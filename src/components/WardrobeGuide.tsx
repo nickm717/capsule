@@ -10,7 +10,7 @@ const WardrobeGuide = () => {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [filter, setFilter] = useState<Filter>("all");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [customItems, setCustomItems] = useState<WardrobeItem[]>([]);
+  const [customItemsRaw, setCustomItemsRaw] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem("darkautumn-favorites");
@@ -20,54 +20,9 @@ const WardrobeGuide = () => {
     }
   });
 
-  const fetchCustomItems = useCallback(async () => {
-    const { data } = await supabase.from("custom_items").select("*").order("created_at", { ascending: false });
-    if (data) {
-      setCustomItems(
-        data.map((row: any) => ({
-          id: `ci-${row.id}`,
-          name: row.name,
-          brand: row.brand || undefined,
-          color: row.color,
-          hex: row.hex,
-          owned: row.owned,
-          gap: !row.owned,
-          notes: row.notes || "",
-        }))
-      );
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchCustomItems();
-  }, [fetchCustomItems]);
-
-  // Merge custom items into categories
-  const mergedCategories: WardrobeCategory[] = wardrobeCategories.map((cat) => {
-    const extras = customItems.filter((ci) => {
-      // Map custom item to category by checking original data category field
-      // We need the raw category from DB, stored in the id prefix
-      return true; // will be filtered below
-    });
-    return cat;
-  });
-
-  // Build a proper merged list
-  const getCategoriesWithCustom = (): WardrobeCategory[] => {
-    // Group custom items by their DB category
-    const customByCategory: Record<string, WardrobeItem[]> = {};
-    // We need the raw category — re-fetch from state won't work, so let's store it
-    return wardrobeCategories;
-  };
-
-  // Better approach: store category info with custom items
-  const [customItemsRaw, setCustomItemsRaw] = useState<any[]>([]);
-
   const fetchItems = useCallback(async () => {
     const { data } = await supabase.from("custom_items").select("*").order("created_at", { ascending: false });
-    if (data) {
-      setCustomItemsRaw(data);
-    }
+    if (data) setCustomItemsRaw(data);
   }, []);
 
   useEffect(() => {
