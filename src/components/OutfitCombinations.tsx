@@ -18,6 +18,9 @@ const OutfitCombinations = ({ onBuilderOpen }: {onBuilderOpen?: (open: boolean) 
   const [activeOccasion, setActiveOccasion] = useState(occasions[0].id);
   const [showBuilder, setShowBuilder] = useState(false);
   const [customOutfits, setCustomOutfits] = useState<CustomOutfit[]>([]);
+  const [menuOutfitId, setMenuOutfitId] = useState<string | null>(null);
+  const [addToDayOutfit, setAddToDayOutfit] = useState<{ id: string; name: string } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const fetchCustom = useCallback(async () => {
     const { data } = await supabase.
