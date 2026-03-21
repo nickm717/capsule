@@ -225,6 +225,12 @@ const OutfitCombinations = ({ onBuilderOpen }: {onBuilderOpen?: (open: boolean) 
           </div>);
 
       })}
+
+      <AddToDaySheet
+        open={!!addToDayOutfit}
+        outfit={addToDayOutfit}
+        onClose={() => setAddToDayOutfit(null)}
+      />
     </div>);
 
 };
