@@ -33,11 +33,14 @@ function closestPaletteHex(colorLabel: string): string {
 
 interface ItemFormPageProps {
   prefill?: Partial<ItemFormData> | null;
+  editId?: string | null;
   onSaved: () => void;
   onCancel: () => void;
 }
 
-const ItemFormPage = ({ prefill, onSaved, onCancel }: ItemFormPageProps) => {
+const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps) => {
+  const isEdit = !!editId;
+
   const [form, setForm] = useState<ItemFormData>({
     name: "",
     brand: "",
@@ -75,7 +78,8 @@ const ItemFormPage = ({ prefill, onSaved, onCancel }: ItemFormPageProps) => {
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("custom_items").insert({
+
+    const payload = {
       name: form.name.trim(),
       brand: form.brand.trim(),
       category: form.category,
@@ -83,13 +87,21 @@ const ItemFormPage = ({ prefill, onSaved, onCancel }: ItemFormPageProps) => {
       hex: form.hex,
       notes: form.notes.trim(),
       owned: form.owned,
-    });
+    };
+
+    let error;
+    if (isEdit) {
+      ({ error } = await supabase.from("custom_items").update(payload).eq("id", editId));
+    } else {
+      ({ error } = await supabase.from("custom_items").insert(payload));
+    }
+
     setSaving(false);
     if (error) {
       toast.error("Failed to save item");
       console.error(error);
     } else {
-      toast.success("Item saved!");
+      toast.success(isEdit ? "Item updated!" : "Item saved!");
       onSaved();
     }
   };
@@ -105,7 +117,7 @@ const ItemFormPage = ({ prefill, onSaved, onCancel }: ItemFormPageProps) => {
           Cancel
         </button>
         <h1 className="absolute left-1/2 -translate-x-1/2 text-base font-semibold text-foreground">
-          New Item
+          {isEdit ? "Edit Item" : "New Item"}
         </h1>
       </header>
 
@@ -225,7 +237,7 @@ const ItemFormPage = ({ prefill, onSaved, onCancel }: ItemFormPageProps) => {
           className="w-full py-3 rounded-xl bg-gold text-white font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {saving && <Loader2 size={16} className="animate-spin" />}
-          Save Item
+          {isEdit ? "Save Changes" : "Save Item"}
         </button>
       </div>
     </div>
