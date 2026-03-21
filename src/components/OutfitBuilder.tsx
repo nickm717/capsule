@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Check, Sparkles, ChevronLeft, ChevronDown } from "lucide-react";
 import { wardrobeCategories, temperatureBadges, occasions, type WardrobeItem, type OutfitPiece } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useSwipeBack } from "@/hooks/use-swipe-back";
 
 const TEMP_OPTIONS = ["Cold", "Cool", "Mild", "Warm"] as const;
 const TEMP_LEGEND: Record<string, string> = {
