@@ -1,20 +1,58 @@
-import { wardrobeCategories, swatches } from "@/data/darkautumn";
+import { useState, useCallback } from "react";
+import { Star } from "lucide-react";
+import { wardrobeCategories, swatches, type WardrobeItem } from "@/data/darkautumn";
+
+type Filter = "all" | "owned" | "gaps";
 
 const WardrobeGuide = () => {
-  const totalPieces = wardrobeCategories.reduce((sum, cat) => sum + cat.items.length, 0);
-  const ownedPieces = wardrobeCategories.reduce((sum, cat) => sum + cat.items.filter(i => i.owned).length, 0);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [filter, setFilter] = useState<Filter>("all");
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("darkautumn-favorites");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  const toggleFavorite = useCallback((id: string) => {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      localStorage.setItem("darkautumn-favorites", JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
+
+  const categories = activeCategory === "all"
+    ? wardrobeCategories
+    : wardrobeCategories.filter((c) => c.id === activeCategory);
+
+  const filterItem = (item: WardrobeItem) => {
+    if (filter === "owned") return item.owned;
+    if (filter === "gaps") return item.gap === true;
+    return true;
+  };
+
+  const totalPieces = wardrobeCategories.reduce((s, c) => s + c.items.length, 0);
+  const ownedCount = wardrobeCategories.reduce((s, c) => s + c.items.filter((i) => i.owned).length, 0);
+  const gapCount = wardrobeCategories.reduce((s, c) => s + c.items.filter((i) => i.gap).length, 0);
 
   return (
-    <div className="px-4 pb-6 space-y-8">
-      {/* Palette swatches */}
+    <div className="px-4 pb-6 space-y-5">
+      {/* Header with palette */}
       <div className="pt-2 animate-reveal-up">
         <h2 className="text-3xl font-semibold text-foreground text-balance">Wardrobe Guide</h2>
-        <p className="text-secondary text-sm mt-1">{ownedPieces} owned of {totalPieces} pieces</p>
+        <p className="text-secondary text-sm mt-1">
+          {ownedCount} owned · {gapCount} gaps · {totalPieces} total
+        </p>
         <div className="flex gap-1.5 mt-3">
           {swatches.map((s) => (
             <div
               key={s.name}
-              className="w-7 h-7 rounded-full border border-border/50"
+              className="w-6 h-6 rounded-full border border-border/40"
               style={{ backgroundColor: s.hex }}
               title={s.name}
             />
@@ -22,49 +60,227 @@ const WardrobeGuide = () => {
         </div>
       </div>
 
-      {wardrobeCategories.map((cat, ci) => (
-        <section key={cat.id} className="animate-reveal-up" style={{ animationDelay: `${ci * 80}ms` }}>
-          <h3 className="text-lg font-medium text-foreground mb-3 flex items-center gap-2">
-            <span className="text-base">{cat.icon}</span>
-            {cat.label}
-            <span className="text-xs text-muted-foreground ml-auto">{cat.items.length}</span>
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            {cat.items.map((item) => (
-              <div
-                key={item.id}
-                className={`bg-card rounded-lg p-3.5 border transition-colors duration-200 active:scale-[0.97] ${
-                  item.gap
-                    ? "border-dashed border-gold/40"
-                    : "border-border hover:border-gold/30"
-                }`}
+      {/* Category chips */}
+      <div
+        className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 animate-reveal-up"
+        style={{ animationDelay: "50ms" }}
+      >
+        <CategoryChip
+          label="All"
+          icon="✦"
+          active={activeCategory === "all"}
+          onClick={() => setActiveCategory("all")}
+        />
+        {wardrobeCategories.map((cat) => (
+          <CategoryChip
+            key={cat.id}
+            label={cat.label}
+            icon={cat.icon}
+            active={activeCategory === cat.id}
+            onClick={() => setActiveCategory(cat.id)}
+          />
+        ))}
+      </div>
+
+      {/* Filter bar */}
+      <div
+        className="flex gap-1 bg-muted rounded-lg p-1 animate-reveal-up"
+        style={{ animationDelay: "100ms" }}
+      >
+        {([
+          { key: "all" as Filter, label: "All", count: totalPieces },
+          { key: "owned" as Filter, label: "Owned", count: ownedCount },
+          { key: "gaps" as Filter, label: "Gaps", count: gapCount },
+        ]).map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className={`flex-1 text-center py-1.5 rounded-md text-sm font-medium transition-all duration-150 active:scale-[0.97] ${
+              filter === f.key
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {f.label}
+            <span className="ml-1 text-[11px] opacity-60">{f.count}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Item cards */}
+      {categories.map((cat) => {
+        const filtered = cat.items.filter(filterItem);
+        if (filtered.length === 0) return null;
+
+        return (
+          <section key={cat.id}>
+            {activeCategory === "all" && (
+              <h3
+                className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2 animate-reveal-up"
               >
-                <div
-                  className="w-full h-8 rounded-md mb-2.5"
-                  style={{ backgroundColor: item.hex }}
+                <span>{cat.icon}</span> {cat.label}
+                <span className="text-xs font-normal">{filtered.length}</span>
+              </h3>
+            )}
+            <div className="space-y-2.5">
+              {filtered.map((item, i) => (
+                <ItemCard
+                  key={item.id}
+                  item={item}
+                  isFavorite={favorites.has(item.id)}
+                  onToggleFavorite={toggleFavorite}
+                  delay={i * 40}
                 />
-                <p className="text-foreground text-sm font-medium leading-tight">{item.name}</p>
-                {item.brand && (
-                  <p className="text-muted-foreground text-[11px] mt-0.5">{item.brand}</p>
-                )}
-                <p className="text-muted-foreground text-xs mt-0.5">{item.color}</p>
-                {item.gap && (
-                  <span className="inline-block mt-1.5 text-[10px] font-medium uppercase tracking-wider text-gold">
-                    {item.priority ? "★ Priority Gap" : "Gap"}
-                  </span>
-                )}
-                {!item.owned && !item.gap && (
-                  <span className="inline-block mt-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                    Wishlist
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      ))}
+              ))}
+            </div>
+          </section>
+        );
+      })}
+
+      {/* Empty state */}
+      {categories.every((c) => c.items.filter(filterItem).length === 0) && (
+        <div className="text-center py-16 animate-reveal-up">
+          <p className="text-muted-foreground text-sm">No items match this filter.</p>
+        </div>
+      )}
     </div>
   );
 };
+
+function CategoryChip({
+  label,
+  icon,
+  active,
+  onClick,
+}: {
+  label: string;
+  icon: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-150 active:scale-[0.96] ${
+        active
+          ? "bg-primary text-primary-foreground"
+          : "bg-muted text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      <span className="text-xs">{icon}</span>
+      {label}
+    </button>
+  );
+}
+
+function ItemCard({
+  item,
+  isFavorite,
+  onToggleFavorite,
+  delay,
+}: {
+  item: WardrobeItem;
+  isFavorite: boolean;
+  onToggleFavorite: (id: string) => void;
+  delay: number;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div
+      className="bg-card rounded-xl border border-border overflow-hidden animate-reveal-up"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="flex">
+        {/* Color accent bar */}
+        <div
+          className="w-1.5 flex-shrink-0 rounded-l-xl"
+          style={{ backgroundColor: item.hex }}
+        />
+
+        <div className="flex-1 p-3.5 min-w-0">
+          {/* Top row: swatch + name + star */}
+          <div className="flex items-start gap-2.5">
+            <span
+              className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5 border border-border/40"
+              style={{ backgroundColor: item.hex }}
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-foreground text-sm font-medium leading-tight truncate">
+                {item.name}
+              </p>
+              {item.brand && (
+                <p className="text-muted-foreground text-[11px] mt-0.5">{item.brand}</p>
+              )}
+              <p className="text-muted-foreground text-xs mt-0.5">{item.color}</p>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite(item.id);
+              }}
+              className="p-1 -m-1 flex-shrink-0 transition-all duration-150 active:scale-[0.9]"
+            >
+              <Star
+                size={18}
+                className={
+                  isFavorite
+                    ? "fill-gold text-gold"
+                    : "text-muted-foreground/40 hover:text-muted-foreground"
+                }
+              />
+            </button>
+          </div>
+
+          {/* Status badges */}
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {item.owned && <Badge label="OWNED" variant="owned" />}
+            {item.gap && <Badge label="GAP" variant="gap" />}
+            {item.priority && <Badge label="PRIORITY" variant="priority" />}
+            {item.seasonal && <Badge label="SEASONAL" variant="seasonal" />}
+          </div>
+
+          {/* Notes (expandable) */}
+          {item.notes && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="mt-2 text-left w-full"
+            >
+              <p
+                className={`text-muted-foreground text-xs leading-relaxed transition-all duration-200 ${
+                  expanded ? "" : "line-clamp-2"
+                }`}
+              >
+                {item.notes}
+              </p>
+              {item.notes.length > 80 && (
+                <span className="text-gold text-[11px] font-medium mt-0.5 inline-block">
+                  {expanded ? "Show less" : "Read more"}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Badge({ label, variant }: { label: string; variant: "owned" | "gap" | "priority" | "seasonal" }) {
+  const styles: Record<string, string> = {
+    owned: "bg-teal/15 text-teal border-teal/30",
+    gap: "bg-rust/15 text-rust border-rust/30",
+    priority: "bg-gold/15 text-gold border-gold/30",
+    seasonal: "bg-olive/15 text-olive border-olive/30",
+  };
+
+  return (
+    <span
+      className={`text-[9px] font-bold uppercase tracking-[0.08em] px-1.5 py-0.5 rounded border ${styles[variant]}`}
+    >
+      {label}
+    </span>
+  );
+}
 
 export default WardrobeGuide;
