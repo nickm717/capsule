@@ -28,6 +28,7 @@ const OutfitPickerSheet = ({
   useEffect(() => {
     if (open) {
       setSearch("");
+      setTempFilter(null);
       setClosing(false);
     }
   }, [open]);
