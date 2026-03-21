@@ -20,6 +20,7 @@ const OutfitPickerSheet = ({
 }: OutfitPickerSheetProps) => {
   const [search, setSearch] = useState("");
   const [tempFilter, setTempFilter] = useState<string | null>(null);
+  const [occasionFilter, setOccasionFilter] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ startY: 0, currentY: 0, dragging: false });
@@ -29,6 +30,7 @@ const OutfitPickerSheet = ({
     if (open) {
       setSearch("");
       setTempFilter(null);
+      setOccasionFilter(null);
       setClosing(false);
     }
   }, [open]);
@@ -73,7 +75,8 @@ const OutfitPickerSheet = ({
   const filtered = allOutfits.filter((o) => {
     const matchesSearch = o.name.toLowerCase().includes(search.toLowerCase());
     const matchesTemp = !tempFilter || o.temp === tempFilter;
-    return matchesSearch && matchesTemp;
+    const matchesOccasion = !occasionFilter || occasions.find((oc) => oc.id === occasionFilter)?.outfits.some((oo) => oo.id === o.id);
+    return matchesSearch && matchesTemp && matchesOccasion;
   });
 
   if (!open && !closing) return null;
@@ -138,7 +141,7 @@ const OutfitPickerSheet = ({
             />
           </div>
 
-          {/* Temperature filter pills */}
+          {/* Filter pills */}
           <div className="flex gap-1.5 mt-3 flex-wrap">
             {allTemps.map((temp) => {
               const badge = temperatureBadges[temp];
@@ -154,10 +157,26 @@ const OutfitPickerSheet = ({
                     backgroundColor: badge?.bg,
                     borderColor: badge?.border,
                     color: badge?.text,
-                    ...(active ? { ringColor: badge?.border } : {}),
                   }}
                 >
                   {temp}
+                </button>
+              );
+            })}
+            <span className="w-px h-5 bg-border/50 self-center mx-0.5" />
+            {occasions.map((oc) => {
+              const active = occasionFilter === oc.id;
+              return (
+                <button
+                  key={oc.id}
+                  onClick={() => setOccasionFilter(active ? null : oc.id)}
+                  className={`text-[11px] font-medium px-2.5 py-1 rounded-full border border-border transition-all active:scale-[0.95] ${
+                    active
+                      ? "bg-gold/15 border-gold/30 text-foreground ring-1 ring-gold/20 ring-offset-1 ring-offset-card"
+                      : "bg-muted/50 text-muted-foreground opacity-70"
+                  }`}
+                >
+                  {oc.icon} {oc.label}
                 </button>
               );
             })}
@@ -188,8 +207,8 @@ const OutfitPickerSheet = ({
                       : "hover:bg-muted border border-transparent"
                   }`}
                 >
-                  {/* Color swatches */}
-                  <div className="flex gap-1 flex-shrink-0">
+                  {/* Color swatches — fixed width for alignment */}
+                  <div className="flex gap-1 flex-shrink-0 w-[72px]">
                     {o.pieces.slice(0, 4).map((p, pi) => (
                       <span
                         key={pi}
