@@ -216,7 +216,18 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
 
         {/* Section 2: Description */}
         <section className="px-4 py-4 border-t border-border">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Description</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Description</h3>
+            <button
+              onClick={generateAI}
+              disabled={aiLoading || selectedItems.length === 0}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-all active:scale-[0.96] disabled:opacity-40 disabled:pointer-events-none"
+              style={{ borderColor: "#B08030", color: "#B08030" }}
+            >
+              <Sparkles size={11} className={aiLoading ? "animate-spin" : ""} />
+              {aiLoading ? "Generating…" : "AI Generate"}
+            </button>
+          </div>
           <input
             type="text"
             placeholder="Outfit name"

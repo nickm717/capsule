@@ -66,7 +66,7 @@ const OutfitCombinations = ({ onBuilderOpen }: { onBuilderOpen?: (open: boolean)
           </p>
         </div>
         <button
-          onClick={() => setShowBuilder(true)}
+          onClick={openBuilder}
           className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all shadow-md"
           style={{ backgroundColor: "#B08030" }}
           aria-label="Add outfit"
