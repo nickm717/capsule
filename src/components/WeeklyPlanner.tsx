@@ -96,19 +96,19 @@ const WeeklyPlanner = () => {
             style={{ animationDelay: `${(i + 1) * 50 + 30}ms` }}
           >
             <button
-              onClick={() => {
-                if (outfit) {
-                  setSheetDay({ key: dayKey, label: dayLabel });
-                } else {
-                  setSheetDay({ key: dayKey, label: dayLabel });
-                }
-              }}
-              className="w-full flex items-center gap-3 p-4 text-left active:scale-[0.99] transition-transform"
+              onClick={() => setSheetDay({ key: dayKey, label: dayLabel })}
+              className="w-full flex items-center gap-3 p-2 text-left active:scale-[0.99] transition-transform"
             >
-              <span className="text-gold font-semibold text-sm uppercase tracking-wider w-14 flex-shrink-0">
-                {DAY_LABELS[i].slice(0, 3)}{" "}
-                <span className="text-foreground">{dayNum}</span>
-              </span>
+              {/* Date block */}
+              <div className="w-16 h-16 flex-shrink-0 bg-muted/60 rounded-xl flex flex-col items-center justify-center">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-gold leading-none">
+                  {DAY_LABELS[i].slice(0, 3)}
+                </span>
+                <span className="text-2xl font-semibold text-foreground leading-tight mt-0.5">
+                  {dayNum}
+                </span>
+              </div>
+
               <div className="flex-1 min-w-0">
                 {outfit ? (
                   <div>
