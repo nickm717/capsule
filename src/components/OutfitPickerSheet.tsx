@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { occasions, temperatureBadges, type Outfit } from "@/data/darkautumn";
 
 interface OutfitPickerSheetProps {
@@ -19,6 +19,7 @@ const OutfitPickerSheet = ({
   onClose,
 }: OutfitPickerSheetProps) => {
   const [search, setSearch] = useState("");
+  const [tempFilter, setTempFilter] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ startY: 0, currentY: 0, dragging: false });
@@ -27,6 +28,7 @@ const OutfitPickerSheet = ({
   useEffect(() => {
     if (open) {
       setSearch("");
+      setTempFilter(null);
       setClosing(false);
     }
   }, [open]);
@@ -63,9 +65,16 @@ const OutfitPickerSheet = ({
     sheetRef.current.style.transform = "";
   };
 
-  const filtered = allOutfits.filter((o) =>
-    o.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const allTemps = useMemo(() => {
+    const temps = new Set(allOutfits.map((o) => o.temp));
+    return Array.from(temps);
+  }, [allOutfits]);
+
+  const filtered = allOutfits.filter((o) => {
+    const matchesSearch = o.name.toLowerCase().includes(search.toLowerCase());
+    const matchesTemp = !tempFilter || o.temp === tempFilter;
+    return matchesSearch && matchesTemp;
+  });
 
   if (!open && !closing) return null;
 
@@ -128,6 +137,31 @@ const OutfitPickerSheet = ({
               className="w-full bg-muted border border-border rounded-lg py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50"
             />
           </div>
+
+          {/* Temperature filter pills */}
+          <div className="flex gap-1.5 mt-3 flex-wrap">
+            {allTemps.map((temp) => {
+              const badge = temperatureBadges[temp];
+              const active = tempFilter === temp;
+              return (
+                <button
+                  key={temp}
+                  onClick={() => setTempFilter(active ? null : temp)}
+                  className={`text-[11px] font-medium px-2.5 py-1 rounded-full border transition-all active:scale-[0.95] ${
+                    active ? "ring-1 ring-offset-1 ring-offset-card" : "opacity-70"
+                  }`}
+                  style={{
+                    backgroundColor: badge?.bg,
+                    borderColor: badge?.border,
+                    color: badge?.text,
+                    ...(active ? { ringColor: badge?.border } : {}),
+                  }}
+                >
+                  {temp}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Scrollable outfit list */}
@@ -165,10 +199,15 @@ const OutfitPickerSheet = ({
                     ))}
                   </div>
 
-                  {/* Name */}
-                  <span className="text-sm text-foreground font-medium truncate flex-1">
-                    {o.name}
-                  </span>
+                  {/* Name + pieces */}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm text-foreground font-medium truncate block">
+                      {o.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground block mt-0.5">
+                      {o.pieces.map((p) => p.name).join(" · ")}
+                    </span>
+                  </div>
 
                   {/* Temp badge */}
                   {tempBadge && (
