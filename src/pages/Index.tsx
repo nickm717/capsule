@@ -44,6 +44,7 @@ const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<Tab>("wardrobe");
+  const [hideNav, setHideNav] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col max-w-lg mx-auto">
@@ -51,29 +52,31 @@ const Index = () => {
       {/* Content */}
       <main className="flex-1 overflow-y-auto pb-24 pt-4">
         {activeTab === "wardrobe" && <WardrobeGuide />}
-        {activeTab === "outfits" && <OutfitCombinations />}
+        {activeTab === "outfits" && <OutfitCombinations onBuilderOpen={setHideNav} />}
         {activeTab === "planner" && <WeeklyPlanner />}
       </main>
 
       {/* Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-50">
-        <div className="max-w-lg mx-auto flex">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 pt-3 transition-colors duration-150 active:scale-[0.96] ${
-                activeTab === tab.key
-                  ? "text-gold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab.icon}
-              <span className="text-[11px] font-medium">{tab.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
+      {!hideNav && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-50">
+          <div className="max-w-lg mx-auto flex">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 pt-3 transition-colors duration-150 active:scale-[0.96] ${
+                  activeTab === tab.key
+                    ? "text-gold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.icon}
+                <span className="text-[11px] font-medium">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </nav>
+      )}
     </div>
   );
 };
