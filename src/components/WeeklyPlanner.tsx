@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { occasions, temperatureBadges, type Outfit } from "@/data/darkautumn";
+import { supabase } from "@/integrations/supabase/client";
 import OutfitPickerSheet from "./OutfitPickerSheet";
 
 const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -30,17 +31,40 @@ const WeeklyPlanner = () => {
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
 
-  const assignOutfit = (dayKey: string, outfitId: string) => {
+  // Load all assignments from Supabase on mount
+  const loadAssignments = useCallback(async () => {
+    const { data } = await supabase
+      .from("planner_assignments")
+      .select("day_key, outfit_id");
+    if (data) {
+      const map: Record<string, string> = {};
+      data.forEach((row: any) => { map[row.day_key] = row.outfit_id; });
+      setPlan(map);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAssignments();
+  }, [loadAssignments]);
+
+  const assignOutfit = async (dayKey: string, outfitId: string) => {
     setPlan((prev) => ({ ...prev, [dayKey]: outfitId }));
     setSheetDay(null);
+    await supabase
+      .from("planner_assignments")
+      .upsert({ day_key: dayKey, outfit_id: outfitId }, { onConflict: "day_key" });
   };
 
-  const clearDay = (dayKey: string) => {
+  const clearDay = async (dayKey: string) => {
     setPlan((prev) => {
       const next = { ...prev };
       delete next[dayKey];
       return next;
     });
+    await supabase
+      .from("planner_assignments")
+      .delete()
+      .eq("day_key", dayKey);
   };
 
   const getOutfit = (id: string): Outfit | undefined => allOutfits.find((o) => o.id === id);
