@@ -97,54 +97,65 @@ const WeeklyPlanner = () => {
           >
             <button
               onClick={() => setSheetDay({ key: dayKey, label: dayLabel })}
-              className="w-full flex items-center gap-3 p-2 text-left active:scale-[0.99] transition-transform"
+              className="w-full flex items-stretch gap-0 text-left active:scale-[0.99] transition-transform"
             >
               {/* Date block */}
-              <div className="w-16 h-16 flex-shrink-0 bg-muted/60 rounded-xl flex flex-col items-center justify-center">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gold leading-none">
+              <div className="w-12 flex-shrink-0 bg-muted/60 flex flex-col items-center justify-center py-3">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-gold leading-none">
                   {DAY_LABELS[i].slice(0, 3)}
                 </span>
-                <span className="text-2xl font-semibold text-foreground leading-tight mt-0.5">
+                <span className="text-xl text-foreground leading-tight mt-0.5" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
                   {dayNum}
                 </span>
               </div>
 
-              <div className="flex-1 min-w-0">
-                {outfit ? (
-                  <div>
+              {outfit ? (
+                <>
+                  {/* Color bars */}
+                  <div className="flex flex-shrink-0">
+                    {outfit.pieces.map((p, pi) => (
+                      <div
+                        key={pi}
+                        className="w-1.5"
+                        style={{ backgroundColor: p.hex }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Outfit info */}
+                  <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-center">
                     <p className="text-foreground font-medium text-sm truncate">{outfit.name}</p>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      {outfit.pieces.slice(0, 4).map((p, pi) => (
-                        <span
-                          key={pi}
-                          className="w-3.5 h-3.5 rounded-full border border-border/50"
-                          style={{ backgroundColor: p.hex }}
-                        />
-                      ))}
-                      {outfit.pieces.length > 4 && (
-                        <span className="text-[10px] text-muted-foreground">+{outfit.pieces.length - 4}</span>
-                      )}
-                      {tempBadge && (
-                        <span
-                          className="text-[10px] font-medium px-1.5 py-0.5 rounded-full border ml-1"
-                          style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
-                        >
-                          {outfit.temp}
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      {outfit.pieces.map((p, pi) => (
+                        <span key={pi} className="text-[10px] text-muted-foreground">
+                          {pi > 0 && "· "}{p.name}
                         </span>
-                      )}
+                      ))}
                     </div>
                   </div>
-                ) : (
+
+                  {/* Temp badge + clear */}
+                  <div className="flex items-center gap-1.5 pr-2 flex-shrink-0">
+                    {tempBadge && (
+                      <span
+                        className="text-[10px] font-medium px-1.5 py-0.5 rounded-full border"
+                        style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
+                      >
+                        {outfit.temp}
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); clearDay(dayKey); }}
+                      className="text-muted-foreground hover:text-foreground text-xs p-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 min-w-0 px-3 py-4 flex items-center">
                   <p className="text-muted-foreground text-sm">No outfit planned</p>
-                )}
-              </div>
-              {outfit && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); clearDay(dayKey); }}
-                  className="text-muted-foreground hover:text-foreground text-xs p-1"
-                >
-                  ✕
-                </button>
+                </div>
               )}
             </button>
           </div>
