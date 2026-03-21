@@ -47,16 +47,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col max-w-lg mx-auto">
-      {/* Header */}
-      <header className="px-4 pt-6 pb-4 animate-reveal-up">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Dark Autumn
-        </h1>
-        <p className="text-sm text-secondary mt-0.5">Your seasonal wardrobe companion</p>
-      </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto pb-24">
+      <main className="flex-1 overflow-y-auto pb-24 pt-4">
         {activeTab === "wardrobe" && <WardrobeGuide />}
         {activeTab === "outfits" && <OutfitCombinations />}
         {activeTab === "planner" && <WeeklyPlanner />}
