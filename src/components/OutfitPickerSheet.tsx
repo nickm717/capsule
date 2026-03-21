@@ -19,6 +19,7 @@ const OutfitPickerSheet = ({
   onClose,
 }: OutfitPickerSheetProps) => {
   const [search, setSearch] = useState("");
+  const [tempFilter, setTempFilter] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ startY: 0, currentY: 0, dragging: false });
