@@ -44,6 +44,18 @@ const OutfitCombinations = ({ onBuilderOpen }: {onBuilderOpen?: (open: boolean) 
     onBuilderOpen?.(false);
   };
 
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOutfitId) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOutfitId(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOutfitId]);
+
   if (showBuilder) {
     return (
       <OutfitBuilder
