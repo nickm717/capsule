@@ -53,7 +53,7 @@ const Index = () => {
 
       {/* Content */}
       <main className="flex-1 overflow-y-auto pb-24 pt-4">
-        {activeTab === "wardrobe" && <WardrobeGuide />}
+        {activeTab === "wardrobe" && <WardrobeGuide onFormOpen={handleWardrobeFormOpen} />}
         {activeTab === "outfits" && <OutfitCombinations onBuilderOpen={setHideNav} />}
         {activeTab === "planner" && <WeeklyPlanner />}
       </main>
