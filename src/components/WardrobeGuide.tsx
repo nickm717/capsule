@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Star, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { wardrobeCategories, swatches, type WardrobeItem, type WardrobeCategory } from "@/data/darkautumn";
+import { categoryDefs, swatches, type WardrobeItem, type WardrobeCategory } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
+import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
 import AddItemSheet from "./AddItemSheet";
 import ItemFormPage from "./ItemFormPage";
 import DeleteItemSheet from "./DeleteItemSheet";
@@ -13,33 +14,6 @@ interface WardrobeGuideProps {
   onFormOpen?: (open: boolean) => void;
 }
 
-/** Convert static wardrobe data into rows for Supabase seeding */
-function staticItemsToRows() {
-  const rows: Array<{
-    name: string;
-    brand: string;
-    category: string;
-    color: string;
-    hex: string;
-    notes: string;
-    owned: boolean;
-  }> = [];
-  for (const cat of wardrobeCategories) {
-    for (const item of cat.items) {
-      rows.push({
-        name: item.name,
-        brand: item.brand || "",
-        category: cat.id,
-        color: item.color,
-        hex: item.hex,
-        notes: item.notes || "",
-        owned: item.owned,
-      });
-    }
-  }
-  return rows;
-}
-
 const WardrobeGuide = ({ onFormOpen }: WardrobeGuideProps) => {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [filter, setFilter] = useState<Filter>("all");
@@ -47,8 +21,6 @@ const WardrobeGuide = ({ onFormOpen }: WardrobeGuideProps) => {
   const [formOpen, setFormOpen] = useState(false);
   const [formPrefill, setFormPrefill] = useState<Partial<ItemFormData> | undefined>();
   const [editId, setEditId] = useState<string | null>(null);
-  const [items, setItems] = useState<any[]>([]);
-  const [seeded, setSeeded] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(() => {
     try {
@@ -59,27 +31,7 @@ const WardrobeGuide = ({ onFormOpen }: WardrobeGuideProps) => {
     }
   });
 
-  const fetchItems = useCallback(async () => {
-    const { data } = await supabase.from("custom_items").select("*").order("created_at", { ascending: true });
-    if (data) {
-      if (data.length === 0 && !seeded) {
-        // Seed static items on first load
-        setSeeded(true);
-        const rows = staticItemsToRows();
-        const { error } = await supabase.from("custom_items").insert(rows);
-        if (!error) {
-          const { data: seededData } = await supabase.from("custom_items").select("*").order("created_at", { ascending: true });
-          if (seededData) setItems(seededData);
-        }
-      } else {
-        setItems(data);
-      }
-    }
-  }, [seeded]);
-
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+  const { categories: allCategories, refetch: fetchItems } = useWardrobeItems();
 
   const openForm = (prefill?: Partial<ItemFormData>, id?: string) => {
     setFormPrefill(prefill);
@@ -119,27 +71,10 @@ const WardrobeGuide = ({ onFormOpen }: WardrobeGuideProps) => {
     if (!deleteTarget) return;
     const { error } = await supabase.from("custom_items").delete().eq("id", deleteTarget.id);
     if (!error) {
-      setItems((prev) => prev.filter((i) => i.id !== deleteTarget.id));
+      fetchItems();
     }
     setDeleteTarget(null);
   };
-
-  // Build categories from Supabase data only
-  const categoryDefs = wardrobeCategories.map((c) => ({ id: c.id, label: c.label, icon: c.icon }));
-  const allCategories: (WardrobeCategory & { rows: any[] })[] = categoryDefs.map((cat) => {
-    const catItems = items.filter((row) => row.category === cat.id);
-    const mapped: WardrobeItem[] = catItems.map((row) => ({
-      id: row.id,
-      name: row.name,
-      brand: row.brand || undefined,
-      color: row.color,
-      hex: row.hex,
-      owned: row.owned,
-      gap: !row.owned,
-      notes: row.notes || "",
-    }));
-    return { ...cat, items: mapped, rows: catItems };
-  });
 
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) => {
@@ -306,7 +241,6 @@ function ItemCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close menu on outside click
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e: MouseEvent) => {

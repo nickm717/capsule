@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { occasions, type Outfit } from "@/data/darkautumn";
+import { useOutfits } from "@/hooks/use-outfits";
 
 const DAY_ABBR = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -37,7 +37,7 @@ const AddToDaySheet = ({ open, outfit, onClose, onSaved }: AddToDaySheetProps) =
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ startY: 0, currentY: 0, dragging: false });
 
-  const allOutfits = useMemo(() => occasions.flatMap((o) => o.outfits), []);
+  const { outfits } = useOutfits();
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
 
   // Load assignments
@@ -80,9 +80,9 @@ const AddToDaySheet = ({ open, outfit, onClose, onSaved }: AddToDaySheetProps) =
 
   const existingOutfitName = useMemo(() => {
     if (!selectedDay || !assignments[selectedDay]) return null;
-    const found = allOutfits.find((o) => o.id === assignments[selectedDay]);
+    const found = outfits.find((o) => o.id === assignments[selectedDay]);
     return found?.name ?? "another outfit";
-  }, [selectedDay, assignments, allOutfits]);
+  }, [selectedDay, assignments, outfits]);
 
   const selectedDayLabel = useMemo(() => {
     if (!selectedDay) return "";

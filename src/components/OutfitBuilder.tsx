@@ -1,9 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
 import { Check, Sparkles, ChevronLeft, ChevronDown } from "lucide-react";
-import { wardrobeCategories, temperatureBadges, occasions, type WardrobeItem, type OutfitPiece } from "@/data/darkautumn";
+import { categoryDefs, temperatureBadges, occasionDefs, type WardrobeItem, type OutfitPiece } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useSwipeBack } from "@/hooks/use-swipe-back";
+import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
 
 const TEMP_OPTIONS = ["Cold", "Cool", "Mild", "Warm"] as const;
 const TEMP_LEGEND: Record<string, string> = {
@@ -13,9 +14,9 @@ const TEMP_LEGEND: Record<string, string> = {
   Warm: "70 °F+",
 };
 
-function suggestTemp(selectedItems: WardrobeItem[]): string {
+function suggestTemp(selectedItems: WardrobeItem[], categories: { id: string; items: WardrobeItem[] }[]): string {
   const hasOuterwear = selectedItems.some((item) => {
-    const cat = wardrobeCategories.find((c) => c.items.some((i) => i.id === item.id));
+    const cat = categories.find((c) => c.items.some((i) => i.id === item.id));
     return cat?.id === "outerwear";
   });
   const hasHeavyLayers = selectedItems.some((item) => {
@@ -48,9 +49,11 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
   const [aiLoading, setAiLoading] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
 
-  const allItems = useMemo(() => wardrobeCategories.flatMap((c) => c.items), []);
+  const { categories } = useWardrobeItems();
+
+  const allItems = useMemo(() => categories.flatMap((c) => c.items), [categories]);
   const selectedItems = useMemo(() => allItems.filter((i) => selectedIds.has(i.id)), [allItems, selectedIds]);
-  const suggestedTemp = useMemo(() => suggestTemp(selectedItems), [selectedItems]);
+  const suggestedTemp = useMemo(() => suggestTemp(selectedItems, categories), [selectedItems, categories]);
   const activeTemp = tempOverride ?? suggestedTemp;
 
   const toggleItem = (id: string) => {
@@ -60,10 +63,8 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
       else next.add(id);
       return next;
     });
-    // Auto-collapse the category this item belongs to
-    const cat = wardrobeCategories.find((c) => c.items.some((i) => i.id === id));
+    const cat = categories.find((c) => c.items.some((i) => i.id === id));
     if (cat && !selectedIds.has(id)) {
-      // Item was just selected → collapse
       setCollapsedCats((prev) => new Set(prev).add(cat.id));
     }
   };
@@ -149,7 +150,6 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
         <section className="px-4 pt-4 pb-2">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Pick Pieces</h3>
 
-          {/* Selected palette strip */}
           {selectedItems.length > 0 && (
             <div className="flex gap-1 mb-4 overflow-x-auto pb-1">
               {selectedItems.map((item) => (
@@ -158,7 +158,7 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
             </div>
           )}
 
-          {wardrobeCategories.map((cat) => {
+          {categories.map((cat) => {
             const isCollapsed = collapsedCats.has(cat.id);
             const selectedInCat = cat.items.filter((i) => selectedIds.has(i.id));
 
@@ -175,7 +175,6 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <span>{cat.icon}</span> {cat.label}
                   </span>
-                  {/* Show selected swatches in collapsed header */}
                   {isCollapsed && selectedInCat.length > 0 && (
                     <span className="flex items-center gap-1.5 ml-auto">
                       {selectedInCat.map((item) => (
@@ -247,7 +246,7 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
 
           {/* Occasion picker */}
           <div className="flex gap-2 overflow-x-auto mt-3 pb-1">
-            {occasions.map((occ) => (
+            {occasionDefs.map((occ) => (
               <button
                 key={occ.id}
                 onClick={() => setOccasionId(occ.id)}
@@ -293,7 +292,6 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
             })}
           </div>
 
-          {/* Temperature legend */}
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
             {TEMP_OPTIONS.map((t) => {
               const badge = temperatureBadges[t];
