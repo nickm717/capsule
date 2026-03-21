@@ -46,12 +46,14 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<Tab>("wardrobe");
   const [hideNav, setHideNav] = useState(false);
 
+  const handleWardrobeFormOpen = (open: boolean) => setHideNav(open);
+
   return (
     <div className="min-h-screen flex flex-col max-w-lg mx-auto">
 
       {/* Content */}
       <main className="flex-1 overflow-y-auto pb-24 pt-4">
-        {activeTab === "wardrobe" && <WardrobeGuide />}
+        {activeTab === "wardrobe" && <WardrobeGuide onFormOpen={handleWardrobeFormOpen} />}
         {activeTab === "outfits" && <OutfitCombinations onBuilderOpen={setHideNav} />}
         {activeTab === "planner" && <WeeklyPlanner />}
       </main>

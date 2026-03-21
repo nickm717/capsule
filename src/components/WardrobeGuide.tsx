@@ -3,13 +3,21 @@ import { Star, Plus } from "lucide-react";
 import { wardrobeCategories, swatches, type WardrobeItem, type WardrobeCategory } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import AddItemSheet from "./AddItemSheet";
+import ItemFormPage from "./ItemFormPage";
+import type { ItemFormData } from "./ItemForm";
 
 type Filter = "all" | "owned" | "gaps";
 
-const WardrobeGuide = () => {
+interface WardrobeGuideProps {
+  onFormOpen?: (open: boolean) => void;
+}
+
+const WardrobeGuide = ({ onFormOpen }: WardrobeGuideProps) => {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [filter, setFilter] = useState<Filter>("all");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [formPrefill, setFormPrefill] = useState<Partial<ItemFormData> | undefined>();
   const [customItemsRaw, setCustomItemsRaw] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(() => {
     try {
@@ -28,6 +36,23 @@ const WardrobeGuide = () => {
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+
+  const openForm = (prefill?: Partial<ItemFormData>) => {
+    setFormPrefill(prefill);
+    setFormOpen(true);
+    onFormOpen?.(true);
+  };
+
+  const closeForm = () => {
+    setFormOpen(false);
+    setFormPrefill(undefined);
+    onFormOpen?.(false);
+  };
+
+  const handleFormSaved = () => {
+    fetchItems();
+    closeForm();
+  };
 
   const allCategories: WardrobeCategory[] = wardrobeCategories.map((cat) => {
     const extras: WardrobeItem[] = customItemsRaw
@@ -69,6 +94,10 @@ const WardrobeGuide = () => {
   const ownedCount = allCategories.reduce((s, c) => s + c.items.filter((i) => i.owned).length, 0);
   const gapCount = allCategories.reduce((s, c) => s + c.items.filter((i) => i.gap).length, 0);
 
+  if (formOpen) {
+    return <ItemFormPage prefill={formPrefill} onSaved={handleFormSaved} onCancel={closeForm} />;
+  }
+
   return (
     <div className="px-4 pb-6 space-y-5">
       {/* Header */}
@@ -103,28 +132,14 @@ const WardrobeGuide = () => {
         className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 animate-reveal-up"
         style={{ animationDelay: "50ms" }}
       >
-        <CategoryChip
-          label="All"
-          icon="✦"
-          active={activeCategory === "all"}
-          onClick={() => setActiveCategory("all")}
-        />
+        <CategoryChip label="All" icon="✦" active={activeCategory === "all"} onClick={() => setActiveCategory("all")} />
         {allCategories.map((cat) => (
-          <CategoryChip
-            key={cat.id}
-            label={cat.label}
-            icon={cat.icon}
-            active={activeCategory === cat.id}
-            onClick={() => setActiveCategory(cat.id)}
-          />
+          <CategoryChip key={cat.id} label={cat.label} icon={cat.icon} active={activeCategory === cat.id} onClick={() => setActiveCategory(cat.id)} />
         ))}
       </div>
 
       {/* Filter bar */}
-      <div
-        className="flex gap-1 bg-muted rounded-lg p-1 animate-reveal-up"
-        style={{ animationDelay: "100ms" }}
-      >
+      <div className="flex gap-1 bg-muted rounded-lg p-1 animate-reveal-up" style={{ animationDelay: "100ms" }}>
         {([
           { key: "all" as Filter, label: "All", count: totalPieces },
           { key: "owned" as Filter, label: "Owned", count: ownedCount },
@@ -134,9 +149,7 @@ const WardrobeGuide = () => {
             key={f.key}
             onClick={() => setFilter(f.key)}
             className={`flex-1 text-center py-1.5 rounded-md text-sm font-medium transition-all duration-150 active:scale-[0.97] ${
-              filter === f.key
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+              filter === f.key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {f.label}
@@ -149,7 +162,6 @@ const WardrobeGuide = () => {
       {categories.map((cat) => {
         const filtered = cat.items.filter(filterItem);
         if (filtered.length === 0) return null;
-
         return (
           <section key={cat.id}>
             {activeCategory === "all" && (
@@ -160,53 +172,30 @@ const WardrobeGuide = () => {
             )}
             <div className="space-y-2.5">
               {filtered.map((item, i) => (
-                <ItemCard
-                  key={item.id}
-                  item={item}
-                  isFavorite={favorites.has(item.id)}
-                  onToggleFavorite={toggleFavorite}
-                  delay={i * 40}
-                />
+                <ItemCard key={item.id} item={item} isFavorite={favorites.has(item.id)} onToggleFavorite={toggleFavorite} delay={i * 40} />
               ))}
             </div>
           </section>
         );
       })}
 
-      {/* Empty state */}
       {categories.every((c) => c.items.filter(filterItem).length === 0) && (
         <div className="text-center py-16 animate-reveal-up">
           <p className="text-muted-foreground text-sm">No items match this filter.</p>
         </div>
       )}
 
-      <AddItemSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        onSaved={fetchItems}
-      />
+      <AddItemSheet open={sheetOpen} onOpenChange={setSheetOpen} onOpenForm={openForm} />
     </div>
   );
 };
 
-function CategoryChip({
-  label,
-  icon,
-  active,
-  onClick,
-}: {
-  label: string;
-  icon: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+function CategoryChip({ label, icon, active, onClick }: { label: string; icon: string; active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
       className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-150 active:scale-[0.96] ${
-        active
-          ? "bg-primary text-primary-foreground"
-          : "bg-muted text-muted-foreground hover:text-foreground"
+        active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
       }`}
     >
       <span className="text-xs">{icon}</span>
@@ -215,85 +204,35 @@ function CategoryChip({
   );
 }
 
-function ItemCard({
-  item,
-  isFavorite,
-  onToggleFavorite,
-  delay,
-}: {
-  item: WardrobeItem;
-  isFavorite: boolean;
-  onToggleFavorite: (id: string) => void;
-  delay: number;
-}) {
+function ItemCard({ item, isFavorite, onToggleFavorite, delay }: { item: WardrobeItem; isFavorite: boolean; onToggleFavorite: (id: string) => void; delay: number }) {
   const [expanded, setExpanded] = useState(false);
-
   return (
-    <div
-      className="bg-card rounded-xl border border-border overflow-hidden animate-reveal-up"
-      style={{ animationDelay: `${delay}ms` }}
-    >
+    <div className="bg-card rounded-xl border border-border overflow-hidden animate-reveal-up" style={{ animationDelay: `${delay}ms` }}>
       <div className="flex">
-        <div
-          className="w-1.5 flex-shrink-0 rounded-l-xl"
-          style={{ backgroundColor: item.hex }}
-        />
+        <div className="w-1.5 flex-shrink-0 rounded-l-xl" style={{ backgroundColor: item.hex }} />
         <div className="flex-1 p-3.5 min-w-0">
           <div className="flex items-start gap-2.5">
-            <span
-              className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5 border border-border/40"
-              style={{ backgroundColor: item.hex }}
-            />
+            <span className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5 border border-border/40" style={{ backgroundColor: item.hex }} />
             <div className="flex-1 min-w-0">
-              <p className="text-foreground text-sm font-medium leading-tight truncate">
-                {item.name}
-              </p>
-              {item.brand && (
-                <p className="text-muted-foreground text-[11px] mt-0.5">{item.brand}</p>
-              )}
+              <p className="text-foreground text-sm font-medium leading-tight truncate">{item.name}</p>
+              {item.brand && <p className="text-muted-foreground text-[11px] mt-0.5">{item.brand}</p>}
               <p className="text-muted-foreground text-xs mt-0.5">{item.color}</p>
             </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorite(item.id);
-              }}
-              className="p-1 -m-1 flex-shrink-0 transition-all duration-150 active:scale-[0.9]"
-            >
-              <Star
-                size={18}
-                className={
-                  isFavorite
-                    ? "fill-gold text-gold"
-                    : "text-muted-foreground/40 hover:text-muted-foreground"
-                }
-              />
+            <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id); }} className="p-1 -m-1 flex-shrink-0 transition-all duration-150 active:scale-[0.9]">
+              <Star size={18} className={isFavorite ? "fill-gold text-gold" : "text-muted-foreground/40 hover:text-muted-foreground"} />
             </button>
           </div>
-
           <div className="flex flex-wrap gap-1.5 mt-2">
             {item.owned && <Badge label="OWNED" variant="owned" />}
             {item.gap && <Badge label="GAP" variant="gap" />}
             {item.priority && <Badge label="PRIORITY" variant="priority" />}
             {item.seasonal && <Badge label="SEASONAL" variant="seasonal" />}
           </div>
-
           {item.notes && (
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="mt-2 text-left w-full"
-            >
-              <p
-                className={`text-muted-foreground text-xs leading-relaxed transition-all duration-200 ${
-                  expanded ? "" : "line-clamp-2"
-                }`}
-              >
-                {item.notes}
-              </p>
+            <button onClick={() => setExpanded(!expanded)} className="mt-2 text-left w-full">
+              <p className={`text-muted-foreground text-xs leading-relaxed transition-all duration-200 ${expanded ? "" : "line-clamp-2"}`}>{item.notes}</p>
               {item.notes.length > 80 && (
-                <span className="text-gold text-[11px] font-medium mt-0.5 inline-block">
-                  {expanded ? "Show less" : "Read more"}
-                </span>
+                <span className="text-gold text-[11px] font-medium mt-0.5 inline-block">{expanded ? "Show less" : "Read more"}</span>
               )}
             </button>
           )}
@@ -310,13 +249,8 @@ function Badge({ label, variant }: { label: string; variant: "owned" | "gap" | "
     priority: "bg-gold/15 text-gold border-gold/30",
     seasonal: "bg-olive/15 text-olive border-olive/30",
   };
-
   return (
-    <span
-      className={`text-[9px] font-bold uppercase tracking-[0.08em] px-1.5 py-0.5 rounded border ${styles[variant]}`}
-    >
-      {label}
-    </span>
+    <span className={`text-[9px] font-bold uppercase tracking-[0.08em] px-1.5 py-0.5 rounded border ${styles[variant]}`}>{label}</span>
   );
 }
 

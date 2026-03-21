@@ -58,6 +58,7 @@ const UrlExtractor = ({ onExtracted, onBack }: UrlExtractorProps) => {
         onChange={(e) => setUrl(e.target.value)}
         placeholder="https://example.com/product/..."
         type="url"
+        autoFocus={false}
       />
 
       <button
