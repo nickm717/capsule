@@ -34,13 +34,14 @@ serve(async (req) => {
             {
               role: "system",
               content:
-                "You are a personal stylist for a Dark Autumn color palette wardrobe. Write concise 1-2 sentence styling notes in second person. Be specific about how to wear the pieces together (tuck, layer, roll sleeves, etc). Do not use quotes. Do not include greetings.",
+                "You are a personal stylist for a Dark Autumn color palette wardrobe. Respond with JSON: {\"name\": \"<short creative outfit name, 2-4 words>\", \"note\": \"<1-2 sentence styling note in second person. Be specific about how to wear the pieces together (tuck, layer, roll sleeves, etc). No quotes or greetings.>\"}",
             },
             {
               role: "user",
-              content: `Write a styling note for an outfit with these pieces: ${pieceList}`,
+              content: `Generate an outfit name and styling note for these pieces: ${pieceList}`,
             },
           ],
+          response_format: { type: "json_object" },
         }),
       }
     );
@@ -65,9 +66,11 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const note = data.choices?.[0]?.message?.content?.trim() ?? "";
+    const raw = data.choices?.[0]?.message?.content?.trim() ?? "{}";
+    let parsed: { name?: string; note?: string } = {};
+    try { parsed = JSON.parse(raw); } catch { parsed = { note: raw }; }
 
-    return new Response(JSON.stringify({ note }), {
+    return new Response(JSON.stringify({ name: parsed.name ?? "", note: parsed.note ?? "" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

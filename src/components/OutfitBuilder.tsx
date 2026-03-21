@@ -1,10 +1,16 @@
 import { useState, useMemo } from "react";
-import { Check, Sparkles, ChevronLeft } from "lucide-react";
+import { Check, Sparkles, ChevronLeft, ChevronDown } from "lucide-react";
 import { wardrobeCategories, temperatureBadges, occasions, type WardrobeItem, type OutfitPiece } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const TEMP_OPTIONS = ["Cold", "Cool", "Mild", "Warm"] as const;
+const TEMP_LEGEND: Record<string, string> = {
+  Cold: "Below 40 °F",
+  Cool: "40–60 °F",
+  Mild: "60–70 °F",
+  Warm: "70 °F+",
+};
 
 function suggestTemp(selectedItems: WardrobeItem[]): string {
   const hasOuterwear = selectedItems.some((item) => {
@@ -38,6 +44,7 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
   const [occasionId, setOccasionId] = useState("casual");
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
 
   const allItems = useMemo(() => wardrobeCategories.flatMap((c) => c.items), []);
   const selectedItems = useMemo(() => allItems.filter((i) => selectedIds.has(i.id)), [allItems, selectedIds]);
@@ -51,9 +58,24 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
       else next.add(id);
       return next;
     });
+    // Auto-collapse the category this item belongs to
+    const cat = wardrobeCategories.find((c) => c.items.some((i) => i.id === id));
+    if (cat && !selectedIds.has(id)) {
+      // Item was just selected → collapse
+      setCollapsedCats((prev) => new Set(prev).add(cat.id));
+    }
   };
 
-  const generateNote = async () => {
+  const toggleCat = (catId: string) => {
+    setCollapsedCats((prev) => {
+      const next = new Set(prev);
+      if (next.has(catId)) next.delete(catId);
+      else next.add(catId);
+      return next;
+    });
+  };
+
+  const generateAI = async () => {
     if (selectedItems.length === 0) {
       toast({ title: "Select pieces first", variant: "destructive" });
       return;
@@ -65,10 +87,11 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
         body: { pieces },
       });
       if (error) throw error;
+      if (data?.name) setName(data.name);
       if (data?.note) setNotes(data.note);
     } catch (e) {
       console.error(e);
-      toast({ title: "Could not generate note", variant: "destructive" });
+      toast({ title: "Could not generate", variant: "destructive" });
     } finally {
       setAiLoading(false);
     }
@@ -111,15 +134,24 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/95 backdrop-blur-md">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/95 backdrop-blur-md flex-shrink-0">
         <button onClick={onBack} className="p-1 -ml-1 text-muted-foreground hover:text-foreground active:scale-[0.95] transition-all">
           <ChevronLeft size={24} />
         </button>
-        <h2 className="text-lg font-semibold text-foreground font-serif">New Outfit</h2>
+        <h2 className="text-lg font-semibold text-foreground font-serif flex-1">New Outfit</h2>
+        <button
+          onClick={generateAI}
+          disabled={aiLoading || selectedItems.length === 0}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-[0.96] disabled:opacity-40 disabled:pointer-events-none"
+          style={{ borderColor: "#B08030", color: "#B08030" }}
+        >
+          <Sparkles size={13} className={aiLoading ? "animate-spin" : ""} />
+          {aiLoading ? "Generating…" : "AI Generate"}
+        </button>
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto pb-24">
+      <div className="flex-1 overflow-y-auto">
         {/* Section 1: Pick Pieces */}
         <section className="px-4 pt-4 pb-2">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Pick Pieces</h3>
@@ -133,34 +165,62 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
             </div>
           )}
 
-          {wardrobeCategories.map((cat) => (
-            <div key={cat.id} className="mb-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <span>{cat.icon}</span> {cat.label}
-              </p>
-              <div className="space-y-1">
-                {cat.items.map((item) => {
-                  const selected = selectedIds.has(item.id);
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => toggleItem(item.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150 active:scale-[0.98] ${
-                        selected ? "bg-primary/10 border border-primary/30" : "bg-card border border-border hover:border-border/80"
-                      }`}
-                    >
-                      <span className="w-4 h-4 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: item.hex }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-foreground truncate">{item.name}</p>
-                        {item.brand && <p className="text-[11px] text-muted-foreground">{item.brand}</p>}
-                      </div>
-                      {selected && <Check size={16} className="text-primary flex-shrink-0" />}
-                    </button>
-                  );
-                })}
+          {wardrobeCategories.map((cat) => {
+            const isCollapsed = collapsedCats.has(cat.id);
+            const selectedInCat = cat.items.filter((i) => selectedIds.has(i.id));
+
+            return (
+              <div key={cat.id} className="mb-3">
+                <button
+                  onClick={() => toggleCat(cat.id)}
+                  className="w-full flex items-center gap-2 py-2 text-left"
+                >
+                  <ChevronDown
+                    size={14}
+                    className={`text-muted-foreground transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}
+                  />
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <span>{cat.icon}</span> {cat.label}
+                  </span>
+                  {/* Show selected swatches in collapsed header */}
+                  {isCollapsed && selectedInCat.length > 0 && (
+                    <span className="flex items-center gap-1.5 ml-auto">
+                      {selectedInCat.map((item) => (
+                        <span key={item.id} className="flex items-center gap-1">
+                          <span className="w-3 h-3 rounded-full border border-border/40" style={{ backgroundColor: item.hex }} />
+                          <span className="text-[11px] text-foreground">{item.name}</span>
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                </button>
+
+                {!isCollapsed && (
+                  <div className="space-y-1 ml-1">
+                    {cat.items.map((item) => {
+                      const selected = selectedIds.has(item.id);
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => toggleItem(item.id)}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150 active:scale-[0.98] ${
+                            selected ? "bg-primary/10 border border-primary/30" : "bg-card border border-border hover:border-border/80"
+                          }`}
+                        >
+                          <span className="w-4 h-4 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: item.hex }} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-foreground truncate">{item.name}</p>
+                            {item.brand && <p className="text-[11px] text-muted-foreground">{item.brand}</p>}
+                          </div>
+                          {selected && <Check size={16} className="text-primary flex-shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </section>
 
         {/* Section 2: Description */}
@@ -173,23 +233,13 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
             onChange={(e) => setName(e.target.value)}
             className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring mb-3"
           />
-          <div className="relative">
-            <textarea
-              placeholder="Styling notes..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none pr-24"
-            />
-            <button
-              onClick={generateNote}
-              disabled={aiLoading || selectedItems.length === 0}
-              className="absolute right-2 top-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-primary/15 text-primary text-xs font-medium hover:bg-primary/25 active:scale-[0.96] transition-all disabled:opacity-40 disabled:pointer-events-none"
-            >
-              <Sparkles size={13} className={aiLoading ? "animate-spin" : ""} />
-              {aiLoading ? "Writing…" : "AI Generate"}
-            </button>
-          </div>
+          <textarea
+            placeholder="Styling notes..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+          />
 
           {/* Occasion picker */}
           <div className="flex gap-2 overflow-x-auto mt-3 pb-1">
@@ -210,13 +260,13 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
         </section>
 
         {/* Section 3: Temperature */}
-        <section className="px-4 py-4 border-t border-border">
+        <section className="px-4 py-4 border-t border-border pb-28">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Temperature</h3>
           <div className="flex gap-2">
             {TEMP_OPTIONS.map((t) => {
               const badge = temperatureBadges[t];
               const isActive = activeTemp === t;
-              const isSuggested = !tempOverride && t === suggestedTemp;
+              const isSuggested = t === suggestedTemp;
               return (
                 <button
                   key={t}
@@ -231,8 +281,22 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
                   }}
                 >
                   {t}
-                  {isSuggested && <span className="block text-[9px] opacity-70 mt-0.5">suggested</span>}
+                  {isSuggested && (
+                    <span className="block text-[9px] opacity-50 mt-0.5">Suggested</span>
+                  )}
                 </button>
+              );
+            })}
+          </div>
+
+          {/* Temperature legend */}
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
+            {TEMP_OPTIONS.map((t) => {
+              const badge = temperatureBadges[t];
+              return (
+                <span key={t} className="text-[10px] font-medium" style={{ color: badge.text }}>
+                  {t}: {TEMP_LEGEND[t]}
+                </span>
               );
             })}
           </div>
@@ -240,7 +304,7 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
       </div>
 
       {/* Fixed save button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-card/95 backdrop-blur-md border-t border-border">
+      <div className="flex-shrink-0 p-4 bg-card/95 backdrop-blur-md border-t border-border">
         <button
           onClick={save}
           disabled={saving || !name.trim() || selectedItems.length === 0}
