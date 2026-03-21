@@ -1,0 +1,26 @@
+{
+  "name": "Dark Autumn",
+  "short_name": "Dark Autumn",
+  "display": "standalone",
+  "background_color": "#141008",
+  "theme_color": "#B08030",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon_180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
