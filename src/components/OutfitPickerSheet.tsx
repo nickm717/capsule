@@ -1,11 +1,21 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { occasions, temperatureBadges, type Outfit } from "@/data/darkautumn";
+import { occasionDefs, temperatureBadges } from "@/data/darkautumn";
+import type { OutfitPiece } from "@/data/darkautumn";
+
+interface PickerOutfit {
+  id: string;
+  name: string;
+  temp: string;
+  pieces: OutfitPiece[];
+  notes: string;
+  occasion_id?: string;
+}
 
 interface OutfitPickerSheetProps {
   open: boolean;
   dayLabel: string;
   currentOutfitId?: string;
-  allOutfits: Outfit[];
+  allOutfits: PickerOutfit[];
   onSelect: (outfitId: string) => void;
   onClose: () => void;
 }
@@ -25,7 +35,6 @@ const OutfitPickerSheet = ({
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ startY: 0, currentY: 0, dragging: false });
 
-  // Reset search when opening
   useEffect(() => {
     if (open) {
       setSearch("");
@@ -43,7 +52,6 @@ const OutfitPickerSheet = ({
     }, 280);
   }, [onClose]);
 
-  // Swipe-to-dismiss
   const onTouchStart = (e: React.TouchEvent) => {
     dragRef.current.startY = e.touches[0].clientY;
     dragRef.current.dragging = true;
@@ -75,7 +83,7 @@ const OutfitPickerSheet = ({
   const filtered = allOutfits.filter((o) => {
     const matchesSearch = o.name.toLowerCase().includes(search.toLowerCase());
     const matchesTemp = !tempFilter || o.temp === tempFilter;
-    const matchesOccasion = !occasionFilter || occasions.find((oc) => oc.id === occasionFilter)?.outfits.some((oo) => oo.id === o.id);
+    const matchesOccasion = !occasionFilter || o.occasion_id === occasionFilter;
     return matchesSearch && matchesTemp && matchesOccasion;
   });
 
@@ -83,7 +91,6 @@ const OutfitPickerSheet = ({
 
   return (
     <div className="fixed inset-0 z-[100]">
-      {/* Overlay */}
       <div
         className={`absolute inset-0 bg-black/60 transition-opacity duration-280 ${
           closing ? "opacity-0" : "opacity-100"
@@ -92,7 +99,6 @@ const OutfitPickerSheet = ({
         onClick={dismiss}
       />
 
-      {/* Sheet */}
       <div
         ref={sheetRef}
         className={`absolute bottom-0 left-0 right-0 bg-card rounded-t-2xl border-t border-border flex flex-col ${
@@ -100,21 +106,18 @@ const OutfitPickerSheet = ({
         }`}
         style={{ height: "85vh", willChange: "transform" }}
       >
-        {/* Fixed header: drag handle + title + search */}
         <div
           className="flex-shrink-0 px-4 pt-3 pb-3"
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          {/* Drag handle */}
           <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto mb-4" />
 
           <h3 className="text-lg font-semibold text-foreground mb-3">
             Pick an outfit — <span className="text-gold">{dayLabel}</span>
           </h3>
 
-          {/* Search input */}
           <div className="relative">
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
@@ -141,7 +144,6 @@ const OutfitPickerSheet = ({
             />
           </div>
 
-          {/* Temperature filter pills */}
           <div className="flex gap-1.5 mt-3 flex-wrap">
             {allTemps.map((temp) => {
               const badge = temperatureBadges[temp];
@@ -165,9 +167,8 @@ const OutfitPickerSheet = ({
             })}
           </div>
 
-          {/* Occasion filter pills */}
           <div className="flex gap-1.5 mt-2 overflow-x-auto no-scrollbar">
-            {occasions.map((oc) => {
+            {occasionDefs.map((oc) => {
               const shortLabels: Record<string, string> = {
                 casual: "Casual",
                 work: "Work",
@@ -192,7 +193,6 @@ const OutfitPickerSheet = ({
           </div>
         </div>
 
-        {/* Scrollable outfit list */}
         <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-8 space-y-1.5">
           {filtered.length === 0 ? (
             <p className="text-muted-foreground text-sm text-center py-8">
@@ -201,9 +201,7 @@ const OutfitPickerSheet = ({
           ) : (
             filtered.map((o) => {
               const tempBadge = temperatureBadges[o.temp];
-              const occasion = occasions.find((oc) =>
-                oc.outfits.some((oo) => oo.id === o.id)
-              );
+              const occasion = occasionDefs.find((oc) => oc.id === o.occasion_id);
               const isSelected = currentOutfitId === o.id;
 
               return (
@@ -216,7 +214,6 @@ const OutfitPickerSheet = ({
                       : "hover:bg-muted border border-transparent"
                   }`}
                 >
-                  {/* Color swatches — fixed width for alignment */}
                   <div className="flex gap-1 flex-shrink-0 w-[72px]">
                     {o.pieces.slice(0, 4).map((p, pi) => (
                       <span
@@ -227,7 +224,6 @@ const OutfitPickerSheet = ({
                     ))}
                   </div>
 
-                  {/* Name + pieces */}
                   <div className="flex-1 min-w-0">
                     <span className="text-sm text-foreground font-medium truncate block">
                       {o.name}
@@ -237,7 +233,6 @@ const OutfitPickerSheet = ({
                     </span>
                   </div>
 
-                  {/* Temp badge */}
                   {tempBadge && (
                     <span
                       className="text-[10px] font-medium px-1.5 py-0.5 rounded-full border flex-shrink-0"
@@ -251,7 +246,6 @@ const OutfitPickerSheet = ({
                     </span>
                   )}
 
-                  {/* Occasion icon */}
                   {occasion && (
                     <span className="text-[12px] flex-shrink-0">
                       {occasion.icon}

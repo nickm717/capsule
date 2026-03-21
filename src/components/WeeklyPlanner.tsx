@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { occasions, temperatureBadges, type Outfit } from "@/data/darkautumn";
+import { temperatureBadges } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
+import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
 import OutfitPickerSheet from "./OutfitPickerSheet";
 
 const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -24,14 +25,13 @@ function formatRange(dates: Date[]): string {
 }
 
 const WeeklyPlanner = () => {
-  const allOutfits = occasions.flatMap((o) => o.outfits);
+  const { outfits } = useOutfits();
   const [plan, setPlan] = useState<Record<string, string>>({});
   const [weekOffset, setWeekOffset] = useState(0);
   const [sheetDay, setSheetDay] = useState<{ key: string; label: string } | null>(null);
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
 
-  // Load all assignments from Supabase on mount
   const loadAssignments = useCallback(async () => {
     const { data } = await supabase
       .from("planner_assignments")
@@ -67,7 +67,19 @@ const WeeklyPlanner = () => {
       .eq("day_key", dayKey);
   };
 
-  const getOutfit = (id: string): Outfit | undefined => allOutfits.find((o) => o.id === id);
+  const getOutfit = (id: string): DbOutfit | undefined => outfits.find((o) => o.id === id);
+
+  // Convert DbOutfit[] to the Outfit shape expected by OutfitPickerSheet
+  const allOutfitsForPicker = useMemo(() =>
+    outfits.map((o) => ({
+      id: o.id,
+      name: o.name,
+      temp: o.temp,
+      pieces: o.pieces,
+      notes: o.notes,
+      occasion_id: o.occasion_id,
+    })),
+  [outfits]);
 
   return (
     <div className="px-4 pb-6 space-y-4">
@@ -178,7 +190,7 @@ const WeeklyPlanner = () => {
         open={!!sheetDay}
         dayLabel={sheetDay?.label ?? ""}
         currentOutfitId={sheetDay ? plan[sheetDay.key] : undefined}
-        allOutfits={allOutfits}
+        allOutfits={allOutfitsForPicker}
         onSelect={(id) => sheetDay && assignOutfit(sheetDay.key, id)}
         onClose={() => setSheetDay(null)}
       />
