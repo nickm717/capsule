@@ -41,6 +41,7 @@ interface ItemFormPageProps {
 
 const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps) => {
   const isEdit = !!editId;
+  useSwipeBack(useCallback(() => onCancel(), [onCancel]));
 
   const [form, setForm] = useState<ItemFormData>({
     name: "",

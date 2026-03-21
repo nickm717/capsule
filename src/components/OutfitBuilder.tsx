@@ -38,6 +38,7 @@ interface Props {
 }
 
 const OutfitBuilder = ({ onBack, onSaved }: Props) => {
+  useSwipeBack(useCallback(() => onBack(), [onBack]));
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [name, setName] = useState("");
   const [notes, setNotes] = useState("");
