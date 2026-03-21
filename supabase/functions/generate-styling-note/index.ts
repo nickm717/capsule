@@ -66,9 +66,11 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const note = data.choices?.[0]?.message?.content?.trim() ?? "";
+    const raw = data.choices?.[0]?.message?.content?.trim() ?? "{}";
+    let parsed: { name?: string; note?: string } = {};
+    try { parsed = JSON.parse(raw); } catch { parsed = { note: raw }; }
 
-    return new Response(JSON.stringify({ note }), {
+    return new Response(JSON.stringify({ name: parsed.name ?? "", note: parsed.note ?? "" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
