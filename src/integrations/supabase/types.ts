@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      custom_items: {
+        Row: {
+          brand: string | null
+          category: string
+          color: string
+          created_at: string
+          hex: string
+          id: string
+          name: string
+          notes: string | null
+          owned: boolean
+        }
+        Insert: {
+          brand?: string | null
+          category?: string
+          color?: string
+          created_at?: string
+          hex?: string
+          id?: string
+          name: string
+          notes?: string | null
+          owned?: boolean
+        }
+        Update: {
+          brand?: string | null
+          category?: string
+          color?: string
+          created_at?: string
+          hex?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          owned?: boolean
+        }
+        Relationships: []
+      }
       custom_outfits: {
         Row: {
           created_at: string
