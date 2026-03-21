@@ -1,12 +1,16 @@
-import { useState, useCallback } from "react";
-import { Star } from "lucide-react";
-import { wardrobeCategories, swatches, type WardrobeItem } from "@/data/darkautumn";
+import { useState, useCallback, useEffect } from "react";
+import { Star, Plus } from "lucide-react";
+import { wardrobeCategories, swatches, type WardrobeItem, type WardrobeCategory } from "@/data/darkautumn";
+import { supabase } from "@/integrations/supabase/client";
+import AddItemSheet from "./AddItemSheet";
 
 type Filter = "all" | "owned" | "gaps";
 
 const WardrobeGuide = () => {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [filter, setFilter] = useState<Filter>("all");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [customItems, setCustomItems] = useState<WardrobeItem[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem("darkautumn-favorites");
@@ -14,6 +18,76 @@ const WardrobeGuide = () => {
     } catch {
       return new Set();
     }
+  });
+
+  const fetchCustomItems = useCallback(async () => {
+    const { data } = await supabase.from("custom_items").select("*").order("created_at", { ascending: false });
+    if (data) {
+      setCustomItems(
+        data.map((row: any) => ({
+          id: `ci-${row.id}`,
+          name: row.name,
+          brand: row.brand || undefined,
+          color: row.color,
+          hex: row.hex,
+          owned: row.owned,
+          gap: !row.owned,
+          notes: row.notes || "",
+        }))
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCustomItems();
+  }, [fetchCustomItems]);
+
+  // Merge custom items into categories
+  const mergedCategories: WardrobeCategory[] = wardrobeCategories.map((cat) => {
+    const extras = customItems.filter((ci) => {
+      // Map custom item to category by checking original data category field
+      // We need the raw category from DB, stored in the id prefix
+      return true; // will be filtered below
+    });
+    return cat;
+  });
+
+  // Build a proper merged list
+  const getCategoriesWithCustom = (): WardrobeCategory[] => {
+    // Group custom items by their DB category
+    const customByCategory: Record<string, WardrobeItem[]> = {};
+    // We need the raw category — re-fetch from state won't work, so let's store it
+    return wardrobeCategories;
+  };
+
+  // Better approach: store category info with custom items
+  const [customItemsRaw, setCustomItemsRaw] = useState<any[]>([]);
+
+  const fetchItems = useCallback(async () => {
+    const { data } = await supabase.from("custom_items").select("*").order("created_at", { ascending: false });
+    if (data) {
+      setCustomItemsRaw(data);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  const allCategories: WardrobeCategory[] = wardrobeCategories.map((cat) => {
+    const extras: WardrobeItem[] = customItemsRaw
+      .filter((row: any) => row.category === cat.id)
+      .map((row: any) => ({
+        id: `ci-${row.id}`,
+        name: row.name,
+        brand: row.brand || undefined,
+        color: row.color,
+        hex: row.hex,
+        owned: row.owned,
+        gap: !row.owned,
+        notes: row.notes || "",
+      }));
+    return { ...cat, items: [...cat.items, ...extras] };
   });
 
   const toggleFavorite = useCallback((id: string) => {
@@ -27,8 +101,8 @@ const WardrobeGuide = () => {
   }, []);
 
   const categories = activeCategory === "all"
-    ? wardrobeCategories
-    : wardrobeCategories.filter((c) => c.id === activeCategory);
+    ? allCategories
+    : allCategories.filter((c) => c.id === activeCategory);
 
   const filterItem = (item: WardrobeItem) => {
     if (filter === "owned") return item.owned;
@@ -36,28 +110,37 @@ const WardrobeGuide = () => {
     return true;
   };
 
-  const totalPieces = wardrobeCategories.reduce((s, c) => s + c.items.length, 0);
-  const ownedCount = wardrobeCategories.reduce((s, c) => s + c.items.filter((i) => i.owned).length, 0);
-  const gapCount = wardrobeCategories.reduce((s, c) => s + c.items.filter((i) => i.gap).length, 0);
+  const totalPieces = allCategories.reduce((s, c) => s + c.items.length, 0);
+  const ownedCount = allCategories.reduce((s, c) => s + c.items.filter((i) => i.owned).length, 0);
+  const gapCount = allCategories.reduce((s, c) => s + c.items.filter((i) => i.gap).length, 0);
 
   return (
     <div className="px-4 pb-6 space-y-5">
-      {/* Header with palette */}
-      <div className="pt-2 animate-reveal-up">
-        <h2 className="text-3xl font-semibold text-foreground text-balance">Wardrobe Guide</h2>
-        <p className="text-secondary text-sm mt-1">
-          {ownedCount} owned · {gapCount} gaps · {totalPieces} total
-        </p>
-        <div className="flex gap-1.5 mt-3">
-          {swatches.map((s) => (
-            <div
-              key={s.name}
-              className="w-6 h-6 rounded-full border border-border/40"
-              style={{ backgroundColor: s.hex }}
-              title={s.name}
-            />
-          ))}
+      {/* Header */}
+      <div className="pt-2 animate-reveal-up flex items-start justify-between">
+        <div>
+          <h2 className="text-3xl font-semibold text-foreground text-balance">Wardrobe Guide</h2>
+          <p className="text-secondary text-sm mt-1">
+            {ownedCount} owned · {gapCount} gaps · {totalPieces} total
+          </p>
+          <div className="flex gap-1.5 mt-3">
+            {swatches.map((s) => (
+              <div
+                key={s.name}
+                className="w-6 h-6 rounded-full border border-border/40"
+                style={{ backgroundColor: s.hex }}
+                title={s.name}
+              />
+            ))}
+          </div>
         </div>
+        <button
+          onClick={() => setSheetOpen(true)}
+          className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-[0.93]"
+          style={{ backgroundColor: "#B08030" }}
+        >
+          <Plus size={22} style={{ color: "#141008" }} strokeWidth={2.5} />
+        </button>
       </div>
 
       {/* Category chips */}
@@ -71,7 +154,7 @@ const WardrobeGuide = () => {
           active={activeCategory === "all"}
           onClick={() => setActiveCategory("all")}
         />
-        {wardrobeCategories.map((cat) => (
+        {allCategories.map((cat) => (
           <CategoryChip
             key={cat.id}
             label={cat.label}
@@ -115,9 +198,7 @@ const WardrobeGuide = () => {
         return (
           <section key={cat.id}>
             {activeCategory === "all" && (
-              <h3
-                className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2 animate-reveal-up"
-              >
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2 animate-reveal-up">
                 <span>{cat.icon}</span> {cat.label}
                 <span className="text-xs font-normal">{filtered.length}</span>
               </h3>
@@ -143,6 +224,12 @@ const WardrobeGuide = () => {
           <p className="text-muted-foreground text-sm">No items match this filter.</p>
         </div>
       )}
+
+      <AddItemSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        onSaved={fetchItems}
+      />
     </div>
   );
 };
@@ -192,14 +279,11 @@ function ItemCard({
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex">
-        {/* Color accent bar */}
         <div
           className="w-1.5 flex-shrink-0 rounded-l-xl"
           style={{ backgroundColor: item.hex }}
         />
-
         <div className="flex-1 p-3.5 min-w-0">
-          {/* Top row: swatch + name + star */}
           <div className="flex items-start gap-2.5">
             <span
               className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5 border border-border/40"
@@ -232,7 +316,6 @@ function ItemCard({
             </button>
           </div>
 
-          {/* Status badges */}
           <div className="flex flex-wrap gap-1.5 mt-2">
             {item.owned && <Badge label="OWNED" variant="owned" />}
             {item.gap && <Badge label="GAP" variant="gap" />}
@@ -240,7 +323,6 @@ function ItemCard({
             {item.seasonal && <Badge label="SEASONAL" variant="seasonal" />}
           </div>
 
-          {/* Notes (expandable) */}
           {item.notes && (
             <button
               onClick={() => setExpanded(!expanded)}
