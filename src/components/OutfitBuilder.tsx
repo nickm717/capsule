@@ -139,15 +139,6 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
           <ChevronLeft size={24} />
         </button>
         <h2 className="text-lg font-semibold text-foreground font-serif flex-1">New Outfit</h2>
-        <button
-          onClick={generateAI}
-          disabled={aiLoading || selectedItems.length === 0}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-[0.96] disabled:opacity-40 disabled:pointer-events-none"
-          style={{ borderColor: "#B08030", color: "#B08030" }}
-        >
-          <Sparkles size={13} className={aiLoading ? "animate-spin" : ""} />
-          {aiLoading ? "Generating…" : "AI Generate"}
-        </button>
       </div>
 
       {/* Scrollable content */}
