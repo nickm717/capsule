@@ -152,7 +152,6 @@ const OutfitCombinations = ({ onBuilderOpen }: {onBuilderOpen?: (open: boolean) 
                 </div>
               </div>
             </div>
-            </div>
             {outfit.notes && <p className="text-muted-foreground text-sm mb-3">{outfit.notes}</p>}
             <div className="flex flex-wrap gap-1.5">
               {outfit.pieces.map((piece, pi) =>
