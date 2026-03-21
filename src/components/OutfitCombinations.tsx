@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
-import { Plus } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Plus, MoreHorizontal, CalendarPlus } from "lucide-react";
 import { occasions, temperatureBadges } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import OutfitBuilder from "./OutfitBuilder";
+import AddToDaySheet from "./AddToDaySheet";
 
 interface CustomOutfit {
   id: string;
