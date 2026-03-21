@@ -46,6 +46,8 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<Tab>("wardrobe");
   const [hideNav, setHideNav] = useState(false);
 
+  const handleWardrobeFormOpen = (open: boolean) => setHideNav(open);
+
   return (
     <div className="min-h-screen flex flex-col max-w-lg mx-auto">
 
