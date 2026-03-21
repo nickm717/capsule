@@ -80,6 +80,27 @@ export type Database = {
         }
         Relationships: []
       }
+      planner_assignments: {
+        Row: {
+          created_at: string
+          day_key: string
+          id: string
+          outfit_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_key: string
+          id?: string
+          outfit_id: string
+        }
+        Update: {
+          created_at?: string
+          day_key?: string
+          id?: string
+          outfit_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
