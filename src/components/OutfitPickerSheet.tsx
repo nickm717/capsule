@@ -207,8 +207,8 @@ const OutfitPickerSheet = ({
                       : "hover:bg-muted border border-transparent"
                   }`}
                 >
-                  {/* Color swatches */}
-                  <div className="flex gap-1 flex-shrink-0">
+                  {/* Color swatches — fixed width for alignment */}
+                  <div className="flex gap-1 flex-shrink-0 w-[72px]">
                     {o.pieces.slice(0, 4).map((p, pi) => (
                       <span
                         key={pi}
