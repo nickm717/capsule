@@ -30,6 +30,7 @@ const OutfitPickerSheet = ({
     if (open) {
       setSearch("");
       setTempFilter(null);
+      setOccasionFilter(null);
       setClosing(false);
     }
   }, [open]);
