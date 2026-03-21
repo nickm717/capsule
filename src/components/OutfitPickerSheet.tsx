@@ -137,6 +137,31 @@ const OutfitPickerSheet = ({
               className="w-full bg-muted border border-border rounded-lg py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50"
             />
           </div>
+
+          {/* Temperature filter pills */}
+          <div className="flex gap-1.5 mt-3 flex-wrap">
+            {allTemps.map((temp) => {
+              const badge = temperatureBadges[temp];
+              const active = tempFilter === temp;
+              return (
+                <button
+                  key={temp}
+                  onClick={() => setTempFilter(active ? null : temp)}
+                  className={`text-[11px] font-medium px-2.5 py-1 rounded-full border transition-all active:scale-[0.95] ${
+                    active ? "ring-1 ring-offset-1 ring-offset-card" : "opacity-70"
+                  }`}
+                  style={{
+                    backgroundColor: badge?.bg,
+                    borderColor: badge?.border,
+                    color: badge?.text,
+                    ...(active ? { ringColor: badge?.border } : {}),
+                  }}
+                >
+                  {temp}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Scrollable outfit list */}
