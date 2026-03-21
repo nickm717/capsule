@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
-import { Plus } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Plus, MoreHorizontal, CalendarPlus } from "lucide-react";
 import { occasions, temperatureBadges } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import OutfitBuilder from "./OutfitBuilder";
+import AddToDaySheet from "./AddToDaySheet";
 
 interface CustomOutfit {
   id: string;
@@ -17,6 +18,9 @@ const OutfitCombinations = ({ onBuilderOpen }: {onBuilderOpen?: (open: boolean) 
   const [activeOccasion, setActiveOccasion] = useState(occasions[0].id);
   const [showBuilder, setShowBuilder] = useState(false);
   const [customOutfits, setCustomOutfits] = useState<CustomOutfit[]>([]);
+  const [menuOutfitId, setMenuOutfitId] = useState<string | null>(null);
+  const [addToDayOutfit, setAddToDayOutfit] = useState<{ id: string; name: string } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const fetchCustom = useCallback(async () => {
     const { data } = await supabase.
@@ -39,6 +43,18 @@ const OutfitCombinations = ({ onBuilderOpen }: {onBuilderOpen?: (open: boolean) 
     setShowBuilder(false);
     onBuilderOpen?.(false);
   };
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOutfitId) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOutfitId(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOutfitId]);
 
   if (showBuilder) {
     return (
@@ -103,18 +119,38 @@ const OutfitCombinations = ({ onBuilderOpen }: {onBuilderOpen?: (open: boolean) 
             style={{ animationDelay: `${i * 50}ms` }}>
             
             <div className="flex items-start justify-between mb-2.5">
-              <div>
+              <div className="flex-1 min-w-0">
                 <h3 className="text-foreground font-medium text-base">{outfit.name}</h3>
                 <span className="text-[10px] font-medium uppercase tracking-wider text-primary">Custom</span>
               </div>
-              {tempBadge &&
-              <span
-                className="text-[11px] font-medium px-2 py-0.5 rounded-full border"
-                style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}>
-                
-                  {outfit.temp} · {tempBadge.range}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {tempBadge &&
+                <span
+                  className="text-[11px] font-medium px-2 py-0.5 rounded-full border"
+                  style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}>
+                    {outfit.temp} · {tempBadge.range}
                 </span>
-              }
+                }
+                <div className="relative">
+                  <button
+                    onClick={() => setMenuOutfitId(menuOutfitId === outfit.id ? null : outfit.id)}
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                  {menuOutfitId === outfit.id && (
+                    <div ref={menuRef} className="absolute right-0 top-8 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] animate-reveal-up">
+                      <button
+                        onClick={() => { setMenuOutfitId(null); setAddToDayOutfit({ id: outfit.id, name: outfit.name }); }}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.98]"
+                      >
+                        <CalendarPlus className="w-3.5 h-3.5 text-muted-foreground" />
+                        Add to day
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
             {outfit.notes && <p className="text-muted-foreground text-sm mb-3">{outfit.notes}</p>}
             <div className="flex flex-wrap gap-1.5">
@@ -141,20 +177,40 @@ const OutfitCombinations = ({ onBuilderOpen }: {onBuilderOpen?: (open: boolean) 
             style={{ animationDelay: `${(i + customForOccasion.length) * 50}ms` }}>
             
             <div className="flex items-start justify-between mb-2.5">
-              <div>
+              <div className="flex-1 min-w-0">
                 <h3 className="text-foreground font-medium text-base">{outfit.name}</h3>
                 {outfit.isGap &&
                 <span className="text-[10px] font-medium uppercase tracking-wider text-gold">Gap Outfit</span>
                 }
               </div>
-              {tempBadge &&
-              <span
-                className="text-[11px] font-medium px-2 py-0.5 rounded-full border"
-                style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}>
-                
-                  {outfit.temp} · {tempBadge.range}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {tempBadge &&
+                <span
+                  className="text-[11px] font-medium px-2 py-0.5 rounded-full border"
+                  style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}>
+                    {outfit.temp} · {tempBadge.range}
                 </span>
-              }
+                }
+                <div className="relative">
+                  <button
+                    onClick={() => setMenuOutfitId(menuOutfitId === outfit.id ? null : outfit.id)}
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                  {menuOutfitId === outfit.id && (
+                    <div ref={menuRef} className="absolute right-0 top-8 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] animate-reveal-up">
+                      <button
+                        onClick={() => { setMenuOutfitId(null); setAddToDayOutfit({ id: outfit.id, name: outfit.name }); }}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.98]"
+                      >
+                        <CalendarPlus className="w-3.5 h-3.5 text-muted-foreground" />
+                        Add to day
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
             <p className="text-muted-foreground text-sm mb-3">{outfit.notes}</p>
             {outfit.upgrade && <p className="text-gold text-xs mb-3 italic">{outfit.upgrade}</p>}
@@ -169,6 +225,12 @@ const OutfitCombinations = ({ onBuilderOpen }: {onBuilderOpen?: (open: boolean) 
           </div>);
 
       })}
+
+      <AddToDaySheet
+        open={!!addToDayOutfit}
+        outfit={addToDayOutfit}
+        onClose={() => setAddToDayOutfit(null)}
+      />
     </div>);
 
 };
