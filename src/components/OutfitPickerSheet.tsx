@@ -75,7 +75,8 @@ const OutfitPickerSheet = ({
   const filtered = allOutfits.filter((o) => {
     const matchesSearch = o.name.toLowerCase().includes(search.toLowerCase());
     const matchesTemp = !tempFilter || o.temp === tempFilter;
-    return matchesSearch && matchesTemp;
+    const matchesOccasion = !occasionFilter || occasions.find((oc) => oc.id === occasionFilter)?.outfits.some((oo) => oo.id === o.id);
+    return matchesSearch && matchesTemp && matchesOccasion;
   });
 
   if (!open && !closing) return null;
