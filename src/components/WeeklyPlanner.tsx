@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
 import { occasions, temperatureBadges, type Outfit } from "@/data/darkautumn";
+import OutfitPickerSheet from "./OutfitPickerSheet";
 
 const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 function getWeekDates(offset: number): Date[] {
   const now = new Date();
-  const day = now.getDay(); // 0=Sun
+  const day = now.getDay();
   const diffToMonday = day === 0 ? -6 : 1 - day;
   const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday + offset * 7);
   return Array.from({ length: 7 }, (_, i) => {
@@ -16,24 +17,22 @@ function getWeekDates(offset: number): Date[] {
 }
 
 function formatRange(dates: Date[]): string {
-  const mon = dates[0];
-  const sun = dates[6];
   const fmt = (d: Date) =>
     d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  return `${fmt(mon)} – ${fmt(sun)}`;
+  return `${fmt(dates[0])} – ${fmt(dates[6])}`;
 }
 
 const WeeklyPlanner = () => {
   const allOutfits = occasions.flatMap((o) => o.outfits);
   const [plan, setPlan] = useState<Record<string, string>>({});
-  const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [weekOffset, setWeekOffset] = useState(0);
+  const [sheetDay, setSheetDay] = useState<{ key: string; label: string } | null>(null);
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
 
   const assignOutfit = (dayKey: string, outfitId: string) => {
     setPlan((prev) => ({ ...prev, [dayKey]: outfitId }));
-    setExpandedDay(null);
+    setSheetDay(null);
   };
 
   const clearDay = (dayKey: string) => {
@@ -84,11 +83,11 @@ const WeeklyPlanner = () => {
       </div>
 
       {weekDates.map((date, i) => {
-        const dayKey = date.toISOString().slice(0, 10); // YYYY-MM-DD
+        const dayKey = date.toISOString().slice(0, 10);
         const outfit = plan[dayKey] ? getOutfit(plan[dayKey]) : undefined;
-        const isExpanded = expandedDay === dayKey;
         const tempBadge = outfit ? temperatureBadges[outfit.temp] : undefined;
         const dayNum = date.getDate();
+        const dayLabel = `${DAY_LABELS[i].slice(0, 3)} ${dayNum}`;
 
         return (
           <div
@@ -96,9 +95,14 @@ const WeeklyPlanner = () => {
             className="bg-card rounded-xl border border-border animate-reveal-up overflow-hidden"
             style={{ animationDelay: `${(i + 1) * 50 + 30}ms` }}
           >
-            {/* Day header */}
             <button
-              onClick={() => setExpandedDay(isExpanded ? null : dayKey)}
+              onClick={() => {
+                if (outfit) {
+                  setSheetDay({ key: dayKey, label: dayLabel });
+                } else {
+                  setSheetDay({ key: dayKey, label: dayLabel });
+                }
+              }}
               className="w-full flex items-center gap-3 p-4 text-left active:scale-[0.99] transition-transform"
             >
               <span className="text-gold font-semibold text-sm uppercase tracking-wider w-14 flex-shrink-0">
@@ -143,34 +147,19 @@ const WeeklyPlanner = () => {
                 </button>
               )}
             </button>
-
-            {/* Expanded outfit picker */}
-            {isExpanded && (
-              <div className="border-t border-border px-4 py-3 max-h-64 overflow-y-auto space-y-1.5">
-                {allOutfits.map((o) => (
-                  <button
-                    key={o.id}
-                    onClick={() => assignOutfit(dayKey, o.id)}
-                    className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors active:scale-[0.98] ${
-                      plan[dayKey] === o.id ? "bg-primary/10 text-foreground" : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <div className="flex gap-1">
-                      {o.pieces.slice(0, 3).map((p, pi) => (
-                        <span key={pi} className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.hex }} />
-                      ))}
-                    </div>
-                    <span className="text-sm truncate">{o.name}</span>
-                    <span className="text-[10px] text-muted-foreground ml-auto flex-shrink-0">
-                      {occasions.find((oc) => oc.outfits.some((oo) => oo.id === o.id))?.icon}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         );
       })}
+
+      {/* Bottom sheet picker */}
+      <OutfitPickerSheet
+        open={!!sheetDay}
+        dayLabel={sheetDay?.label ?? ""}
+        currentOutfitId={sheetDay ? plan[sheetDay.key] : undefined}
+        allOutfits={allOutfits}
+        onSelect={(id) => sheetDay && assignOutfit(sheetDay.key, id)}
+        onClose={() => setSheetDay(null)}
+      />
     </div>
   );
 };
