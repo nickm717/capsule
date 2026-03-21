@@ -199,10 +199,15 @@ const OutfitPickerSheet = ({
                     ))}
                   </div>
 
-                  {/* Name */}
-                  <span className="text-sm text-foreground font-medium truncate flex-1">
-                    {o.name}
-                  </span>
+                  {/* Name + pieces */}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm text-foreground font-medium truncate block">
+                      {o.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground block mt-0.5">
+                      {o.pieces.map((p) => p.name).join(" · ")}
+                    </span>
+                  </div>
 
                   {/* Temp badge */}
                   {tempBadge && (
