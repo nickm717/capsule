@@ -13,7 +13,7 @@ interface CustomOutfit {
   occasion_id: string;
 }
 
-const OutfitCombinations = () => {
+const OutfitCombinations = ({ onBuilderOpen }: { onBuilderOpen?: (open: boolean) => void }) => {
   const [activeOccasion, setActiveOccasion] = useState(occasions[0].id);
   const [showBuilder, setShowBuilder] = useState(false);
   const [customOutfits, setCustomOutfits] = useState<CustomOutfit[]>([]);
@@ -30,12 +30,22 @@ const OutfitCombinations = () => {
     fetchCustom();
   }, [fetchCustom]);
 
+  const openBuilder = () => {
+    setShowBuilder(true);
+    onBuilderOpen?.(true);
+  };
+
+  const closeBuilder = () => {
+    setShowBuilder(false);
+    onBuilderOpen?.(false);
+  };
+
   if (showBuilder) {
     return (
       <OutfitBuilder
-        onBack={() => setShowBuilder(false)}
+        onBack={closeBuilder}
         onSaved={() => {
-          setShowBuilder(false);
+          closeBuilder();
           fetchCustom();
         }}
       />
