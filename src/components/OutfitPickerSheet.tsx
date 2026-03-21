@@ -65,9 +65,16 @@ const OutfitPickerSheet = ({
     sheetRef.current.style.transform = "";
   };
 
-  const filtered = allOutfits.filter((o) =>
-    o.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const allTemps = useMemo(() => {
+    const temps = new Set(allOutfits.map((o) => o.temp));
+    return Array.from(temps);
+  }, [allOutfits]);
+
+  const filtered = allOutfits.filter((o) => {
+    const matchesSearch = o.name.toLowerCase().includes(search.toLowerCase());
+    const matchesTemp = !tempFilter || o.temp === tempFilter;
+    return matchesSearch && matchesTemp;
+  });
 
   if (!open && !closing) return null;
 
