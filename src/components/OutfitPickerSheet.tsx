@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { occasions, temperatureBadges, type Outfit } from "@/data/darkautumn";
 
 interface OutfitPickerSheetProps {
