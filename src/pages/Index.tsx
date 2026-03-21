@@ -49,7 +49,7 @@ const Index = () => {
   const handleWardrobeFormOpen = (open: boolean) => setHideNav(open);
 
   return (
-    <div className="min-h-screen flex flex-col max-w-lg mx-auto">
+    <div className="min-h-screen flex flex-col max-w-lg mx-auto" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
 
       {/* Content */}
       <main className="flex-1 overflow-y-auto pb-24 pt-4">
