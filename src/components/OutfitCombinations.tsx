@@ -57,10 +57,11 @@ const OutfitCombinations = () => {
         </div>
         <button
           onClick={() => setShowBuilder(true)}
-          className="mt-1 p-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 active:scale-[0.95] transition-all"
+          className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all shadow-md"
+          style={{ backgroundColor: "#B08030" }}
           aria-label="Add outfit"
         >
-          <Plus size={20} />
+          <Plus size={22} color="#141008" strokeWidth={2.5} />
         </button>
       </div>
 
