@@ -229,6 +229,14 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
       )}
 
       <AddItemSheet open={sheetOpen} onOpenChange={setSheetOpen} onOpenForm={openForm} />
+      <ItemDetailSheet
+        open={!!detailItem}
+        item={detailItem?.item ?? null}
+        brand={detailItem?.row?.brand || undefined}
+        category={detailItem?.row?.category || undefined}
+        onClose={() => setDetailItem(null)}
+        onEdit={() => detailItem?.row && handleEdit(detailItem.row)}
+      />
       <DeleteItemSheet
         open={!!deleteTarget}
         itemName={deleteTarget?.name || ""}
