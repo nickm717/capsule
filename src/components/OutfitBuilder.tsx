@@ -148,7 +148,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
       return;
     }
     if (selectedItems.length === 0) {
-      toast({ title: "Select at least one piece", variant: "destructive" });
+      toast.error("Select at least one piece");
       return;
     }
     setSaving(true);
