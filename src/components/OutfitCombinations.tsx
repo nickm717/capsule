@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Plus, MoreHorizontal, Pencil, Trash2, CalendarPlus, Loader2 } from "lucide-react";
 import { occasionDefs, temperatureBadges } from "@/data/darkautumn";
 import type { OutfitPiece } from "@/data/darkautumn";
@@ -6,7 +6,9 @@ import OutfitBuilder from "./OutfitBuilder";
 import AddToDaySheet from "./AddToDaySheet";
 import DeleteOutfitSheet from "./DeleteOutfitSheet";
 import OutfitDetailSheet from "./OutfitDetailSheet";
+import AddOutfitSheet, { type AiCriteria } from "./AddOutfitSheet";
 import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
+import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -23,8 +25,22 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
   const [deleteOutfit, setDeleteOutfit] = useState<{ id: string; name: string } | null>(null);
   const [detailOutfit, setDetailOutfit] = useState<DbOutfit | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [addSheetOpen, setAddSheetOpen] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [builderPreset, setBuilderPreset] = useState<{
+    selectedIds: string[];
+    name: string;
+    notes: string;
+    temp: string;
+    occasionId: string;
+  } | null>(null);
 
   const { outfits, loading, error, refetch } = useOutfits();
+  const { categories: wardrobeCategories } = useWardrobeItems();
+  const allWardrobeItems = useMemo(
+    () => wardrobeCategories.flatMap((c) => c.items),
+    [wardrobeCategories]
+  );
 
   const openBuilder = (outfit?: DbOutfit) => {
     setEditOutfit(outfit ?? null);
@@ -35,6 +51,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
   const closeBuilder = () => {
     setShowBuilder(false);
     setEditOutfit(null);
+    setBuilderPreset(null);
     onBuilderOpen?.(false);
   };
 
@@ -50,6 +67,79 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
       toast.success("Outfit deleted");
       setDeleteOutfit(null);
       refetch();
+    }
+  };
+
+  const handleAiGenerate = async (criteria: AiCriteria) => {
+    setAiGenerating(true);
+    try {
+      // Prepare wardrobe data
+      const wardrobeData = allWardrobeItems.map((i) => ({
+        id: i.id,
+        name: i.name,
+        brand: i.brand || "",
+        color: i.color,
+        hex: i.hex,
+        category: wardrobeCategories.find((c) => c.items.some((ci) => ci.id === i.id))?.id || "",
+        owned: i.owned,
+      }));
+
+      // Prepare existing outfits
+      const existingData = outfits.map((o) => ({
+        name: o.name,
+        pieces: o.pieces as OutfitPiece[],
+      }));
+
+      const occasionLabel = occasionDefs.find((o) => o.id === criteria.occasion)?.label || criteria.occasion;
+
+      const { data, error } = await supabase.functions.invoke("generate-outfit", {
+        body: {
+          wardrobeItems: wardrobeData,
+          existingOutfits: existingData,
+          criteria: {
+            anchorPieceId: criteria.anchorPieceId,
+            occasion: occasionLabel,
+            temperature: criteria.temperature,
+            mustIncludeCategory: criteria.mustIncludeCategory,
+          },
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const pieceIds: string[] = data.piece_ids || [];
+      const validIds = pieceIds.filter((id) => allWardrobeItems.some((i) => i.id === id));
+
+      if (validIds.length === 0) {
+        toast.error("AI couldn't find matching pieces. Try different criteria.");
+        return;
+      }
+
+      // Close the add sheet and open builder with preset
+      setAddSheetOpen(false);
+      setBuilderPreset({
+        selectedIds: validIds,
+        name: data.name || "",
+        notes: data.notes || "",
+        temp: criteria.temperature,
+        occasionId: criteria.occasion,
+      });
+      setShowBuilder(true);
+      onBuilderOpen?.(true);
+      toast.success("Outfit generated — review and save!");
+    } catch (e: any) {
+      console.error("AI generate error:", e);
+      const msg = e?.message || "Failed to generate outfit";
+      if (msg.includes("Rate limit") || msg.includes("429")) {
+        toast.error("Rate limited — please try again shortly.");
+      } else if (msg.includes("402") || msg.includes("Credits")) {
+        toast.error("AI credits exhausted. Please add funds.");
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setAiGenerating(false);
     }
   };
 
@@ -69,6 +159,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
           occasion_id: editOutfit.occasion_id,
           pieces: editOutfit.pieces as any[],
         } : null}
+        preset={builderPreset}
       />
     );
   }
@@ -85,7 +176,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
           </p>
         </div>
         <button
-          onClick={() => openBuilder()}
+          onClick={() => setAddSheetOpen(true)}
           className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all shadow-md"
           style={{ backgroundColor: "#B08030" }}
           aria-label="Add outfit"
@@ -179,6 +270,18 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         outfitName={deleteOutfit?.name ?? ""}
         onConfirm={handleDelete}
         onCancel={() => setDeleteOutfit(null)}
+      />
+
+      <AddOutfitSheet
+        open={addSheetOpen}
+        onClose={() => setAddSheetOpen(false)}
+        onBuildManually={() => {
+          setAddSheetOpen(false);
+          openBuilder();
+        }}
+        onAiGenerate={handleAiGenerate}
+        wardrobeItems={allWardrobeItems}
+        generating={aiGenerating}
       />
     </div>
   );
