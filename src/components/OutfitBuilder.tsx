@@ -60,14 +60,15 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
   }, [editOutfit, allItems]);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [name, setName] = useState(editOutfit?.name ?? "");
-  const [notes, setNotes] = useState(editOutfit?.notes ?? "");
-  const [tempOverride, setTempOverride] = useState<string | null>(editOutfit?.temp ?? null);
-  const [occasionId, setOccasionId] = useState(editOutfit?.occasion_id ?? "casual");
+  const [name, setName] = useState(editOutfit?.name ?? preset?.name ?? "");
+  const [notes, setNotes] = useState(editOutfit?.notes ?? preset?.notes ?? "");
+  const [tempOverride, setTempOverride] = useState<string | null>(editOutfit?.temp ?? preset?.temp ?? null);
+  const [occasionId, setOccasionId] = useState(editOutfit?.occasion_id ?? preset?.occasionId ?? "casual");
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
   const [initialized, setInitialized] = useState(false);
+  const [presetApplied, setPresetApplied] = useState(false);
 
   // Once allItems are loaded and we have an editOutfit, seed selectedIds
   useEffect(() => {
