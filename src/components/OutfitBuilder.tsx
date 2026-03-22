@@ -36,20 +36,45 @@ function suggestTemp(selectedItems: WardrobeItem[], categories: { id: string; it
 interface Props {
   onBack: () => void;
   onSaved: () => void;
+  editOutfit?: { id: string; name: string; notes: string; temp: string; occasion_id: string; pieces: any[] } | null;
 }
 
-const OutfitBuilder = ({ onBack, onSaved }: Props) => {
+const OutfitBuilder = ({ onBack, onSaved, editOutfit }: Props) => {
+  const isEdit = !!editOutfit;
   useSwipeBack(useCallback(() => onBack(), [onBack]));
+
+  const { categories } = useWardrobeItems();
+  const allItems = useMemo(() => categories.flatMap((c) => c.items), [categories]);
+
+  // Derive initial selected IDs from editOutfit pieces
+  const initialIds = useMemo(() => {
+    if (!editOutfit) return new Set<string>();
+    const ids = new Set<string>();
+    for (const p of editOutfit.pieces) {
+      if (p.item_id && allItems.some((i) => i.id === p.item_id)) {
+        ids.add(p.item_id);
+      }
+    }
+    return ids;
+  }, [editOutfit, allItems]);
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [name, setName] = useState("");
-  const [notes, setNotes] = useState("");
-  const [tempOverride, setTempOverride] = useState<string | null>(null);
-  const [occasionId, setOccasionId] = useState("casual");
+  const [name, setName] = useState(editOutfit?.name ?? "");
+  const [notes, setNotes] = useState(editOutfit?.notes ?? "");
+  const [tempOverride, setTempOverride] = useState<string | null>(editOutfit?.temp ?? null);
+  const [occasionId, setOccasionId] = useState(editOutfit?.occasion_id ?? "casual");
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
+  const [initialized, setInitialized] = useState(false);
 
-  const { categories } = useWardrobeItems();
+  // Once allItems are loaded and we have an editOutfit, seed selectedIds
+  useEffect(() => {
+    if (editOutfit && allItems.length > 0 && !initialized) {
+      setSelectedIds(initialIds);
+      setInitialized(true);
+    }
+  }, [editOutfit, allItems, initialIds, initialized]);
 
   const allItems = useMemo(() => categories.flatMap((c) => c.items), [categories]);
   const selectedItems = useMemo(() => allItems.filter((i) => selectedIds.has(i.id)), [allItems, selectedIds]);
