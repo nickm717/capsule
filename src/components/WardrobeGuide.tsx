@@ -25,6 +25,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   const [formPrefill, setFormPrefill] = useState<Partial<ItemFormData> | undefined>();
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [detailItem, setDetailItem] = useState<{ item: any; row: any } | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem("darkautumn-favorites");
