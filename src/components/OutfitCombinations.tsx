@@ -5,6 +5,7 @@ import type { OutfitPiece } from "@/data/darkautumn";
 import OutfitBuilder from "./OutfitBuilder";
 import AddToDaySheet from "./AddToDaySheet";
 import DeleteOutfitSheet from "./DeleteOutfitSheet";
+import OutfitDetailSheet from "./OutfitDetailSheet";
 import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
