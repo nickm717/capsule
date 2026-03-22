@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MoreHorizontal, Pencil, Trash2, CalendarPlus } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, CalendarPlus, X } from "lucide-react";
 import {
   Sheet,
   SheetContent,
