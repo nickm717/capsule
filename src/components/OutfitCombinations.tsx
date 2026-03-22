@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, MoreHorizontal, CalendarPlus, Loader2 } from "lucide-react";
+import { Plus, MoreHorizontal, CalendarPlus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { occasionDefs, temperatureBadges } from "@/data/darkautumn";
 import type { OutfitPiece } from "@/data/darkautumn";
 import OutfitBuilder from "./OutfitBuilder";
 import AddToDaySheet from "./AddToDaySheet";
+import DeleteOutfitSheet from "./DeleteOutfitSheet";
 import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface OutfitCombinationsProps {
   onBuilderOpen?: (open: boolean) => void;
@@ -14,20 +17,40 @@ interface OutfitCombinationsProps {
 const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsProps) => {
   const [activeOccasion, setActiveOccasion] = useState(occasionDefs[0].id);
   const [showBuilder, setShowBuilder] = useState(false);
+  const [editOutfit, setEditOutfit] = useState<DbOutfit | null>(null);
   const [menuOutfitId, setMenuOutfitId] = useState<string | null>(null);
   const [addToDayOutfit, setAddToDayOutfit] = useState<{ id: string; name: string } | null>(null);
+  const [deleteOutfit, setDeleteOutfit] = useState<{ id: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const { outfits, loading, error, refetch } = useOutfits();
 
-  const openBuilder = () => {
+  const openBuilder = (outfit?: DbOutfit) => {
+    setEditOutfit(outfit ?? null);
     setShowBuilder(true);
     onBuilderOpen?.(true);
   };
 
   const closeBuilder = () => {
     setShowBuilder(false);
+    setEditOutfit(null);
     onBuilderOpen?.(false);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteOutfit) return;
+    setDeleting(true);
+    const { error } = await supabase.from("custom_outfits").delete().eq("id", deleteOutfit.id);
+    setDeleting(false);
+    if (error) {
+      console.error(error);
+      toast.error("Failed to delete outfit");
+    } else {
+      toast.success("Outfit deleted");
+      setDeleteOutfit(null);
+      refetch();
+    }
   };
 
   useEffect(() => {
@@ -49,6 +72,14 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
           closeBuilder();
           refetch();
         }}
+        editOutfit={editOutfit ? {
+          id: editOutfit.id,
+          name: editOutfit.name,
+          notes: editOutfit.notes || "",
+          temp: editOutfit.temp,
+          occasion_id: editOutfit.occasion_id,
+          pieces: editOutfit.pieces as any[],
+        } : null}
       />
     );
   }
@@ -65,7 +96,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
           </p>
         </div>
         <button
-          onClick={openBuilder}
+          onClick={() => openBuilder()}
           className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all shadow-md"
           style={{ backgroundColor: "#B08030" }}
           aria-label="Add outfit"
@@ -140,17 +171,37 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
                   {menuOutfitId === outfit.id && (
                     <div
                       ref={menuRef}
-                      className="absolute right-0 top-8 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] animate-reveal-up"
+                      className="absolute right-0 top-8 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] animate-in fade-in-0 zoom-in-95 duration-150"
                     >
+                      <button
+                        onClick={() => {
+                          setMenuOutfitId(null);
+                          openBuilder(outfit);
+                        }}
+                        className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
+                      >
+                        <Pencil size={14} className="text-muted-foreground" />
+                        Edit outfit
+                      </button>
                       <button
                         onClick={() => {
                           setMenuOutfitId(null);
                           setAddToDayOutfit({ id: outfit.id, name: outfit.name });
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.98]"
+                        className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
                       >
-                        <CalendarPlus className="w-3.5 h-3.5 text-muted-foreground" />
+                        <CalendarPlus size={14} className="text-muted-foreground" />
                         Add to day
+                      </button>
+                      <button
+                        onClick={() => {
+                          setMenuOutfitId(null);
+                          setDeleteOutfit({ id: outfit.id, name: outfit.name });
+                        }}
+                        className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-destructive hover:bg-muted transition-colors active:scale-[0.97]"
+                      >
+                        <Trash2 size={14} />
+                        Delete outfit
                       </button>
                     </div>
                   )}
@@ -170,7 +221,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
                   <span className="w-3 h-3 rounded-full border border-border/50" style={{ backgroundColor: piece.hex }} />
                   <span className="text-xs text-foreground">{piece.name}</span>
                   {piece.owned === false && (
-                    <span className="text-[9px] font-bold uppercase text-rust">GAP</span>
+                    <span className="text-[9px] font-bold uppercase text-rust">RENTAL</span>
                   )}
                 </button>
               ))}
@@ -189,6 +240,13 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         open={!!addToDayOutfit}
         outfit={addToDayOutfit}
         onClose={() => setAddToDayOutfit(null)}
+      />
+
+      <DeleteOutfitSheet
+        open={!!deleteOutfit}
+        outfitName={deleteOutfit?.name ?? ""}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteOutfit(null)}
       />
     </div>
   );

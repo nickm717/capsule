@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Check, Sparkles, ChevronLeft, ChevronDown } from "lucide-react";
 import { categoryDefs, temperatureBadges, occasionDefs, type WardrobeItem, type OutfitPiece } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,22 +36,46 @@ function suggestTemp(selectedItems: WardrobeItem[], categories: { id: string; it
 interface Props {
   onBack: () => void;
   onSaved: () => void;
+  editOutfit?: { id: string; name: string; notes: string; temp: string; occasion_id: string; pieces: any[] } | null;
 }
 
-const OutfitBuilder = ({ onBack, onSaved }: Props) => {
+const OutfitBuilder = ({ onBack, onSaved, editOutfit }: Props) => {
+  const isEdit = !!editOutfit;
   useSwipeBack(useCallback(() => onBack(), [onBack]));
+
+  const { categories } = useWardrobeItems();
+  const allItems = useMemo(() => categories.flatMap((c) => c.items), [categories]);
+
+  // Derive initial selected IDs from editOutfit pieces
+  const initialIds = useMemo(() => {
+    if (!editOutfit) return new Set<string>();
+    const ids = new Set<string>();
+    for (const p of editOutfit.pieces) {
+      if (p.item_id && allItems.some((i) => i.id === p.item_id)) {
+        ids.add(p.item_id);
+      }
+    }
+    return ids;
+  }, [editOutfit, allItems]);
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [name, setName] = useState("");
-  const [notes, setNotes] = useState("");
-  const [tempOverride, setTempOverride] = useState<string | null>(null);
-  const [occasionId, setOccasionId] = useState("casual");
+  const [name, setName] = useState(editOutfit?.name ?? "");
+  const [notes, setNotes] = useState(editOutfit?.notes ?? "");
+  const [tempOverride, setTempOverride] = useState<string | null>(editOutfit?.temp ?? null);
+  const [occasionId, setOccasionId] = useState(editOutfit?.occasion_id ?? "casual");
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
+  const [initialized, setInitialized] = useState(false);
 
-  const { categories } = useWardrobeItems();
+  // Once allItems are loaded and we have an editOutfit, seed selectedIds
+  useEffect(() => {
+    if (editOutfit && allItems.length > 0 && !initialized) {
+      setSelectedIds(initialIds);
+      setInitialized(true);
+    }
+  }, [editOutfit, allItems, initialIds, initialized]);
 
-  const allItems = useMemo(() => categories.flatMap((c) => c.items), [categories]);
   const selectedItems = useMemo(() => allItems.filter((i) => selectedIds.has(i.id)), [allItems, selectedIds]);
   const suggestedTemp = useMemo(() => suggestTemp(selectedItems, categories), [selectedItems, categories]);
   const activeTemp = tempOverride ?? suggestedTemp;
@@ -123,15 +147,26 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
           owned: i.owned,
         };
       });
-      const { error } = await supabase.from("custom_outfits").insert({
-        name: name.trim(),
-        pieces: pieces as any,
-        temp: activeTemp,
-        notes: notes.trim(),
-        occasion_id: occasionId,
-      });
+      let error;
+      if (isEdit && editOutfit) {
+        ({ error } = await supabase.from("custom_outfits").update({
+          name: name.trim(),
+          pieces: pieces as any,
+          temp: activeTemp,
+          notes: notes.trim(),
+          occasion_id: occasionId,
+        }).eq("id", editOutfit.id));
+      } else {
+        ({ error } = await supabase.from("custom_outfits").insert({
+          name: name.trim(),
+          pieces: pieces as any,
+          temp: activeTemp,
+          notes: notes.trim(),
+          occasion_id: occasionId,
+        }));
+      }
       if (error) throw error;
-      toast({ title: "Outfit saved!" });
+      toast({ title: isEdit ? "Outfit updated!" : "Outfit saved!" });
       onSaved();
     } catch (e) {
       console.error(e);
@@ -148,7 +183,7 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
         <button onClick={onBack} className="p-1 -ml-1 text-muted-foreground hover:text-foreground active:scale-[0.95] transition-all">
           <ChevronLeft size={24} />
         </button>
-        <h2 className="text-lg font-semibold text-foreground font-serif flex-1">New Outfit</h2>
+        <h2 className="text-lg font-semibold text-foreground font-serif flex-1">{isEdit ? "Edit Outfit" : "New Outfit"}</h2>
       </div>
 
       {/* Scrollable content */}
@@ -319,7 +354,7 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
           disabled={saving || !name.trim() || selectedItems.length === 0}
           className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none"
         >
-          {saving ? "Saving…" : "Save Outfit"}
+          {saving ? "Saving…" : isEdit ? "Save Changes" : "Save Outfit"}
         </button>
       </div>
     </div>

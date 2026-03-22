@@ -1,0 +1,1 @@
+CREATE POLICY "Anyone can update custom outfits" ON public.custom_outfits FOR UPDATE TO public USING (true) WITH CHECK (true);
