@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { Check, Sparkles, ChevronDown } from "lucide-react";
 import { categoryDefs, temperatureBadges, occasionDefs, type WardrobeItem, type OutfitPiece } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useSwipeBack } from "@/hooks/use-swipe-back";
 import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
 
@@ -122,7 +122,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
 
   const generateAI = async () => {
     if (selectedItems.length === 0) {
-      toast({ title: "Select pieces first", variant: "destructive" });
+      toast.error("Select pieces first");
       return;
     }
     setAiLoading(true);
@@ -136,7 +136,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
       if (data?.note) setNotes(data.note);
     } catch (e) {
       console.error(e);
-      toast({ title: "Could not generate", variant: "destructive" });
+      toast.error("Could not generate");
     } finally {
       setAiLoading(false);
     }
@@ -144,11 +144,11 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
 
   const save = async () => {
     if (!name.trim()) {
-      toast({ title: "Give your outfit a name", variant: "destructive" });
+      toast.error("Give your outfit a name");
       return;
     }
     if (selectedItems.length === 0) {
-      toast({ title: "Select at least one piece", variant: "destructive" });
+      toast.error("Select at least one piece");
       return;
     }
     setSaving(true);
@@ -184,11 +184,11 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
         }));
       }
       if (error) throw error;
-      toast({ title: isEdit ? "Outfit updated!" : "Outfit saved!" });
+      toast.success(isEdit ? "Outfit updated!" : "Outfit saved!");
       onSaved();
     } catch (e) {
       console.error(e);
-      toast({ title: "Failed to save", variant: "destructive" });
+      toast.error("Failed to save");
     } finally {
       setSaving(false);
     }
