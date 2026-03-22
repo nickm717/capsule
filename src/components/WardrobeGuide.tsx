@@ -265,6 +265,7 @@ function ItemCard({
   item,
   isFavorite,
   onToggleFavorite,
+  onTap,
   onEdit,
   onDelete,
   delay,
@@ -272,6 +273,7 @@ function ItemCard({
   item: WardrobeItem;
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
+  onTap: () => void;
   onEdit: () => void;
   onDelete: () => void;
   delay: number;
