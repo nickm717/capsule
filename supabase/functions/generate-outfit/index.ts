@@ -50,6 +50,15 @@ STYLING RULES:
 - 3–6 pieces per outfit is ideal
 - Don't repeat the exact same combination as an existing outfit
 
+NAMING RULES:
+- Names must be short (1–4 words), specific, and evocative
+- Follow one of three patterns:
+  1. Tonal/color-led: "Tonal Brown", "Olive & Cream", "Dark & Moody"
+  2. Piece-led: "Silk Skirt Evening", "Bomber & Camel Mini", "Wedge Tee & Trousers"
+  3. Vibe-led: "Effortless Olive", "Linen Saturday", "Rust Errand Day"
+- NEVER use generic names like "Casual Outfit", "Work Look", "Weekend Wear", or "Spring Ensemble"
+- The name should instantly conjure the outfit without describing it literally
+
 WARDROBE (available pieces):
 ${wardrobeContext}
 
