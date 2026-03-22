@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import WardrobeGuide from "@/components/WardrobeGuide";
 import OutfitCombinations from "@/components/OutfitCombinations";
 import WeeklyPlanner from "@/components/WeeklyPlanner";
@@ -45,16 +45,35 @@ const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
 const Index = () => {
   const [activeTab, setActiveTab] = useState<Tab>("wardrobe");
   const [hideNav, setHideNav] = useState(false);
+  const [editItemId, setEditItemId] = useState<string | null>(null);
 
   const handleWardrobeFormOpen = (open: boolean) => setHideNav(open);
+
+  const handlePieceTap = useCallback((itemId: string) => {
+    setEditItemId(itemId);
+    setActiveTab("wardrobe");
+  }, []);
+
+  // Clear editItemId after WardrobeGuide consumes it
+  const handleEditItemConsumed = useCallback(() => {
+    setEditItemId(null);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col max-w-lg mx-auto" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
 
       {/* Content */}
       <main className="flex-1 overflow-y-auto pb-24 pt-4">
-        {activeTab === "wardrobe" && <WardrobeGuide onFormOpen={handleWardrobeFormOpen} />}
-        {activeTab === "outfits" && <OutfitCombinations onBuilderOpen={setHideNav} />}
+        {activeTab === "wardrobe" && (
+          <WardrobeGuide
+            onFormOpen={handleWardrobeFormOpen}
+            openItemId={editItemId}
+            onOpenItemConsumed={handleEditItemConsumed}
+          />
+        )}
+        {activeTab === "outfits" && (
+          <OutfitCombinations onBuilderOpen={setHideNav} onPieceTap={handlePieceTap} />
+        )}
         {activeTab === "planner" && <WeeklyPlanner />}
       </main>
 

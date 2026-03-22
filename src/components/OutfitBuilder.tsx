@@ -111,11 +111,18 @@ const OutfitBuilder = ({ onBack, onSaved }: Props) => {
     }
     setSaving(true);
     try {
-      const pieces: OutfitPiece[] = selectedItems.map((i) => ({
-        name: i.name,
-        color: i.color,
-        hex: i.hex,
-      }));
+      const pieces: OutfitPiece[] = selectedItems.map((i) => {
+        const cat = categories.find((c) => c.items.some((it) => it.id === i.id));
+        return {
+          name: i.name,
+          color: i.color,
+          hex: i.hex,
+          item_id: i.id,
+          category: cat?.id,
+          brand: i.brand,
+          owned: i.owned,
+        };
+      });
       const { error } = await supabase.from("custom_outfits").insert({
         name: name.trim(),
         pieces: pieces as any,

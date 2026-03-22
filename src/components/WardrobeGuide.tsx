@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Star, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { categoryDefs, swatches, type WardrobeItem, type WardrobeCategory } from "@/data/darkautumn";
+import { Star, Plus, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
+import { swatches, type WardrobeItem } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
 import AddItemSheet from "./AddItemSheet";
@@ -12,9 +12,11 @@ type Filter = "all" | "owned" | "gaps";
 
 interface WardrobeGuideProps {
   onFormOpen?: (open: boolean) => void;
+  openItemId?: string | null;
+  onOpenItemConsumed?: () => void;
 }
 
-const WardrobeGuide = ({ onFormOpen }: WardrobeGuideProps) => {
+const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeGuideProps) => {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [filter, setFilter] = useState<Filter>("all");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -31,7 +33,17 @@ const WardrobeGuide = ({ onFormOpen }: WardrobeGuideProps) => {
     }
   });
 
-  const { categories: allCategories, refetch: fetchItems } = useWardrobeItems();
+  const { categories: allCategories, loading, error, refetch: fetchItems } = useWardrobeItems();
+
+  // Handle deep-link from piece tap
+  useEffect(() => {
+    if (!openItemId || loading) return;
+    const row = allCategories.flatMap((c) => c.rows).find((r: any) => r.id === openItemId);
+    if (row) {
+      handleEdit(row);
+    }
+    onOpenItemConsumed?.();
+  }, [openItemId, loading]);
 
   const openForm = (prefill?: Partial<ItemFormData>, id?: string) => {
     setFormPrefill(prefill);
@@ -159,8 +171,24 @@ const WardrobeGuide = ({ onFormOpen }: WardrobeGuideProps) => {
         ))}
       </div>
 
+      {/* Loading */}
+      {loading && (
+        <div className="flex items-center justify-center py-16 animate-reveal-up">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-sm text-muted-foreground">Loading wardrobe…</span>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && !loading && (
+        <div className="text-center py-16 animate-reveal-up">
+          <p className="text-destructive text-sm mb-2">Failed to load items</p>
+          <button onClick={fetchItems} className="text-sm text-gold underline">Retry</button>
+        </div>
+      )}
+
       {/* Item cards */}
-      {categories.map((cat) => {
+      {!loading && !error && categories.map((cat) => {
         const filtered = cat.items.filter(filterItem);
         if (filtered.length === 0) return null;
         return (
@@ -191,7 +219,7 @@ const WardrobeGuide = ({ onFormOpen }: WardrobeGuideProps) => {
         );
       })}
 
-      {categories.every((c) => c.items.filter(filterItem).length === 0) && (
+      {!loading && !error && categories.every((c) => c.items.filter(filterItem).length === 0) && (
         <div className="text-center py-16 animate-reveal-up">
           <p className="text-muted-foreground text-sm">No items match this filter.</p>
         </div>
