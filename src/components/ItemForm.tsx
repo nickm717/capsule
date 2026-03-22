@@ -199,7 +199,7 @@ const ItemForm = ({ prefill, onSaved, onBack }: ItemFormProps) => {
         <Label htmlFor="item-owned">Status</Label>
         <div className="flex items-center gap-2">
           <span className={`text-xs font-medium ${!form.owned ? "text-rust" : "text-muted-foreground"}`}>
-            Gap
+            Rental
           </span>
           <Switch
             id="item-owned"
@@ -207,7 +207,7 @@ const ItemForm = ({ prefill, onSaved, onBack }: ItemFormProps) => {
             onCheckedChange={(v) => update("owned", v)}
           />
           <span className={`text-xs font-medium ${form.owned ? "text-teal" : "text-muted-foreground"}`}>
-            Owned
+            Own
           </span>
         </div>
       </div>
