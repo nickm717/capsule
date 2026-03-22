@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import type { WardrobeItem } from "@/data/darkautumn";
 
 interface ItemDetailSheetProps {
@@ -24,14 +24,14 @@ const ItemDetailSheet = ({ open, item, brand, category, onClose, onEdit, onDelet
   if (!item) return null;
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) { setMenuOpen(false); onClose(); } }}>
-      <SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8 pt-5 [&>button[class*='absolute']]:hidden">
-        <SheetHeader className="text-left mb-5">
+    <Drawer open={open} onOpenChange={(v) => { if (!v) { setMenuOpen(false); onClose(); } }}>
+      <DrawerContent className="px-5 pb-8 pt-0">
+        <DrawerHeader className="text-left px-0 pt-4 pb-5">
           <div className="flex items-center justify-between">
-            <SheetTitle className="text-lg font-semibold text-foreground flex items-center gap-3">
+            <DrawerTitle className="text-lg font-semibold text-foreground flex items-center gap-3">
               <span className="w-6 h-6 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: item.hex }} />
               {item.name}
-            </SheetTitle>
+            </DrawerTitle>
             <div className="flex items-center gap-1">
               <div className="relative">
                 <button
@@ -67,7 +67,7 @@ const ItemDetailSheet = ({ open, item, brand, category, onClose, onEdit, onDelet
               </button>
             </div>
           </div>
-        </SheetHeader>
+        </DrawerHeader>
 
         <div className="space-y-4">
           {brand && (
@@ -94,8 +94,8 @@ const ItemDetailSheet = ({ open, item, brand, category, onClose, onEdit, onDelet
             </div>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 };
 

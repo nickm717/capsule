@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { MoreHorizontal, Pencil, Trash2, CalendarPlus, X } from "lucide-react";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { temperatureBadges } from "@/data/darkautumn";
 import type { OutfitPiece } from "@/data/darkautumn";
 
@@ -32,11 +32,11 @@ const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay
   const tempBadge = temperatureBadges[outfit.temp];
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) { setMenuOpen(false); onClose(); } }}>
-      <SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8 pt-5 [&>button[class*='absolute']]:hidden">
-        <SheetHeader className="text-left mb-5">
+    <Drawer open={open} onOpenChange={(v) => { if (!v) { setMenuOpen(false); onClose(); } }}>
+      <DrawerContent className="px-5 pb-8 pt-0">
+        <DrawerHeader className="text-left px-0 pt-4 pb-5">
           <div className="flex items-center justify-between">
-            <SheetTitle className="text-lg font-semibold text-foreground flex items-center gap-2.5">
+            <DrawerTitle className="text-lg font-semibold text-foreground flex items-center gap-2.5">
               {outfit.name}
               {tempBadge && (
                 <span
@@ -46,7 +46,7 @@ const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay
                   {outfit.temp} · {tempBadge.range}
                 </span>
               )}
-            </SheetTitle>
+            </DrawerTitle>
             <div className="flex items-center gap-1">
               <div className="relative">
                 <button
@@ -55,24 +55,24 @@ const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay
                 >
                   <MoreHorizontal className="w-5 h-5" />
                 </button>
-              {menuOpen && (
-                <div className="absolute right-0 top-9 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] animate-in fade-in-0 zoom-in-95 duration-150">
-                  <button
-                    onClick={() => { setMenuOpen(false); onClose(); onEdit(); }}
-                    className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
-                  >
-                    <Pencil size={14} className="text-muted-foreground" />
-                    Edit outfit
-                  </button>
-                  <button
-                    onClick={() => { setMenuOpen(false); onClose(); onDelete(); }}
-                    className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-destructive hover:bg-muted transition-colors active:scale-[0.97]"
-                  >
-                    <Trash2 size={14} />
-                    Delete outfit
-                  </button>
-                </div>
-              )}
+                {menuOpen && (
+                  <div className="absolute right-0 top-9 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] animate-in fade-in-0 zoom-in-95 duration-150">
+                    <button
+                      onClick={() => { setMenuOpen(false); onClose(); onEdit(); }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
+                    >
+                      <Pencil size={14} className="text-muted-foreground" />
+                      Edit outfit
+                    </button>
+                    <button
+                      onClick={() => { setMenuOpen(false); onClose(); onDelete(); }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-destructive hover:bg-muted transition-colors active:scale-[0.97]"
+                    >
+                      <Trash2 size={14} />
+                      Delete outfit
+                    </button>
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => { setMenuOpen(false); onClose(); }}
@@ -82,7 +82,7 @@ const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay
               </button>
             </div>
           </div>
-        </SheetHeader>
+        </DrawerHeader>
 
         {/* Piece list */}
         <div className="space-y-3">
@@ -114,8 +114,8 @@ const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay
           <CalendarPlus size={14} />
           Add to day
         </button>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 };
 

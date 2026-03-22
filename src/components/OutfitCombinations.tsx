@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, MoreHorizontal, CalendarPlus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, MoreHorizontal, Pencil, Trash2, CalendarPlus, Loader2 } from "lucide-react";
 import { occasionDefs, temperatureBadges } from "@/data/darkautumn";
 import type { OutfitPiece } from "@/data/darkautumn";
 import OutfitBuilder from "./OutfitBuilder";
@@ -19,12 +19,10 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
   const [activeOccasion, setActiveOccasion] = useState(occasionDefs[0].id);
   const [showBuilder, setShowBuilder] = useState(false);
   const [editOutfit, setEditOutfit] = useState<DbOutfit | null>(null);
-  const [menuOutfitId, setMenuOutfitId] = useState<string | null>(null);
   const [addToDayOutfit, setAddToDayOutfit] = useState<{ id: string; name: string } | null>(null);
   const [deleteOutfit, setDeleteOutfit] = useState<{ id: string; name: string } | null>(null);
   const [detailOutfit, setDetailOutfit] = useState<DbOutfit | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   const { outfits, loading, error, refetch } = useOutfits();
 
@@ -54,17 +52,6 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
       refetch();
     }
   };
-
-  useEffect(() => {
-    if (!menuOutfitId) return;
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOutfitId(null);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [menuOutfitId]);
 
   if (showBuilder) {
     return (
@@ -146,45 +133,17 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         const tempBadge = temperatureBadges[outfit.temp];
         const pieces = outfit.pieces as OutfitPiece[];
         return (
-          <button
+          <OutfitCard
             key={outfit.id}
-            onClick={() => setDetailOutfit(outfit)}
-            className="w-full text-left bg-card rounded-xl border border-border animate-reveal-up active:scale-[0.99] transition-transform"
-            style={{ animationDelay: `${i * 50}ms` }}
-          >
-            <div className="flex">
-              {/* Vertical color strips */}
-              <div className="flex flex-shrink-0 py-3 pl-3 gap-0.5">
-                {pieces.map((piece, pi) => (
-                  <div
-                    key={pi}
-                    className="w-2"
-                    style={{ backgroundColor: piece.hex, minHeight: "32px", borderRadius: "2px" }}
-                  />
-                ))}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 p-3 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-foreground font-medium text-sm truncate">{outfit.name}</h3>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {tempBadge && (
-                      <span
-                        className="text-[10px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap"
-                        style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
-                      >
-                        {outfit.temp} · {tempBadge.range}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <p className="text-muted-foreground text-xs mt-1">
-                  {pieces.map((p) => p.name).join(" · ")}
-                </p>
-              </div>
-            </div>
-          </button>
+            outfit={outfit}
+            tempBadge={tempBadge}
+            pieces={pieces}
+            delay={i * 50}
+            onTap={() => setDetailOutfit(outfit)}
+            onEdit={() => openBuilder(outfit)}
+            onDelete={() => setDeleteOutfit({ id: outfit.id, name: outfit.name })}
+            onAddToDay={() => setAddToDayOutfit({ id: outfit.id, name: outfit.name })}
+          />
         );
       })}
 
@@ -224,5 +183,115 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
     </div>
   );
 };
+
+function OutfitCard({
+  outfit,
+  tempBadge,
+  pieces,
+  delay,
+  onTap,
+  onEdit,
+  onDelete,
+  onAddToDay,
+}: {
+  outfit: DbOutfit;
+  tempBadge: any;
+  pieces: OutfitPiece[];
+  delay: number;
+  onTap: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onAddToDay: () => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
+
+  return (
+    <div
+      className="w-full text-left bg-card rounded-xl border border-border animate-reveal-up cursor-pointer active:scale-[0.99] transition-transform"
+      style={{ animationDelay: `${delay}ms` }}
+      onClick={onTap}
+    >
+      <div className="flex">
+        {/* Vertical color strips */}
+        <div className="flex flex-shrink-0 py-3 pl-3 items-center" style={{ gap: "2px" }}>
+          {pieces.map((piece, pi) => (
+            <div
+              key={pi}
+              style={{ backgroundColor: piece.hex, width: "10px", height: "36px", borderRadius: "2px" }}
+            />
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 p-3 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-foreground font-medium text-sm truncate">{outfit.name}</h3>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {tempBadge && (
+                <span
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap"
+                  style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
+                >
+                  {outfit.temp} · {tempBadge.range}
+                </span>
+              )}
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMenuOpen((p) => !p);
+                  }}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
+                >
+                  <MoreHorizontal size={16} />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-9 z-50 min-w-[140px] rounded-lg border border-border bg-card shadow-lg py-1 animate-in fade-in-0 zoom-in-95 duration-150">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
+                    >
+                      <Pencil size={14} className="text-muted-foreground" />
+                      Edit outfit
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onAddToDay(); }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
+                    >
+                      <CalendarPlus size={14} className="text-muted-foreground" />
+                      Add to day
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-destructive hover:bg-muted transition-colors active:scale-[0.97]"
+                    >
+                      <Trash2 size={14} />
+                      Delete outfit
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <p className="text-muted-foreground text-xs mt-1">
+            {pieces.map((p) => p.name).join(" · ")}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default OutfitCombinations;
