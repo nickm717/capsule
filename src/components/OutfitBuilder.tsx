@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Check, Sparkles, ChevronLeft, ChevronDown } from "lucide-react";
+import { Check, Sparkles, ChevronDown } from "lucide-react";
 import { categoryDefs, temperatureBadges, occasionDefs, type WardrobeItem, type OutfitPiece } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
