@@ -184,7 +184,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
         }));
       }
       if (error) throw error;
-      toast({ title: isEdit ? "Outfit updated!" : "Outfit saved!" });
+      toast.success(isEdit ? "Outfit updated!" : "Outfit saved!");
       onSaved();
     } catch (e) {
       console.error(e);
