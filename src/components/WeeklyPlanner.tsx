@@ -177,7 +177,7 @@ const WeeklyPlanner = () => {
                         </button>
                       </div>
                     </div>
-                    <p className="text-muted-foreground text-[10px] mt-0.5 truncate">
+                    <p className="text-muted-foreground text-[10px] mt-0.5">
                       {outfit.pieces.map((p) => p.name).join(" · ")}
                     </p>
                   </div>
