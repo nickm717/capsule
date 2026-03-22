@@ -213,7 +213,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
             <Label htmlFor="item-owned">Status</Label>
             <div className="flex items-center gap-2">
               <span className={`text-xs font-medium ${!form.owned ? "text-rust" : "text-muted-foreground"}`}>
-                Gap
+                Rental
               </span>
               <Switch
                 id="item-owned"
