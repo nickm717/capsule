@@ -101,31 +101,31 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   return (
     <div className="px-4 pb-6 space-y-5">
       {/* Header */}
-      <div className="pt-2 animate-reveal-up flex items-start justify-between">
-        <div>
-          <h2 className="text-3xl font-semibold text-foreground text-balance">Wardrobe</h2>
-          <p className="text-secondary text-sm mt-1">
-            {ownedCount} owned · {gapCount} gaps · {totalPieces} total
-          </p>
-          <div className="flex gap-1.5 mt-3">
-            {swatches.map((s) => (
-              <div
-                key={s.name}
-                className="w-6 h-6 rounded-full border border-border/40"
-                style={{ backgroundColor: s.hex }}
-                title={s.name}
-              />
-            ))}
-          </div>
+      <div className="pt-2 animate-reveal-up">
+        <h2 className="text-3xl font-semibold text-foreground text-balance">Wardrobe</h2>
+        <p className="text-secondary text-sm mt-1">
+          {ownedCount} owned · {gapCount} gaps · {totalPieces} total
+        </p>
+        <div className="flex gap-1.5 mt-3">
+          {swatches.map((s) => (
+            <div
+              key={s.name}
+              className="w-6 h-6 rounded-full border border-border/40"
+              style={{ backgroundColor: s.hex }}
+              title={s.name}
+            />
+          ))}
         </div>
-        <button
-          onClick={() => setSheetOpen(true)}
-          className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-[0.93]"
-          style={{ backgroundColor: "#B08030" }}
-        >
-          <Plus size={22} style={{ color: "#141008" }} strokeWidth={2.5} />
-        </button>
       </div>
+
+      {/* Floating Action Button */}
+      <button
+        onClick={() => setSheetOpen(true)}
+        className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-[0.93] shadow-lg shadow-black/30"
+        style={{ backgroundColor: "#B08030", bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))" }}
+      >
+        <Plus size={24} style={{ color: "#141008" }} strokeWidth={2.5} />
+      </button>
 
       {/* Category chips */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 animate-reveal-up" style={{ animationDelay: "50ms" }}>
