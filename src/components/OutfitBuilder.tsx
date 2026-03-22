@@ -354,7 +354,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit }: Props) => {
           disabled={saving || !name.trim() || selectedItems.length === 0}
           className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none"
         >
-          {saving ? "Saving…" : "Save Outfit"}
+          {saving ? "Saving…" : isEdit ? "Save Changes" : "Save Outfit"}
         </button>
       </div>
     </div>
