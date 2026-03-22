@@ -90,9 +90,10 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
     return true;
   };
 
-  const totalPieces = allCategories.reduce((s, c) => s + c.items.length, 0);
-  const ownedCount = allCategories.reduce((s, c) => s + c.items.filter((i) => i.owned).length, 0);
-  const gapCount = allCategories.reduce((s, c) => s + c.items.filter((i) => i.gap).length, 0);
+  const filteredCategories = activeCategory === "all" ? allCategories : allCategories.filter((c) => c.id === activeCategory);
+  const totalPieces = filteredCategories.reduce((s, c) => s + c.items.length, 0);
+  const ownedCount = filteredCategories.reduce((s, c) => s + c.items.filter((i) => i.owned).length, 0);
+  const gapCount = filteredCategories.reduce((s, c) => s + c.items.filter((i) => i.gap).length, 0);
 
   if (formOpen) {
     return <ItemFormPage prefill={formPrefill} editId={editId} onSaved={handleFormSaved} onCancel={closeForm} />;
