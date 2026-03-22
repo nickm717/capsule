@@ -293,7 +293,11 @@ function ItemCard({
   }, [menuOpen]);
 
   return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden animate-reveal-up" style={{ animationDelay: `${delay}ms` }}>
+    <div
+      className="bg-card rounded-xl border border-border overflow-hidden animate-reveal-up cursor-pointer active:scale-[0.98] transition-transform"
+      style={{ animationDelay: `${delay}ms` }}
+      onClick={onTap}
+    >
       <div className="flex">
         <div className="w-1.5 flex-shrink-0 rounded-l-xl" style={{ backgroundColor: item.hex }} />
         <div className="flex-1 p-3.5 min-w-0">
@@ -354,19 +358,11 @@ function ItemCard({
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {item.owned && <Badge label="OWNED" variant="owned" />}
+            {item.owned && <Badge label="OWN" variant="owned" />}
             {item.gap && <Badge label="RENTAL" variant="gap" />}
             {item.priority && <Badge label="PRIORITY" variant="priority" />}
             {item.seasonal && <Badge label="SEASONAL" variant="seasonal" />}
           </div>
-          {item.notes && (
-            <button onClick={() => setExpanded(!expanded)} className="mt-2 text-left w-full">
-              <p className={`text-muted-foreground text-xs leading-relaxed transition-all duration-200 ${expanded ? "" : "line-clamp-2"}`}>{item.notes}</p>
-              {item.notes.length > 80 && (
-                <span className="text-gold text-[11px] font-medium mt-0.5 inline-block">{expanded ? "Show less" : "Read more"}</span>
-              )}
-            </button>
-          )}
         </div>
       </div>
     </div>
