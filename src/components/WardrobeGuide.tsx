@@ -129,7 +129,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
       </button>
 
       {/* Category chips */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 animate-reveal-up" style={{ animationDelay: "50ms" }}>
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 animate-reveal-up [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ animationDelay: "50ms" }}>
         <CategoryChip label="All" icon="✦" active={activeCategory === "all"} onClick={() => setActiveCategory("all")} />
         {allCategories.map((cat) => (
           <CategoryChip key={cat.id} label={cat.label} icon={cat.icon} active={activeCategory === cat.id} onClick={() => setActiveCategory(cat.id)} />
