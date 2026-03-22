@@ -219,7 +219,7 @@ function OutfitCard({
 
   return (
     <div
-      className="w-full text-left bg-card rounded-xl border border-border animate-reveal-up cursor-pointer active:scale-[0.99] transition-transform"
+      className={`w-full text-left bg-card rounded-xl border border-border animate-reveal-up cursor-pointer active:scale-[0.99] transition-transform relative ${menuOpen ? "z-40" : ""}`}
       style={{ animationDelay: `${delay}ms` }}
       onClick={onTap}
     >

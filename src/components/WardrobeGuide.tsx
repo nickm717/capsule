@@ -271,7 +271,7 @@ function ItemCard({
 
   return (
     <div
-      className="bg-card rounded-xl border border-border animate-reveal-up cursor-pointer active:scale-[0.98] transition-transform"
+      className={`bg-card rounded-xl border border-border animate-reveal-up cursor-pointer active:scale-[0.98] transition-transform relative ${menuOpen ? "z-40" : ""}`}
       style={{ animationDelay: `${delay}ms` }}
       onClick={onTap}
     >
