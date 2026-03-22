@@ -37,9 +37,10 @@ interface Props {
   onBack: () => void;
   onSaved: () => void;
   editOutfit?: { id: string; name: string; notes: string; temp: string; occasion_id: string; pieces: any[] } | null;
+  preset?: { selectedIds: string[]; name: string; notes: string; temp: string; occasionId: string } | null;
 }
 
-const OutfitBuilder = ({ onBack, onSaved, editOutfit }: Props) => {
+const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
   const isEdit = !!editOutfit;
   useSwipeBack(useCallback(() => onBack(), [onBack]));
 
@@ -59,14 +60,15 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit }: Props) => {
   }, [editOutfit, allItems]);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [name, setName] = useState(editOutfit?.name ?? "");
-  const [notes, setNotes] = useState(editOutfit?.notes ?? "");
-  const [tempOverride, setTempOverride] = useState<string | null>(editOutfit?.temp ?? null);
-  const [occasionId, setOccasionId] = useState(editOutfit?.occasion_id ?? "casual");
+  const [name, setName] = useState(editOutfit?.name ?? preset?.name ?? "");
+  const [notes, setNotes] = useState(editOutfit?.notes ?? preset?.notes ?? "");
+  const [tempOverride, setTempOverride] = useState<string | null>(editOutfit?.temp ?? preset?.temp ?? null);
+  const [occasionId, setOccasionId] = useState(editOutfit?.occasion_id ?? preset?.occasionId ?? "casual");
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
   const [initialized, setInitialized] = useState(false);
+  const [presetApplied, setPresetApplied] = useState(false);
 
   // Once allItems are loaded and we have an editOutfit, seed selectedIds
   useEffect(() => {
@@ -75,6 +77,22 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit }: Props) => {
       setInitialized(true);
     }
   }, [editOutfit, allItems, initialIds, initialized]);
+
+  // Apply preset from AI generation
+  useEffect(() => {
+    if (preset && allItems.length > 0 && !presetApplied) {
+      const validIds = preset.selectedIds.filter((id) => allItems.some((i) => i.id === id));
+      setSelectedIds(new Set(validIds));
+      // Collapse categories that have selections
+      const catsWithSelection = new Set<string>();
+      for (const id of validIds) {
+        const cat = categories.find((c) => c.items.some((i) => i.id === id));
+        if (cat) catsWithSelection.add(cat.id);
+      }
+      setCollapsedCats(catsWithSelection);
+      setPresetApplied(true);
+    }
+  }, [preset, allItems, presetApplied, categories]);
 
   const selectedItems = useMemo(() => allItems.filter((i) => selectedIds.has(i.id)), [allItems, selectedIds]);
   const suggestedTemp = useMemo(() => suggestTemp(selectedItems, categories), [selectedItems, categories]);
