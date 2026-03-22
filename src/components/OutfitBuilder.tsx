@@ -76,7 +76,6 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit }: Props) => {
     }
   }, [editOutfit, allItems, initialIds, initialized]);
 
-  const allItems = useMemo(() => categories.flatMap((c) => c.items), [categories]);
   const selectedItems = useMemo(() => allItems.filter((i) => selectedIds.has(i.id)), [allItems, selectedIds]);
   const suggestedTemp = useMemo(() => suggestTemp(selectedItems, categories), [selectedItems, categories]);
   const activeTemp = tempOverride ?? suggestedTemp;
