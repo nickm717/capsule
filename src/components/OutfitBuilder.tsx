@@ -183,7 +183,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit }: Props) => {
         <button onClick={onBack} className="p-1 -ml-1 text-muted-foreground hover:text-foreground active:scale-[0.95] transition-all">
           <ChevronLeft size={24} />
         </button>
-        <h2 className="text-lg font-semibold text-foreground font-serif flex-1">New Outfit</h2>
+        <h2 className="text-lg font-semibold text-foreground font-serif flex-1">{isEdit ? "Edit Outfit" : "New Outfit"}</h2>
       </div>
 
       {/* Scrollable content */}
