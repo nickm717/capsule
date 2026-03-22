@@ -210,6 +210,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
                     item={item}
                     isFavorite={favorites.has(item.id)}
                     onToggleFavorite={toggleFavorite}
+                    onTap={() => row && setDetailItem({ item, row })}
                     onEdit={() => row && handleEdit(row)}
                     onDelete={() => setDeleteTarget({ id: item.id, name: item.name })}
                     delay={i * 40}
