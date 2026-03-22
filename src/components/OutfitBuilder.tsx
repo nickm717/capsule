@@ -78,6 +78,22 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
     }
   }, [editOutfit, allItems, initialIds, initialized]);
 
+  // Apply preset from AI generation
+  useEffect(() => {
+    if (preset && allItems.length > 0 && !presetApplied) {
+      const validIds = preset.selectedIds.filter((id) => allItems.some((i) => i.id === id));
+      setSelectedIds(new Set(validIds));
+      // Collapse categories that have selections
+      const catsWithSelection = new Set<string>();
+      for (const id of validIds) {
+        const cat = categories.find((c) => c.items.some((i) => i.id === id));
+        if (cat) catsWithSelection.add(cat.id);
+      }
+      setCollapsedCats(catsWithSelection);
+      setPresetApplied(true);
+    }
+  }, [preset, allItems, presetApplied, categories]);
+
   const selectedItems = useMemo(() => allItems.filter((i) => selectedIds.has(i.id)), [allItems, selectedIds]);
   const suggestedTemp = useMemo(() => suggestTemp(selectedItems, categories), [selectedItems, categories]);
   const activeTemp = tempOverride ?? suggestedTemp;
