@@ -22,6 +22,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
   const [menuOutfitId, setMenuOutfitId] = useState<string | null>(null);
   const [addToDayOutfit, setAddToDayOutfit] = useState<{ id: string; name: string } | null>(null);
   const [deleteOutfit, setDeleteOutfit] = useState<{ id: string; name: string } | null>(null);
+  const [detailOutfit, setDetailOutfit] = useState<DbOutfit | null>(null);
   const [deleting, setDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
