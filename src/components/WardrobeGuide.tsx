@@ -278,8 +278,6 @@ function ItemCard({
   onDelete: () => void;
   delay: number;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
