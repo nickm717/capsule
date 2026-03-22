@@ -168,22 +168,22 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
 
   return (
     <div className="px-4 pb-6 space-y-5">
-      <div className="pt-2 animate-reveal-up flex items-start justify-between">
-        <div>
-          <h2 className="text-3xl font-semibold text-foreground text-balance">Outfits</h2>
-          <p className="text-secondary text-sm mt-1">
-            {outfits.length} curated looks across {occasionDefs.length} occasions
-          </p>
-        </div>
-        <button
-          onClick={() => setAddSheetOpen(true)}
-          className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all shadow-md"
-          style={{ backgroundColor: "#B08030" }}
-          aria-label="Add outfit"
-        >
-          <Plus size={22} color="#141008" strokeWidth={2.5} />
-        </button>
+      <div className="pt-2 animate-reveal-up">
+        <h2 className="text-3xl font-semibold text-foreground text-balance">Outfits</h2>
+        <p className="text-secondary text-sm mt-1">
+          {outfits.length} curated looks across {occasionDefs.length} occasions
+        </p>
       </div>
+
+      {/* Floating Action Button */}
+      <button
+        onClick={() => setAddSheetOpen(true)}
+        className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center active:scale-[0.93] transition-all shadow-lg shadow-black/30"
+        style={{ backgroundColor: "#B08030", bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))" }}
+        aria-label="Add outfit"
+      >
+        <Plus size={24} color="#141008" strokeWidth={2.5} />
+      </button>
 
       {/* Occasion tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 animate-reveal-up" style={{ animationDelay: "60ms" }}>
