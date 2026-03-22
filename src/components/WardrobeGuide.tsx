@@ -156,7 +156,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         {[
           { key: "all" as Filter, label: "All", count: totalPieces },
           { key: "owned" as Filter, label: "Owned", count: ownedCount },
-          { key: "gaps" as Filter, label: "Gaps", count: gapCount },
+          { key: "gaps" as Filter, label: "Rentals", count: gapCount },
         ].map((f) => (
           <button
             key={f.key}
