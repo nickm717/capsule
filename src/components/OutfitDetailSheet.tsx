@@ -33,7 +33,7 @@ const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) { setMenuOpen(false); onClose(); } }}>
-      <SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8 pt-5">
+      <SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8 pt-5 [&>button[class*='absolute']]:hidden">
         <SheetHeader className="text-left mb-5">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-lg font-semibold text-foreground flex items-center gap-2.5">
