@@ -136,7 +136,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
       if (data?.note) setNotes(data.note);
     } catch (e) {
       console.error(e);
-      toast({ title: "Could not generate", variant: "destructive" });
+      toast.error("Could not generate");
     } finally {
       setAiLoading(false);
     }
