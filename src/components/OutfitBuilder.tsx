@@ -188,7 +188,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
       onSaved();
     } catch (e) {
       console.error(e);
-      toast({ title: "Failed to save", variant: "destructive" });
+      toast.error("Failed to save");
     } finally {
       setSaving(false);
     }
