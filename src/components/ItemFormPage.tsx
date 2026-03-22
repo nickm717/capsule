@@ -221,7 +221,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
                 onCheckedChange={(v) => update("owned", v)}
               />
               <span className={`text-xs font-medium ${form.owned ? "text-teal" : "text-muted-foreground"}`}>
-                Owned
+                Own
               </span>
             </div>
           </div>
