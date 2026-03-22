@@ -1,5 +1,5 @@
 import { Toaster as Sonner, toast } from "sonner";
-import { CircleCheck, CircleX, X } from "lucide-react";
+import { CircleCheck, CircleX } from "lucide-react";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
@@ -9,7 +9,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme="dark"
       position="bottom-center"
       duration={3000}
-      closeButton={false}
+      closeButton={true}
       offset={80}
       className="toaster group"
       toastOptions={{
@@ -22,6 +22,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "!border-[hsl(176,41%,30%)]",
           error:
             "!border-[hsl(0,62%,40%)]",
+          closeButton:
+            "!static !order-last !ml-auto !transform-none !top-auto !left-auto !right-auto !border-0 !bg-transparent !text-muted-foreground hover:!text-foreground !p-1 !h-6 !w-6 !rounded-md !shrink-0",
         },
       }}
       icons={{
