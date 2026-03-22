@@ -147,15 +147,26 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit }: Props) => {
           owned: i.owned,
         };
       });
-      const { error } = await supabase.from("custom_outfits").insert({
-        name: name.trim(),
-        pieces: pieces as any,
-        temp: activeTemp,
-        notes: notes.trim(),
-        occasion_id: occasionId,
-      });
+      let error;
+      if (isEdit && editOutfit) {
+        ({ error } = await supabase.from("custom_outfits").update({
+          name: name.trim(),
+          pieces: pieces as any,
+          temp: activeTemp,
+          notes: notes.trim(),
+          occasion_id: occasionId,
+        }).eq("id", editOutfit.id));
+      } else {
+        ({ error } = await supabase.from("custom_outfits").insert({
+          name: name.trim(),
+          pieces: pieces as any,
+          temp: activeTemp,
+          notes: notes.trim(),
+          occasion_id: occasionId,
+        }));
+      }
       if (error) throw error;
-      toast({ title: "Outfit saved!" });
+      toast({ title: isEdit ? "Outfit updated!" : "Outfit saved!" });
       onSaved();
     } catch (e) {
       console.error(e);
