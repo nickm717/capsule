@@ -37,9 +37,10 @@ interface Props {
   onBack: () => void;
   onSaved: () => void;
   editOutfit?: { id: string; name: string; notes: string; temp: string; occasion_id: string; pieces: any[] } | null;
+  preset?: { selectedIds: string[]; name: string; notes: string; temp: string; occasionId: string } | null;
 }
 
-const OutfitBuilder = ({ onBack, onSaved, editOutfit }: Props) => {
+const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
   const isEdit = !!editOutfit;
   useSwipeBack(useCallback(() => onBack(), [onBack]));
 
