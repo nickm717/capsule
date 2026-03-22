@@ -142,89 +142,89 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
       {/* Outfit cards */}
       {!loading && !error && outfitsForOccasion.map((outfit, i) => {
         const tempBadge = temperatureBadges[outfit.temp];
+        const pieces = outfit.pieces as OutfitPiece[];
         return (
           <div
             key={outfit.id}
-            className="bg-card rounded-xl p-4 border border-border animate-reveal-up"
+            className="bg-card rounded-xl border border-border overflow-hidden animate-reveal-up"
             style={{ animationDelay: `${i * 50}ms` }}
           >
-            <div className="flex items-start justify-between mb-2.5">
-              <div className="flex-1 min-w-0">
-                <h3 className="text-foreground font-medium text-base">{outfit.name}</h3>
+            <div className="flex">
+              {/* Vertical color strips */}
+              <div className="flex flex-shrink-0 py-3 pl-3 gap-0.5">
+                {pieces.map((piece, pi) => (
+                  <div
+                    key={pi}
+                    className="w-2 rounded-sm"
+                    style={{ backgroundColor: piece.hex, minHeight: "32px" }}
+                  />
+                ))}
               </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                {tempBadge && (
-                  <span
-                    className="text-[11px] font-medium px-2 py-0.5 rounded-full border"
-                    style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
-                  >
-                    {outfit.temp} · {tempBadge.range}
-                  </span>
-                )}
-                <div className="relative">
-                  <button
-                    onClick={() => setMenuOutfitId(menuOutfitId === outfit.id ? null : outfit.id)}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
-                  >
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
-                  {menuOutfitId === outfit.id && (
-                    <div
-                      ref={menuRef}
-                      className="absolute right-0 top-8 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] animate-in fade-in-0 zoom-in-95 duration-150"
-                    >
-                      <button
-                        onClick={() => {
-                          setMenuOutfitId(null);
-                          openBuilder(outfit);
-                        }}
-                        className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
+
+              {/* Content */}
+              <div className="flex-1 p-3 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-foreground font-medium text-sm truncate">{outfit.name}</h3>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {tempBadge && (
+                      <span
+                        className="text-[10px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap"
+                        style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
                       >
-                        <Pencil size={14} className="text-muted-foreground" />
-                        Edit outfit
-                      </button>
+                        {outfit.temp}
+                      </span>
+                    )}
+                    <div className="relative">
                       <button
-                        onClick={() => {
-                          setMenuOutfitId(null);
-                          setAddToDayOutfit({ id: outfit.id, name: outfit.name });
-                        }}
-                        className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
+                        onClick={() => setMenuOutfitId(menuOutfitId === outfit.id ? null : outfit.id)}
+                        className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
                       >
-                        <CalendarPlus size={14} className="text-muted-foreground" />
-                        Add to day
+                        <MoreHorizontal className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => {
-                          setMenuOutfitId(null);
-                          setDeleteOutfit({ id: outfit.id, name: outfit.name });
-                        }}
-                        className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-destructive hover:bg-muted transition-colors active:scale-[0.97]"
-                      >
-                        <Trash2 size={14} />
-                        Delete outfit
-                      </button>
+                      {menuOutfitId === outfit.id && (
+                        <div
+                          ref={menuRef}
+                          className="absolute right-0 top-8 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] animate-in fade-in-0 zoom-in-95 duration-150"
+                        >
+                          <button
+                            onClick={() => {
+                              setMenuOutfitId(null);
+                              openBuilder(outfit);
+                            }}
+                            className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
+                          >
+                            <Pencil size={14} className="text-muted-foreground" />
+                            Edit outfit
+                          </button>
+                          <button
+                            onClick={() => {
+                              setMenuOutfitId(null);
+                              setAddToDayOutfit({ id: outfit.id, name: outfit.name });
+                            }}
+                            className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
+                          >
+                            <CalendarPlus size={14} className="text-muted-foreground" />
+                            Add to day
+                          </button>
+                          <button
+                            onClick={() => {
+                              setMenuOutfitId(null);
+                              setDeleteOutfit({ id: outfit.id, name: outfit.name });
+                            }}
+                            className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-destructive hover:bg-muted transition-colors active:scale-[0.97]"
+                          >
+                            <Trash2 size={14} />
+                            Delete outfit
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
+                <p className="text-muted-foreground text-xs mt-1 truncate">
+                  {pieces.map((p) => p.name).join(" · ")}
+                </p>
               </div>
-            </div>
-            {outfit.notes && <p className="text-muted-foreground text-sm mb-3">{outfit.notes}</p>}
-            <div className="flex flex-wrap gap-1.5">
-              {outfit.pieces.map((piece: OutfitPiece, pi: number) => (
-                <button
-                  key={pi}
-                  onClick={() => piece.item_id && onPieceTap?.(piece.item_id)}
-                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 ${
-                    piece.item_id ? "bg-muted hover:bg-muted/80 active:scale-[0.97] transition-all cursor-pointer" : "bg-muted cursor-default"
-                  }`}
-                >
-                  <span className="w-3 h-3 rounded-full border border-border/50" style={{ backgroundColor: piece.hex }} />
-                  <span className="text-xs text-foreground">{piece.name}</span>
-                  {piece.owned === false && (
-                    <span className="text-[9px] font-bold uppercase text-rust">RENTAL</span>
-                  )}
-                </button>
-              ))}
             </div>
           </div>
         );

@@ -6,6 +6,7 @@ import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
 import AddItemSheet from "./AddItemSheet";
 import ItemFormPage from "./ItemFormPage";
 import DeleteItemSheet from "./DeleteItemSheet";
+import ItemDetailSheet from "./ItemDetailSheet";
 import type { ItemFormData } from "./ItemForm";
 
 type Filter = "all" | "owned" | "gaps";
@@ -24,6 +25,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   const [formPrefill, setFormPrefill] = useState<Partial<ItemFormData> | undefined>();
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [detailItem, setDetailItem] = useState<{ item: any; row: any } | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem("darkautumn-favorites");
@@ -208,6 +210,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
                     item={item}
                     isFavorite={favorites.has(item.id)}
                     onToggleFavorite={toggleFavorite}
+                    onTap={() => row && setDetailItem({ item, row })}
                     onEdit={() => row && handleEdit(row)}
                     onDelete={() => setDeleteTarget({ id: item.id, name: item.name })}
                     delay={i * 40}
@@ -226,6 +229,14 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
       )}
 
       <AddItemSheet open={sheetOpen} onOpenChange={setSheetOpen} onOpenForm={openForm} />
+      <ItemDetailSheet
+        open={!!detailItem}
+        item={detailItem?.item ?? null}
+        brand={detailItem?.row?.brand || undefined}
+        category={detailItem?.row?.category || undefined}
+        onClose={() => setDetailItem(null)}
+        onEdit={() => detailItem?.row && handleEdit(detailItem.row)}
+      />
       <DeleteItemSheet
         open={!!deleteTarget}
         itemName={deleteTarget?.name || ""}
@@ -254,6 +265,7 @@ function ItemCard({
   item,
   isFavorite,
   onToggleFavorite,
+  onTap,
   onEdit,
   onDelete,
   delay,
@@ -261,11 +273,11 @@ function ItemCard({
   item: WardrobeItem;
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
+  onTap: () => void;
   onEdit: () => void;
   onDelete: () => void;
   delay: number;
 }) {
-  const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -281,7 +293,11 @@ function ItemCard({
   }, [menuOpen]);
 
   return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden animate-reveal-up" style={{ animationDelay: `${delay}ms` }}>
+    <div
+      className="bg-card rounded-xl border border-border overflow-hidden animate-reveal-up cursor-pointer active:scale-[0.98] transition-transform"
+      style={{ animationDelay: `${delay}ms` }}
+      onClick={onTap}
+    >
       <div className="flex">
         <div className="w-1.5 flex-shrink-0 rounded-l-xl" style={{ backgroundColor: item.hex }} />
         <div className="flex-1 p-3.5 min-w-0">
@@ -342,19 +358,11 @@ function ItemCard({
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {item.owned && <Badge label="OWNED" variant="owned" />}
+            {item.owned && <Badge label="OWN" variant="owned" />}
             {item.gap && <Badge label="RENTAL" variant="gap" />}
             {item.priority && <Badge label="PRIORITY" variant="priority" />}
             {item.seasonal && <Badge label="SEASONAL" variant="seasonal" />}
           </div>
-          {item.notes && (
-            <button onClick={() => setExpanded(!expanded)} className="mt-2 text-left w-full">
-              <p className={`text-muted-foreground text-xs leading-relaxed transition-all duration-200 ${expanded ? "" : "line-clamp-2"}`}>{item.notes}</p>
-              {item.notes.length > 80 && (
-                <span className="text-gold text-[11px] font-medium mt-0.5 inline-block">{expanded ? "Show less" : "Read more"}</span>
-              )}
-            </button>
-          )}
         </div>
       </div>
     </div>
