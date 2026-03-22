@@ -197,12 +197,17 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/95 backdrop-blur-md flex-shrink-0">
-        <button onClick={onBack} className="p-1 -ml-1 text-muted-foreground hover:text-foreground active:scale-[0.95] transition-all">
-          <ChevronLeft size={24} />
+      <header className="flex-shrink-0 flex items-center h-14 px-4 border-b border-border relative">
+        <button
+          onClick={onBack}
+          className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Cancel
         </button>
-        <h2 className="text-lg font-semibold text-foreground font-serif flex-1">{isEdit ? "Edit Outfit" : "New Outfit"}</h2>
-      </div>
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-base font-semibold text-foreground">
+          {isEdit ? "Edit Outfit" : "New Outfit"}
+        </h1>
+      </header>
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
