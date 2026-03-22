@@ -144,7 +144,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
 
   const save = async () => {
     if (!name.trim()) {
-      toast({ title: "Give your outfit a name", variant: "destructive" });
+      toast.error("Give your outfit a name");
       return;
     }
     if (selectedItems.length === 0) {
