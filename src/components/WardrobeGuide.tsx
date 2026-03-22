@@ -156,7 +156,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         {[
           { key: "all" as Filter, label: "All", count: totalPieces },
           { key: "owned" as Filter, label: "Owned", count: ownedCount },
-          { key: "gaps" as Filter, label: "Gaps", count: gapCount },
+          { key: "gaps" as Filter, label: "Rentals", count: gapCount },
         ].map((f) => (
           <button
             key={f.key}
@@ -343,7 +343,7 @@ function ItemCard({
           </div>
           <div className="flex flex-wrap gap-1.5 mt-2">
             {item.owned && <Badge label="OWNED" variant="owned" />}
-            {item.gap && <Badge label="GAP" variant="gap" />}
+            {item.gap && <Badge label="RENTAL" variant="gap" />}
             {item.priority && <Badge label="PRIORITY" variant="priority" />}
             {item.seasonal && <Badge label="SEASONAL" variant="seasonal" />}
           </div>
