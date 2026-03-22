@@ -166,7 +166,7 @@ const WeeklyPlanner = () => {
                             className="text-[10px] font-medium px-1.5 py-0.5 rounded-full border whitespace-nowrap"
                             style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
                           >
-                            {outfit.temp}
+                            {outfit.temp} · {tempBadge.range}
                           </span>
                         )}
                         <button
