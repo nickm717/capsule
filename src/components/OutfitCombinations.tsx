@@ -194,6 +194,21 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         </div>
       )}
 
+      <OutfitDetailSheet
+        open={!!detailOutfit}
+        outfit={detailOutfit ? {
+          id: detailOutfit.id,
+          name: detailOutfit.name,
+          temp: detailOutfit.temp,
+          pieces: detailOutfit.pieces as OutfitPiece[],
+          notes: detailOutfit.notes || "",
+        } : null}
+        onClose={() => setDetailOutfit(null)}
+        onEdit={() => openBuilder(detailOutfit!)}
+        onDelete={() => setDeleteOutfit({ id: detailOutfit!.id, name: detailOutfit!.name })}
+        onAddToDay={() => setAddToDayOutfit({ id: detailOutfit!.id, name: detailOutfit!.name })}
+      />
+
       <AddToDaySheet
         open={!!addToDayOutfit}
         outfit={addToDayOutfit}
