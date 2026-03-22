@@ -1,34 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { SEED_WARDROBE_ITEMS, categoryDefs, type WardrobeItem, type WardrobeCategory } from "@/data/darkautumn";
-
-let seedingStarted = false;
+import { categoryDefs, type WardrobeItem, type WardrobeCategory } from "@/data/darkautumn";
 
 export function useWardrobeItems() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchItems = useCallback(async () => {
-    const { data } = await supabase
+    setLoading(true);
+    setError(null);
+    const { data, error: err } = await supabase
       .from("custom_items")
       .select("*")
       .order("created_at", { ascending: true });
 
-    if (data) {
-      if (data.length === 0 && !seedingStarted) {
-        seedingStarted = true;
-        const { error } = await supabase.from("custom_items").insert(SEED_WARDROBE_ITEMS);
-        if (!error) {
-          const { data: seeded } = await supabase
-            .from("custom_items")
-            .select("*")
-            .order("created_at", { ascending: true });
-          if (seeded) setItems(seeded);
-        }
-      } else {
-        setItems(data);
-      }
+    if (err) {
+      setError(err.message);
+      setLoading(false);
+      return;
     }
+    setItems(data ?? []);
     setLoading(false);
   }, []);
 
@@ -52,5 +44,5 @@ export function useWardrobeItems() {
     return { ...cat, items: mapped, rows: catItems };
   });
 
-  return { items, categories, loading, refetch: fetchItems };
+  return { items, categories, loading, error, refetch: fetchItems };
 }

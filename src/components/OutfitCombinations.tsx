@@ -1,18 +1,24 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Plus, MoreHorizontal, CalendarPlus } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, MoreHorizontal, CalendarPlus, Loader2 } from "lucide-react";
 import { occasionDefs, temperatureBadges } from "@/data/darkautumn";
+import type { OutfitPiece } from "@/data/darkautumn";
 import OutfitBuilder from "./OutfitBuilder";
 import AddToDaySheet from "./AddToDaySheet";
 import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
 
-const OutfitCombinations = ({ onBuilderOpen }: { onBuilderOpen?: (open: boolean) => void }) => {
+interface OutfitCombinationsProps {
+  onBuilderOpen?: (open: boolean) => void;
+  onPieceTap?: (itemId: string) => void;
+}
+
+const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsProps) => {
   const [activeOccasion, setActiveOccasion] = useState(occasionDefs[0].id);
   const [showBuilder, setShowBuilder] = useState(false);
   const [menuOutfitId, setMenuOutfitId] = useState<string | null>(null);
   const [addToDayOutfit, setAddToDayOutfit] = useState<{ id: string; name: string } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const { outfits, refetch } = useOutfits();
+  const { outfits, loading, error, refetch } = useOutfits();
 
   const openBuilder = () => {
     setShowBuilder(true);
@@ -24,7 +30,6 @@ const OutfitCombinations = ({ onBuilderOpen }: { onBuilderOpen?: (open: boolean)
     onBuilderOpen?.(false);
   };
 
-  // Close menu on outside click
   useEffect(() => {
     if (!menuOutfitId) return;
     const handler = (e: MouseEvent) => {
@@ -87,8 +92,24 @@ const OutfitCombinations = ({ onBuilderOpen }: { onBuilderOpen?: (open: boolean)
         ))}
       </div>
 
+      {/* Loading */}
+      {loading && (
+        <div className="flex items-center justify-center py-16 animate-reveal-up">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-sm text-muted-foreground">Loading outfits…</span>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && !loading && (
+        <div className="text-center py-16 animate-reveal-up">
+          <p className="text-destructive text-sm mb-2">Failed to load outfits</p>
+          <button onClick={refetch} className="text-sm text-gold underline">Retry</button>
+        </div>
+      )}
+
       {/* Outfit cards */}
-      {outfitsForOccasion.map((outfit, i) => {
+      {!loading && !error && outfitsForOccasion.map((outfit, i) => {
         const tempBadge = temperatureBadges[outfit.temp];
         return (
           <div
@@ -138,18 +159,27 @@ const OutfitCombinations = ({ onBuilderOpen }: { onBuilderOpen?: (open: boolean)
             </div>
             {outfit.notes && <p className="text-muted-foreground text-sm mb-3">{outfit.notes}</p>}
             <div className="flex flex-wrap gap-1.5">
-              {outfit.pieces.map((piece, pi) => (
-                <div key={pi} className="flex items-center gap-1.5 bg-muted rounded-full px-2.5 py-1">
+              {outfit.pieces.map((piece: OutfitPiece, pi: number) => (
+                <button
+                  key={pi}
+                  onClick={() => piece.item_id && onPieceTap?.(piece.item_id)}
+                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 ${
+                    piece.item_id ? "bg-muted hover:bg-muted/80 active:scale-[0.97] transition-all cursor-pointer" : "bg-muted cursor-default"
+                  }`}
+                >
                   <span className="w-3 h-3 rounded-full border border-border/50" style={{ backgroundColor: piece.hex }} />
                   <span className="text-xs text-foreground">{piece.name}</span>
-                </div>
+                  {piece.owned === false && (
+                    <span className="text-[9px] font-bold uppercase text-rust">GAP</span>
+                  )}
+                </button>
               ))}
             </div>
           </div>
         );
       })}
 
-      {outfitsForOccasion.length === 0 && (
+      {!loading && !error && outfitsForOccasion.length === 0 && (
         <div className="text-center py-16 animate-reveal-up">
           <p className="text-muted-foreground text-sm">No outfits for this occasion yet.</p>
         </div>
