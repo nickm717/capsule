@@ -47,13 +47,14 @@ const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay
                 </span>
               )}
             </SheetTitle>
-            <div className="relative">
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
-              >
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
+            <div className="flex items-center gap-1">
+              <div className="relative">
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
+                >
+                  <MoreHorizontal className="w-5 h-5" />
+                </button>
               {menuOpen && (
                 <div className="absolute right-0 top-9 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] animate-in fade-in-0 zoom-in-95 duration-150">
                   <button
