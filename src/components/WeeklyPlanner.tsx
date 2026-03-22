@@ -152,8 +152,8 @@ const WeeklyPlanner = () => {
                     {outfit.pieces.map((p, pi) => (
                       <div
                         key={pi}
-                        className="w-1.5 rounded-sm"
-                        style={{ backgroundColor: p.hex, minHeight: "24px" }}
+                        className="w-1.5"
+                        style={{ backgroundColor: p.hex, minHeight: "24px", borderRadius: "2px" }}
                       />
                     ))}
                   </div>
@@ -166,7 +166,7 @@ const WeeklyPlanner = () => {
                             className="text-[10px] font-medium px-1.5 py-0.5 rounded-full border whitespace-nowrap"
                             style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
                           >
-                            {outfit.temp}
+                            {outfit.temp} · {tempBadge.range}
                           </span>
                         )}
                         <button
@@ -177,7 +177,7 @@ const WeeklyPlanner = () => {
                         </button>
                       </div>
                     </div>
-                    <p className="text-muted-foreground text-[10px] mt-0.5 truncate">
+                    <p className="text-muted-foreground text-[10px] mt-0.5">
                       {outfit.pieces.map((p) => p.name).join(" · ")}
                     </p>
                   </div>

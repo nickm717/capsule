@@ -5,6 +5,7 @@ import type { OutfitPiece } from "@/data/darkautumn";
 import OutfitBuilder from "./OutfitBuilder";
 import AddToDaySheet from "./AddToDaySheet";
 import DeleteOutfitSheet from "./DeleteOutfitSheet";
+import OutfitDetailSheet from "./OutfitDetailSheet";
 import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
   const [menuOutfitId, setMenuOutfitId] = useState<string | null>(null);
   const [addToDayOutfit, setAddToDayOutfit] = useState<{ id: string; name: string } | null>(null);
   const [deleteOutfit, setDeleteOutfit] = useState<{ id: string; name: string } | null>(null);
+  const [detailOutfit, setDetailOutfit] = useState<DbOutfit | null>(null);
   const [deleting, setDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -144,9 +146,10 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         const tempBadge = temperatureBadges[outfit.temp];
         const pieces = outfit.pieces as OutfitPiece[];
         return (
-          <div
+          <button
             key={outfit.id}
-            className="bg-card rounded-xl border border-border overflow-hidden animate-reveal-up"
+            onClick={() => setDetailOutfit(outfit)}
+            className="w-full text-left bg-card rounded-xl border border-border animate-reveal-up active:scale-[0.99] transition-transform"
             style={{ animationDelay: `${i * 50}ms` }}
           >
             <div className="flex">
@@ -155,8 +158,8 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
                 {pieces.map((piece, pi) => (
                   <div
                     key={pi}
-                    className="w-2 rounded-sm"
-                    style={{ backgroundColor: piece.hex, minHeight: "32px" }}
+                    className="w-2"
+                    style={{ backgroundColor: piece.hex, minHeight: "32px", borderRadius: "2px" }}
                   />
                 ))}
               </div>
@@ -171,62 +174,17 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
                         className="text-[10px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap"
                         style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
                       >
-                        {outfit.temp}
+                        {outfit.temp} · {tempBadge.range}
                       </span>
                     )}
-                    <div className="relative">
-                      <button
-                        onClick={() => setMenuOutfitId(menuOutfitId === outfit.id ? null : outfit.id)}
-                        className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
-                      {menuOutfitId === outfit.id && (
-                        <div
-                          ref={menuRef}
-                          className="absolute right-0 top-8 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] animate-in fade-in-0 zoom-in-95 duration-150"
-                        >
-                          <button
-                            onClick={() => {
-                              setMenuOutfitId(null);
-                              openBuilder(outfit);
-                            }}
-                            className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
-                          >
-                            <Pencil size={14} className="text-muted-foreground" />
-                            Edit outfit
-                          </button>
-                          <button
-                            onClick={() => {
-                              setMenuOutfitId(null);
-                              setAddToDayOutfit({ id: outfit.id, name: outfit.name });
-                            }}
-                            className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
-                          >
-                            <CalendarPlus size={14} className="text-muted-foreground" />
-                            Add to day
-                          </button>
-                          <button
-                            onClick={() => {
-                              setMenuOutfitId(null);
-                              setDeleteOutfit({ id: outfit.id, name: outfit.name });
-                            }}
-                            className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-destructive hover:bg-muted transition-colors active:scale-[0.97]"
-                          >
-                            <Trash2 size={14} />
-                            Delete outfit
-                          </button>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
-                <p className="text-muted-foreground text-xs mt-1 truncate">
+                <p className="text-muted-foreground text-xs mt-1">
                   {pieces.map((p) => p.name).join(" · ")}
                 </p>
               </div>
             </div>
-          </div>
+          </button>
         );
       })}
 
@@ -235,6 +193,21 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
           <p className="text-muted-foreground text-sm">No outfits for this occasion yet.</p>
         </div>
       )}
+
+      <OutfitDetailSheet
+        open={!!detailOutfit}
+        outfit={detailOutfit ? {
+          id: detailOutfit.id,
+          name: detailOutfit.name,
+          temp: detailOutfit.temp,
+          pieces: detailOutfit.pieces as OutfitPiece[],
+          notes: detailOutfit.notes || "",
+        } : null}
+        onClose={() => setDetailOutfit(null)}
+        onEdit={() => openBuilder(detailOutfit!)}
+        onDelete={() => setDeleteOutfit({ id: detailOutfit!.id, name: detailOutfit!.name })}
+        onAddToDay={() => setAddToDayOutfit({ id: detailOutfit!.id, name: detailOutfit!.name })}
+      />
 
       <AddToDaySheet
         open={!!addToDayOutfit}
