@@ -122,7 +122,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
 
   const generateAI = async () => {
     if (selectedItems.length === 0) {
-      toast({ title: "Select pieces first", variant: "destructive" });
+      toast.error("Select pieces first");
       return;
     }
     setAiLoading(true);
