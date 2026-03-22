@@ -6,6 +6,7 @@ import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
 import AddItemSheet from "./AddItemSheet";
 import ItemFormPage from "./ItemFormPage";
 import DeleteItemSheet from "./DeleteItemSheet";
+import ItemDetailSheet from "./ItemDetailSheet";
 import type { ItemFormData } from "./ItemForm";
 
 type Filter = "all" | "owned" | "gaps";
