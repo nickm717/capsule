@@ -152,8 +152,8 @@ const WeeklyPlanner = () => {
                     {outfit.pieces.map((p, pi) => (
                       <div
                         key={pi}
-                        className="w-1.5 rounded-sm"
-                        style={{ backgroundColor: p.hex, minHeight: "24px" }}
+                        className="w-1.5"
+                        style={{ backgroundColor: p.hex, minHeight: "24px", borderRadius: "2px" }}
                       />
                     ))}
                   </div>
