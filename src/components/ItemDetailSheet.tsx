@@ -1,4 +1,5 @@
-import { Pencil } from "lucide-react";
+import { useState } from "react";
+import { MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -14,19 +15,58 @@ interface ItemDetailSheetProps {
   category?: string;
   onClose: () => void;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
-const ItemDetailSheet = ({ open, item, brand, category, onClose, onEdit }: ItemDetailSheetProps) => {
+const ItemDetailSheet = ({ open, item, brand, category, onClose, onEdit, onDelete }: ItemDetailSheetProps) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   if (!item) return null;
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8 pt-5">
+    <Sheet open={open} onOpenChange={(v) => { if (!v) { setMenuOpen(false); onClose(); } }}>
+      <SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8 pt-5 [&>button[class*='absolute']]:hidden">
         <SheetHeader className="text-left mb-5">
-          <SheetTitle className="text-lg font-semibold text-foreground flex items-center gap-3">
-            <span className="w-6 h-6 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: item.hex }} />
-            {item.name}
-          </SheetTitle>
+          <div className="flex items-center justify-between">
+            <SheetTitle className="text-lg font-semibold text-foreground flex items-center gap-3">
+              <span className="w-6 h-6 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: item.hex }} />
+              {item.name}
+            </SheetTitle>
+            <div className="flex items-center gap-1">
+              <div className="relative">
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
+                >
+                  <MoreHorizontal className="w-5 h-5" />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-9 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] animate-in fade-in-0 zoom-in-95 duration-150">
+                    <button
+                      onClick={() => { setMenuOpen(false); onClose(); onEdit(); }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
+                    >
+                      <Pencil size={14} className="text-muted-foreground" />
+                      Edit item
+                    </button>
+                    <button
+                      onClick={() => { setMenuOpen(false); onClose(); onDelete(); }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-destructive hover:bg-muted transition-colors active:scale-[0.97]"
+                    >
+                      <Trash2 size={14} />
+                      Delete item
+                    </button>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => { setMenuOpen(false); onClose(); }}
+                className="w-9 h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
         </SheetHeader>
 
         <div className="space-y-4">
@@ -54,14 +94,6 @@ const ItemDetailSheet = ({ open, item, brand, category, onClose, onEdit }: ItemD
             </div>
           )}
         </div>
-
-        <button
-          onClick={() => { onClose(); onEdit(); }}
-          className="w-full mt-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm transition-all active:scale-[0.97] flex items-center justify-center gap-2"
-        >
-          <Pencil size={14} />
-          Edit item
-        </button>
       </SheetContent>
     </Sheet>
   );

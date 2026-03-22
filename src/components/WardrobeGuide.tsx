@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Star, Plus, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
 import { swatches, type WardrobeItem } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
@@ -26,14 +26,6 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [detailItem, setDetailItem] = useState<{ item: any; row: any } | null>(null);
-  const [favorites, setFavorites] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem("darkautumn-favorites");
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
 
   const { categories: allCategories, loading, error, refetch: fetchItems } = useWardrobeItems();
 
@@ -89,16 +81,6 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
     }
     setDeleteTarget(null);
   };
-
-  const toggleFavorite = useCallback((id: string) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      localStorage.setItem("darkautumn-favorites", JSON.stringify([...next]));
-      return next;
-    });
-  }, []);
 
   const categories = activeCategory === "all" ? allCategories : allCategories.filter((c) => c.id === activeCategory);
 
@@ -208,8 +190,6 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
                   <ItemCard
                     key={item.id}
                     item={item}
-                    isFavorite={favorites.has(item.id)}
-                    onToggleFavorite={toggleFavorite}
                     onTap={() => row && setDetailItem({ item, row })}
                     onEdit={() => row && handleEdit(row)}
                     onDelete={() => setDeleteTarget({ id: item.id, name: item.name })}
@@ -236,6 +216,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         category={detailItem?.row?.category || undefined}
         onClose={() => setDetailItem(null)}
         onEdit={() => detailItem?.row && handleEdit(detailItem.row)}
+        onDelete={() => detailItem && setDeleteTarget({ id: detailItem.item.id, name: detailItem.item.name })}
       />
       <DeleteItemSheet
         open={!!deleteTarget}
@@ -263,16 +244,12 @@ function CategoryChip({ label, icon, active, onClick }: { label: string; icon: s
 
 function ItemCard({
   item,
-  isFavorite,
-  onToggleFavorite,
   onTap,
   onEdit,
   onDelete,
   delay,
 }: {
   item: WardrobeItem;
-  isFavorite: boolean;
-  onToggleFavorite: (id: string) => void;
   onTap: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -294,7 +271,7 @@ function ItemCard({
 
   return (
     <div
-      className="bg-card rounded-xl border border-border overflow-hidden animate-reveal-up cursor-pointer active:scale-[0.98] transition-transform"
+      className="bg-card rounded-xl border border-border animate-reveal-up cursor-pointer active:scale-[0.98] transition-transform"
       style={{ animationDelay: `${delay}ms` }}
       onClick={onTap}
     >
@@ -308,28 +285,24 @@ function ItemCard({
               {item.brand && <p className="text-muted-foreground text-[11px] mt-0.5">{item.brand}</p>}
               <p className="text-muted-foreground text-xs mt-0.5">{item.color}</p>
             </div>
-            <div className="flex items-center gap-0.5 flex-shrink-0">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleFavorite(item.id);
-                }}
-                className="p-1 -m-0.5 transition-all duration-150 active:scale-[0.9]"
-              >
-                <Star size={18} className={isFavorite ? "fill-gold text-gold" : "text-muted-foreground/40 hover:text-muted-foreground"} />
-              </button>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className={`text-[9px] font-bold uppercase tracking-[0.08em] px-1.5 py-0.5 rounded border ${
+                item.owned ? "bg-teal/15 text-teal border-teal/30" : "bg-rust/15 text-rust border-rust/30"
+              }`}>
+                {item.owned ? "OWN" : "RENTAL"}
+              </span>
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setMenuOpen((p) => !p);
                   }}
-                  className="p-1 -m-0.5 transition-all duration-150 active:scale-[0.9]"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
                 >
-                  <MoreHorizontal size={18} className="text-muted-foreground/40 hover:text-muted-foreground" />
+                  <MoreHorizontal size={16} />
                 </button>
                 {menuOpen && (
-                  <div className="absolute right-0 top-8 z-50 min-w-[140px] rounded-lg border border-border bg-card shadow-lg py-1 animate-in fade-in-0 zoom-in-95 duration-150">
+                  <div className="absolute right-0 top-9 z-50 min-w-[140px] rounded-lg border border-border bg-card shadow-lg py-1 animate-in fade-in-0 zoom-in-95 duration-150">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -357,26 +330,10 @@ function ItemCard({
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {item.owned && <Badge label="OWN" variant="owned" />}
-            {item.gap && <Badge label="RENTAL" variant="gap" />}
-            {item.priority && <Badge label="PRIORITY" variant="priority" />}
-            {item.seasonal && <Badge label="SEASONAL" variant="seasonal" />}
-          </div>
         </div>
       </div>
     </div>
   );
-}
-
-function Badge({ label, variant }: { label: string; variant: "owned" | "gap" | "priority" | "seasonal" }) {
-  const styles: Record<string, string> = {
-    owned: "bg-teal/15 text-teal border-teal/30",
-    gap: "bg-rust/15 text-rust border-rust/30",
-    priority: "bg-gold/15 text-gold border-gold/30",
-    seasonal: "bg-olive/15 text-olive border-olive/30",
-  };
-  return <span className={`text-[9px] font-bold uppercase tracking-[0.08em] px-1.5 py-0.5 rounded border ${styles[variant]}`}>{label}</span>;
 }
 
 export default WardrobeGuide;
