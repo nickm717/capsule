@@ -142,9 +142,9 @@ const WeeklyPlanner = () => {
           >
             {/* Day + weather header — outside the card, pure system font */}
             <div className="flex items-center justify-between px-1 mb-1.5">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <span
-                  className="text-[11px] font-semibold uppercase"
+                  className="text-[12px] font-bold uppercase"
                   style={{
                     letterSpacing: "0.12em",
                     color: isToday ? "hsl(var(--gold))" : "hsl(var(--muted-foreground))",
@@ -153,7 +153,7 @@ const WeeklyPlanner = () => {
                   {DAY_SHORT[i]}
                 </span>
                 <span
-                  className="text-[22px] font-bold leading-none"
+                  className="text-[12px] font-bold"
                   style={{ color: isToday ? "hsl(var(--gold))" : "hsl(var(--foreground))" }}
                 >
                   {dayNum}
@@ -169,7 +169,7 @@ const WeeklyPlanner = () => {
             {/* Outfit card */}
             <button
               onClick={() => setSheetDay({ key: dayKey, label: `${DAY_LABELS[i].slice(0, 3)} ${dayNum}` })}
-              className={`w-full text-left rounded-2xl border overflow-hidden transition-all active:scale-[0.99] bg-card shadow-sm dark:shadow-none ${
+              className={`w-full text-left rounded-2xl border transition-all active:scale-[0.99] bg-card shadow-sm dark:shadow-none ${
                 outfit
                   ? isToday ? "border-gold/30" : "border-border/50"
                   : "border-dashed border-border/50"
@@ -177,8 +177,8 @@ const WeeklyPlanner = () => {
             >
               {outfit ? (
                 <div>
-                  {/* Full-width color palette strip */}
-                  <div className="flex h-2">
+                  {/* Full-width color palette strip — clip rounded top independently */}
+                  <div className="flex h-2 rounded-t-2xl overflow-hidden">
                     {outfit.pieces.map((p, pi) => (
                       <div key={pi} style={{ backgroundColor: p.hex, flex: 1 }} />
                     ))}

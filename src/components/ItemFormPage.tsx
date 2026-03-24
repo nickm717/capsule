@@ -171,39 +171,39 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
           </FormSection>
 
           {/* Section 2 — Color picker */}
-          <FormSection label="Color Swatch">
-            <div className="px-4 py-4 space-y-3">
-              {/* Selected swatch preview */}
-              <div className="flex items-center gap-3">
+          <FormSection label="Color">
+            {/* Palette swatches grid */}
+            <div className="px-4 pt-4 pb-3">
+              <div className="flex flex-wrap gap-2.5">
+                {swatches.map((s) => (
+                  <button
+                    key={s.hex}
+                    onClick={() => update("hex", s.hex)}
+                    title={s.name}
+                    className={`w-9 h-9 rounded-xl transition-all active:scale-[0.88] ${
+                      form.hex === s.hex
+                        ? "ring-2 ring-gold ring-offset-2 ring-offset-card scale-105 shadow-sm"
+                        : "border border-black/10 dark:border-white/10"
+                    }`}
+                    style={{ backgroundColor: s.hex }}
+                  />
+                ))}
+              </div>
+            </div>
+            {/* Custom color — iOS-style row at bottom of section */}
+            <div className="border-t border-border/40 flex items-center justify-between px-4 py-3">
+              <span className="text-[17px] text-foreground">Custom</span>
+              <div className="relative w-9 h-9">
                 <div
-                  className="w-10 h-10 rounded-xl border border-black/10 dark:border-white/10 shadow-sm flex-shrink-0"
+                  className="w-9 h-9 rounded-xl border border-black/10 dark:border-white/10 shadow-sm"
                   style={{ backgroundColor: form.hex }}
                 />
-                <div className="flex gap-2 flex-wrap flex-1">
-                  {swatches.map((s) => (
-                    <button
-                      key={s.hex}
-                      onClick={() => update("hex", s.hex)}
-                      className={`w-7 h-7 rounded-full transition-all active:scale-[0.88] ${
-                        form.hex === s.hex
-                          ? "ring-2 ring-offset-2 ring-gold ring-offset-card scale-110"
-                          : "border border-black/10 dark:border-white/10"
-                      }`}
-                      style={{ backgroundColor: s.hex }}
-                      title={s.name}
-                    />
-                  ))}
-                </div>
-              </div>
-              {/* Custom hex */}
-              <div className="flex items-center gap-3 pt-1">
                 <input
                   type="color"
                   value={form.hex}
                   onChange={(e) => update("hex", e.target.value)}
-                  className="w-9 h-9 rounded-xl border border-border cursor-pointer bg-transparent"
+                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer rounded-xl"
                 />
-                <span className="text-[13px] text-muted-foreground">Custom color</span>
               </div>
             </div>
           </FormSection>

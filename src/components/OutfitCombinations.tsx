@@ -326,92 +326,74 @@ function OutfitCard({
   }, [menuOpen]);
 
   return (
+    // No overflow-hidden on the card so the dropdown menu can escape its bounds
     <div
-      className={`w-full text-left bg-card rounded-2xl border border-border/60 animate-reveal-up cursor-pointer active:scale-[0.99] transition-transform overflow-hidden relative ${menuOpen ? "z-40" : ""}`}
+      className={`w-full text-left bg-card rounded-2xl border border-border/60 animate-reveal-up cursor-pointer active:scale-[0.99] transition-transform relative ${menuOpen ? "z-40" : ""}`}
       style={{ animationDelay: `${delay}ms` }}
       onClick={onTap}
     >
-      {/* Full-width color palette strip */}
-      <div className="flex h-2.5 w-full">
+      {/* Full-width color palette strip — rounded top clipped independently */}
+      <div className="flex h-2 w-full rounded-t-2xl overflow-hidden">
         {pieces.map((piece, pi) => (
-          <div
-            key={pi}
-            style={{ backgroundColor: piece.hex, flex: 1 }}
-          />
+          <div key={pi} style={{ backgroundColor: piece.hex, flex: 1 }} />
         ))}
       </div>
 
       {/* Content */}
-      <div className="p-3.5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <h3 className="text-foreground font-medium text-sm leading-snug truncate">{outfit.name}</h3>
-            <p className="text-muted-foreground text-[11px] mt-1 leading-relaxed line-clamp-1">
-              {pieces.map((p) => p.name).join("  ·  ")}
-            </p>
-          </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {tempBadge && (
-              <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
-                {outfit.temp}
-              </AppBadge>
+      <div className="px-4 py-3.5">
+        {/* Top row: name + menu */}
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-foreground font-semibold text-[15px] leading-snug flex-1">{outfit.name}</h3>
+          {/* Menu — z-[60] so it sits above adjacent cards */}
+          <div className="relative flex-shrink-0" ref={menuRef}>
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen((p) => !p); }}
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92] -mt-0.5"
+            >
+              <MoreHorizontal size={15} />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-9 z-[60] min-w-[150px] rounded-xl border border-border bg-card shadow-xl py-1 animate-in fade-in-0 zoom-in-95 duration-150">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }}
+                  className="flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-foreground active:bg-muted transition-colors"
+                >
+                  <Pencil size={13} className="text-muted-foreground" />
+                  Edit outfit
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onAddToDay(); }}
+                  className="flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-foreground active:bg-muted transition-colors"
+                >
+                  <CalendarPlus size={13} className="text-muted-foreground" />
+                  Add to day
+                </button>
+                <div className="my-1 h-px bg-border/60" />
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
+                  className="flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-destructive active:bg-muted transition-colors"
+                >
+                  <Trash2 size={13} />
+                  Delete outfit
+                </button>
+              </div>
             )}
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMenuOpen((p) => !p);
-                }}
-                className="w-8 h-8 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors active:scale-[0.92]"
-              >
-                <MoreHorizontal size={15} />
-              </button>
-              {menuOpen && (
-                <div className="absolute right-0 top-9 z-50 min-w-[150px] rounded-xl border border-border bg-card shadow-xl py-1 animate-in fade-in-0 zoom-in-95 duration-150">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }}
-                    className="flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                  >
-                    <Pencil size={13} className="text-muted-foreground" />
-                    Edit outfit
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onAddToDay(); }}
-                    className="flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                  >
-                    <CalendarPlus size={13} className="text-muted-foreground" />
-                    Add to day
-                  </button>
-                  <div className="my-1 h-px bg-border/60" />
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
-                    className="flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-destructive hover:bg-muted transition-colors"
-                  >
-                    <Trash2 size={13} />
-                    Delete outfit
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
         </div>
 
-        {/* Color dot row */}
-        <div className="flex items-center gap-1.5 mt-2.5">
-          {pieces.map((piece, pi) => (
-            <div
-              key={pi}
-              className="w-3 h-3 rounded-full border border-black/20 flex-shrink-0"
-              style={{ backgroundColor: piece.hex }}
-              title={piece.name}
-            />
-          ))}
-          {tempBadge && (
-            <span className="text-[10px] text-muted-foreground/60 ml-auto">
-              {tempBadge.range}
-            </span>
-          )}
-        </div>
+        {/* Piece names — allow wrapping, no clamp */}
+        <p className="text-muted-foreground text-[13px] mt-1.5 leading-relaxed">
+          {pieces.map((p) => p.name).join(" · ")}
+        </p>
+
+        {/* Temp badge with full range inside */}
+        {tempBadge && (
+          <div className="mt-2.5">
+            <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
+              {outfit.temp} · {tempBadge.range}
+            </AppBadge>
+          </div>
+        )}
       </div>
     </div>
   );
