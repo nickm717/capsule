@@ -32,9 +32,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   useEffect(() => {
     if (!openItemId || loading) return;
     const row = allCategories.flatMap((c) => c.rows).find((r: any) => r.id === openItemId);
-    if (row) {
-      handleEdit(row);
-    }
+    if (row) handleEdit(row);
     onOpenItemConsumed?.();
   }, [openItemId, loading]);
 
@@ -52,36 +50,26 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
     onFormOpen?.(false);
   };
 
-  const handleFormSaved = () => {
-    fetchItems();
-    closeForm();
-  };
+  const handleFormSaved = () => { fetchItems(); closeForm(); };
 
   const handleEdit = (row: any) => {
-    openForm(
-      {
-        name: row.name,
-        brand: row.brand || "",
-        category: row.category,
-        color: row.color,
-        hex: row.hex,
-        notes: row.notes || "",
-        owned: row.owned,
-      },
-      row.id
-    );
+    openForm({
+      name: row.name,
+      brand: row.brand || "",
+      category: row.category,
+      color: row.color,
+      hex: row.hex,
+      notes: row.notes || "",
+      owned: row.owned,
+    }, row.id);
   };
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     const { error } = await supabase.from("custom_items").delete().eq("id", deleteTarget.id);
-    if (!error) {
-      fetchItems();
-    }
+    if (!error) fetchItems();
     setDeleteTarget(null);
   };
-
-  const categories = activeCategory === "all" ? allCategories : allCategories.filter((c) => c.id === activeCategory);
 
   const filterItem = (item: WardrobeItem) => {
     if (filter === "owned") return item.owned;
@@ -90,6 +78,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   };
 
   const filteredCategories = activeCategory === "all" ? allCategories : allCategories.filter((c) => c.id === activeCategory);
+  const categories = filteredCategories;
   const totalPieces = filteredCategories.reduce((s, c) => s + c.items.length, 0);
   const ownedCount = filteredCategories.reduce((s, c) => s + c.items.filter((i) => i.owned).length, 0);
   const gapCount = filteredCategories.reduce((s, c) => s + c.items.filter((i) => i.gap).length, 0);
@@ -105,50 +94,42 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         <h2 className="text-4xl font-medium text-foreground" style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
           Wardrobe
         </h2>
-        <div className="flex items-center gap-3 mt-2">
-          <p className="text-muted-foreground text-xs tracking-wide uppercase" style={{ letterSpacing: "0.08em" }}>
-            {ownedCount} owned · {gapCount} rentals · {totalPieces} total
-          </p>
-        </div>
-        {/* Color palette row */}
+        <p className="text-muted-foreground text-xs mt-1.5 tracking-wide" style={{ letterSpacing: "0.06em" }}>
+          {ownedCount} owned · {gapCount} rentals · {totalPieces} total
+        </p>
         <div className="flex gap-1.5 mt-3">
           {swatches.map((s) => (
-            <div
-              key={s.name}
-              className="w-5 h-5 rounded-full border border-white/10 flex-shrink-0"
-              style={{ backgroundColor: s.hex }}
-              title={s.name}
-            />
+            <div key={s.name} className="w-5 h-5 rounded-full border border-black/10 dark:border-white/10 flex-shrink-0" style={{ backgroundColor: s.hex }} title={s.name} />
           ))}
         </div>
       </div>
 
-      {/* Floating Action Button */}
+      {/* Liquid Glass FAB */}
       <button
         onClick={() => setSheetOpen(true)}
-        className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-[0.93] shadow-xl"
+        className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-[0.92] active:opacity-90"
         style={{
-          backgroundColor: "hsl(38 80% 54%)",
           bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)"
+          background: "linear-gradient(145deg, rgba(184,128,48,0.82) 0%, rgba(160,104,28,0.70) 100%)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          border: "1px solid rgba(255, 200, 100, 0.45)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.28), inset 0 1.5px 0 rgba(255,255,255,0.32), inset 0 -1px 0 rgba(0,0,0,0.18)",
         }}
       >
-        <Plus size={22} color="hsl(26 22% 5%)" strokeWidth={2.5} />
+        <Plus size={22} color="rgba(255,255,255,0.95)" strokeWidth={2.5} />
       </button>
 
       {/* Category chips */}
-      <div
-        className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 animate-reveal-up [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        style={{ animationDelay: "50ms" }}
-      >
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 animate-reveal-up [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ animationDelay: "50ms" }}>
         <CategoryChip label="All" icon="✦" active={activeCategory === "all"} onClick={() => setActiveCategory("all")} />
         {allCategories.map((cat) => (
           <CategoryChip key={cat.id} label={cat.label} icon={cat.icon} active={activeCategory === cat.id} onClick={() => setActiveCategory(cat.id)} />
         ))}
       </div>
 
-      {/* Filter bar */}
-      <div className="flex gap-1 bg-muted/60 rounded-xl p-1 animate-reveal-up border border-border/40" style={{ animationDelay: "100ms" }}>
+      {/* iOS-style segmented filter */}
+      <div className="flex gap-0.5 bg-muted/70 rounded-[10px] p-0.5 animate-reveal-up border border-border/30" style={{ animationDelay: "100ms" }}>
         {[
           { key: "all" as Filter, label: "All", count: totalPieces },
           { key: "owned" as Filter, label: "Owned", count: ownedCount },
@@ -157,15 +138,14 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`flex-1 text-center py-1.5 rounded-lg text-xs font-medium transition-all duration-150 active:scale-[0.97] tracking-wide ${
+            className={`flex-1 text-center py-[7px] rounded-[8px] text-[13px] font-medium transition-all duration-150 active:scale-[0.97] ${
               filter === f.key
-                ? "bg-card text-foreground shadow-sm border border-border/60"
-                : "text-muted-foreground hover:text-foreground/70"
+                ? "bg-card text-foreground shadow-sm dark:shadow-black/40"
+                : "text-muted-foreground"
             }`}
-            style={{ letterSpacing: "0.04em" }}
           >
             {f.label}
-            <span className="ml-1.5 text-[10px] opacity-50">{f.count}</span>
+            <span className="ml-1 text-[11px] opacity-50">{f.count}</span>
           </button>
         ))}
       </div>
@@ -174,7 +154,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
       {loading && (
         <div className="flex items-center justify-center py-16 animate-reveal-up">
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-xs text-muted-foreground tracking-wide">Loading wardrobe…</span>
+          <span className="ml-2 text-xs text-muted-foreground">Loading wardrobe…</span>
         </div>
       )}
 
@@ -186,33 +166,30 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         </div>
       )}
 
-      {/* Item grid */}
+      {/* Item list — iOS inset grouped style */}
       {!loading && !error && categories.map((cat) => {
         const filtered = cat.items.filter(filterItem);
         if (filtered.length === 0) return null;
         return (
-          <section key={cat.id}>
+          <section key={cat.id} className="animate-reveal-up">
             {activeCategory === "all" && (
-              <div className="flex items-center gap-2 mb-3 animate-reveal-up">
-                <span className="text-base">{cat.icon}</span>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest" style={{ letterSpacing: "0.12em" }}>
-                  {cat.label}
-                </h3>
-                <div className="flex-1 h-px bg-border/50" />
-                <span className="text-[10px] text-muted-foreground/60">{filtered.length}</span>
-              </div>
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase mb-1.5 px-1" style={{ letterSpacing: "0.1em" }}>
+                {cat.icon}  {cat.label}
+              </p>
             )}
-            <div className="grid grid-cols-2 gap-2.5">
+            {/* Grouped list container */}
+            <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-sm dark:shadow-none">
               {filtered.map((item, i) => {
                 const row = cat.rows.find((r: any) => r.id === item.id);
                 return (
-                  <ItemGridCard
+                  <ItemRow
                     key={item.id}
                     item={item}
+                    isLast={i === filtered.length - 1}
                     onTap={() => row && setDetailItem({ item, row })}
                     onEdit={() => row && handleEdit(row)}
                     onDelete={() => setDeleteTarget({ id: item.id, name: item.name })}
-                    delay={i * 35}
+                    delay={i * 30}
                   />
                 );
               })}
@@ -253,10 +230,9 @@ function CategoryChip({ label, icon, active, onClick }: { label: string; icon: s
       onClick={onClick}
       className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-150 active:scale-[0.96] border ${
         active
-          ? "bg-primary text-primary-foreground border-primary/80"
-          : "bg-muted/60 text-muted-foreground hover:text-foreground border-border/40"
+          ? "bg-primary text-primary-foreground border-primary/70 shadow-sm"
+          : "bg-muted/60 text-muted-foreground border-border/40"
       }`}
-      style={{ letterSpacing: "0.03em" }}
     >
       <span className="text-sm">{icon}</span>
       {label}
@@ -264,14 +240,16 @@ function CategoryChip({ label, icon, active, onClick }: { label: string; icon: s
   );
 }
 
-function ItemGridCard({
+function ItemRow({
   item,
+  isLast,
   onTap,
   onEdit,
   onDelete,
   delay,
 }: {
   item: WardrobeItem;
+  isLast: boolean;
   onTap: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -283,9 +261,7 @@ function ItemGridCard({
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -293,76 +269,61 @@ function ItemGridCard({
 
   return (
     <div
-      className={`bg-card rounded-2xl border border-border/60 overflow-hidden animate-reveal-up active:scale-[0.97] transition-transform relative ${menuOpen ? "z-40" : ""}`}
+      className={`animate-reveal-up relative ${menuOpen ? "z-40" : ""}`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      {/* Color swatch area */}
       <div
-        className="relative w-full cursor-pointer"
-        style={{ height: "90px", backgroundColor: item.hex }}
+        className={`flex items-center px-4 py-3 active:bg-muted/40 transition-colors cursor-pointer ${!isLast ? "border-b border-border/40" : ""}`}
         onClick={onTap}
       >
-        {/* Subtle gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20" />
+        {/* Color swatch */}
+        <div className="w-9 h-9 rounded-xl flex-shrink-0 border border-black/10 dark:border-white/10 shadow-sm" style={{ backgroundColor: item.hex }} />
 
-        {/* Top-right: menu button */}
-        <div className="absolute top-2 right-2 z-10" ref={menuRef}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setMenuOpen((p) => !p);
-            }}
-            className="w-7 h-7 flex items-center justify-center rounded-lg bg-black/30 text-white/80 hover:bg-black/50 transition-colors active:scale-[0.9] backdrop-blur-sm"
-          >
-            <MoreHorizontal size={14} />
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 top-8 z-50 min-w-[140px] rounded-xl border border-border bg-card shadow-xl py-1 animate-in fade-in-0 zoom-in-95 duration-150">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMenuOpen(false);
-                  onEdit();
-                }}
-                className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-              >
-                <Pencil size={13} className="text-muted-foreground" />
-                Edit item
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMenuOpen(false);
-                  onDelete();
-                }}
-                className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-destructive hover:bg-muted transition-colors"
-              >
-                <Trash2 size={13} />
-                Delete item
-              </button>
-            </div>
-          )}
+        {/* Details */}
+        <div className="flex-1 min-w-0 ml-3">
+          <p className="text-foreground text-[15px] font-medium leading-snug truncate">{item.name}</p>
+          <p className="text-muted-foreground text-[13px] mt-0.5 truncate">
+            {item.brand ? `${item.brand} · ` : ""}{item.color}
+          </p>
         </div>
 
-        {/* Bottom-left: owned badge */}
-        <div className="absolute bottom-2 left-2">
-          <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-md backdrop-blur-sm ${
+        {/* Status + menu */}
+        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+          <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-md ${
             item.owned
-              ? "bg-black/40 text-white/90 border border-white/20"
-              : "bg-black/40 text-white/70 border border-white/15"
+              ? "bg-teal/15 text-teal"
+              : "bg-rust/15 text-rust"
           }`}>
             {item.owned ? "Own" : "Rental"}
           </span>
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen((p) => !p); }}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92]"
+            >
+              <MoreHorizontal size={16} />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-9 z-50 min-w-[150px] rounded-2xl border border-border bg-card shadow-xl py-1 animate-in fade-in-0 zoom-in-95 duration-150">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }}
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[15px] text-foreground active:bg-muted transition-colors"
+                >
+                  <Pencil size={14} className="text-muted-foreground" />
+                  Edit item
+                </button>
+                <div className="h-px bg-border/60 mx-3" />
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[15px] text-destructive active:bg-muted transition-colors"
+                >
+                  <Trash2 size={14} />
+                  Delete item
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* Info area */}
-      <div className="p-2.5 cursor-pointer" onClick={onTap}>
-        <p className="text-foreground text-xs font-medium leading-snug line-clamp-1">{item.name}</p>
-        {item.brand && (
-          <p className="text-muted-foreground text-[10px] mt-0.5 line-clamp-1">{item.brand}</p>
-        )}
-        <p className="text-muted-foreground/60 text-[10px] mt-0.5">{item.color}</p>
       </div>
     </div>
   );

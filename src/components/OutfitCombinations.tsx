@@ -175,18 +175,21 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         </p>
       </div>
 
-      {/* Floating Action Button */}
+      {/* Liquid Glass FAB */}
       <button
         onClick={() => setAddSheetOpen(true)}
-        className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center active:scale-[0.93] transition-all shadow-xl"
+        className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-[0.92] active:opacity-90"
         style={{
-          backgroundColor: "hsl(38 80% 54%)",
           bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)"
+          background: "linear-gradient(145deg, rgba(184,128,48,0.82) 0%, rgba(160,104,28,0.70) 100%)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          border: "1px solid rgba(255, 200, 100, 0.45)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.28), inset 0 1.5px 0 rgba(255,255,255,0.32), inset 0 -1px 0 rgba(0,0,0,0.18)",
         }}
         aria-label="Add outfit"
       >
-        <Plus size={22} color="hsl(26 22% 5%)" strokeWidth={2.5} />
+        <Plus size={22} color="rgba(255,255,255,0.95)" strokeWidth={2.5} />
       </button>
 
       {/* Occasion tabs */}
