@@ -36,8 +36,10 @@ const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay
       <DrawerContent className="px-5 pb-8 pt-0">
         <DrawerHeader className="text-left px-0 pt-4 pb-5">
           <div className="flex items-center justify-between">
-            <DrawerTitle className="text-lg font-semibold text-foreground flex items-center gap-2.5">
-              {outfit.name}
+            <div className="flex items-center gap-2.5">
+              <DrawerTitle className="text-lg font-semibold text-foreground">
+                {outfit.name}
+              </DrawerTitle>
               {tempBadge && (
                 <span
                   className="text-[10px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap"
@@ -46,7 +48,7 @@ const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay
                   {outfit.temp} · {tempBadge.range}
                 </span>
               )}
-            </DrawerTitle>
+            </div>
             <div className="flex items-center gap-1">
               <div className="relative">
                 <button
