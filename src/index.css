@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* ── Light mode (default) ─────────────────────────────────────── */
 @layer base {
@@ -107,12 +107,8 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
-  }
-
-  h1, h2, h3, h4 {
-    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
   }
 
   /* Prevent iOS zoom on focus — inputs must be ≥16px */
@@ -124,10 +120,6 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
-  }
-
-  .font-serif {
-    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
   }
 
   .text-gold {

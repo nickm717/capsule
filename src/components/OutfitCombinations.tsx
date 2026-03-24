@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Plus, MoreHorizontal, Pencil, Trash2, CalendarPlus, Loader2 } from "lucide-react";
 import { occasionDefs, temperatureBadges } from "@/data/darkautumn";
+import AppBadge from "./AppBadge";
 import type { OutfitPiece } from "@/data/darkautumn";
 import OutfitBuilder from "./OutfitBuilder";
 import AddToDaySheet from "./AddToDaySheet";
@@ -165,31 +166,25 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
 
   return (
     <div className="px-4 pb-6 space-y-5 pt-5">
-      {/* Header */}
+      {/* Header — title only */}
       <div className="animate-reveal-up">
-        <h2 className="text-4xl font-medium text-foreground" style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
+        <h2 className="text-[34px] font-bold text-foreground tracking-tight leading-none">
           Outfits
         </h2>
-        <p className="text-muted-foreground text-xs mt-1.5 tracking-wide uppercase" style={{ letterSpacing: "0.08em" }}>
-          {outfits.length} curated looks · {occasionDefs.length} occasions
-        </p>
       </div>
 
-      {/* Liquid Glass FAB */}
+      {/* Solid FAB */}
       <button
         onClick={() => setAddSheetOpen(true)}
         className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-[0.92] active:opacity-90"
         style={{
           bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))",
-          background: "linear-gradient(145deg, rgba(184,128,48,0.82) 0%, rgba(160,104,28,0.70) 100%)",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          border: "1px solid rgba(255, 200, 100, 0.45)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.28), inset 0 1.5px 0 rgba(255,255,255,0.32), inset 0 -1px 0 rgba(0,0,0,0.18)",
+          backgroundColor: "hsl(var(--primary))",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.22)",
         }}
         aria-label="Add outfit"
       >
-        <Plus size={22} color="rgba(255,255,255,0.95)" strokeWidth={2.5} />
+        <Plus size={22} color="white" strokeWidth={2.5} />
       </button>
 
       {/* Occasion tabs */}
@@ -357,12 +352,9 @@ function OutfitCard({
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {tempBadge && (
-              <span
-                className="text-[10px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap"
-                style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
-              >
+              <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
                 {outfit.temp}
-              </span>
+              </AppBadge>
             )}
             <div className="relative" ref={menuRef}>
               <button

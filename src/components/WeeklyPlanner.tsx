@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
 import { useWeatherForecast } from "@/hooks/use-weather-forecast";
 import OutfitPickerSheet from "./OutfitPickerSheet";
+import AppBadge from "./AppBadge";
 
 function conditionEmoji(condition: string): string {
   switch (condition) {
@@ -84,13 +85,11 @@ const WeeklyPlanner = () => {
   [outfits]);
 
   return (
-    <div className="px-4 pb-6 pt-5 space-y-1">
+    <div className="px-4 pb-6 pt-5">
       {/* Title */}
-      <div className="mb-4 animate-reveal-up">
-        <h2 className="text-4xl font-medium text-foreground" style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
-          Planner
-        </h2>
-      </div>
+      <h2 className="text-[34px] font-bold text-foreground tracking-tight leading-none mb-4 animate-reveal-up">
+        Planner
+      </h2>
 
       {/* Week navigation */}
       <div
@@ -108,7 +107,7 @@ const WeeklyPlanner = () => {
         </button>
         <button
           onClick={() => setWeekOffset(0)}
-          className={`text-[13px] font-medium uppercase tracking-widest transition-colors active:scale-[0.97] px-3 py-1 rounded-lg ${
+          className={`text-[13px] font-semibold uppercase transition-colors active:scale-[0.97] px-3 py-1 rounded-lg ${
             weekOffset === 0 ? "text-gold" : "text-foreground active:text-gold"
           }`}
           style={{ letterSpacing: "0.1em" }}
@@ -126,7 +125,7 @@ const WeeklyPlanner = () => {
         </button>
       </div>
 
-      {/* Day rows */}
+      {/* Day rows — 8px gap between each day group */}
       {weekDates.map((date, i) => {
         const dayKey    = date.toISOString().slice(0, 10);
         const outfit    = plan[dayKey] ? getOutfit(plan[dayKey]) : undefined;
@@ -138,24 +137,24 @@ const WeeklyPlanner = () => {
         return (
           <div
             key={dayKey}
-            className="animate-reveal-up mb-3"
-            style={{ animationDelay: `${(i + 1) * 45 + 30}ms` }}
+            className="animate-reveal-up"
+            style={{ animationDelay: `${(i + 1) * 45 + 30}ms`, marginBottom: "8px" }}
           >
-            {/* ── Day + weather header (OUTSIDE the card) ── */}
-            <div className="flex items-baseline justify-between px-1 mb-1.5">
-              <div className="flex items-baseline gap-2">
+            {/* Day + weather header — outside the card, pure system font */}
+            <div className="flex items-center justify-between px-1 mb-1.5">
+              <div className="flex items-center gap-2">
                 <span
-                  className="text-[10px] font-bold uppercase"
-                  style={{ letterSpacing: "0.14em", color: isToday ? "hsl(var(--gold))" : "hsl(var(--muted-foreground))" }}
+                  className="text-[11px] font-semibold uppercase"
+                  style={{
+                    letterSpacing: "0.12em",
+                    color: isToday ? "hsl(var(--gold))" : "hsl(var(--muted-foreground))",
+                  }}
                 >
                   {DAY_SHORT[i]}
                 </span>
                 <span
-                  className="text-xl font-medium leading-none"
-                  style={{
-                    fontFamily: "'EB Garamond', serif",
-                    color: isToday ? "hsl(var(--gold))" : "hsl(var(--foreground))",
-                  }}
+                  className="text-[22px] font-bold leading-none"
+                  style={{ color: isToday ? "hsl(var(--gold))" : "hsl(var(--foreground))" }}
                 >
                   {dayNum}
                 </span>
@@ -167,7 +166,7 @@ const WeeklyPlanner = () => {
               )}
             </div>
 
-            {/* ── Outfit card ── */}
+            {/* Outfit card */}
             <button
               onClick={() => setSheetDay({ key: dayKey, label: `${DAY_LABELS[i].slice(0, 3)} ${dayNum}` })}
               className={`w-full text-left rounded-2xl border overflow-hidden transition-all active:scale-[0.99] bg-card shadow-sm dark:shadow-none ${
@@ -184,22 +183,18 @@ const WeeklyPlanner = () => {
                       <div key={pi} style={{ backgroundColor: p.hex, flex: 1 }} />
                     ))}
                   </div>
-                  {/* Content */}
                   <div className="flex items-center px-3.5 py-3 gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="text-foreground font-medium text-[15px] truncate leading-snug">{outfit.name}</p>
+                      <p className="text-foreground font-semibold text-[15px] truncate leading-snug">{outfit.name}</p>
                       <p className="text-muted-foreground text-[12px] mt-0.5 truncate">
                         {outfit.pieces.map((p) => p.name).join(" · ")}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {tempBadge && (
-                        <span
-                          className="text-[10px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap"
-                          style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
-                        >
+                        <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
                           {outfit.temp}
-                        </span>
+                        </AppBadge>
                       )}
                       <button
                         onClick={(e) => { e.stopPropagation(); clearDay(dayKey); }}

@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/drawer";
 import { temperatureBadges } from "@/data/darkautumn";
 import type { OutfitPiece } from "@/data/darkautumn";
+import AppBadge from "./AppBadge";
 
 interface OutfitDetailSheetProps {
   open: boolean;
@@ -41,12 +42,9 @@ const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay
                 {outfit.name}
               </DrawerTitle>
               {tempBadge && (
-                <span
-                  className="text-[10px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap"
-                  style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
-                >
+                <AppBadge size="md" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
                   {outfit.temp} · {tempBadge.range}
-                </span>
+                </AppBadge>
               )}
             </div>
             <div className="flex items-center gap-1">
@@ -102,7 +100,7 @@ const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay
         {/* Notes */}
         {outfit.notes && (
           <div className="mt-5 pt-4 border-t border-border">
-            <p className="text-sm text-muted-foreground leading-relaxed italic" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+            <p className="text-sm text-muted-foreground leading-relaxed italic">
               {outfit.notes}
             </p>
           </div>

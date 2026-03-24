@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Plus, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
-import { swatches, type WardrobeItem } from "@/data/darkautumn";
+import { type WardrobeItem } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
 import AddItemSheet from "./AddItemSheet";
 import ItemFormPage from "./ItemFormPage";
 import DeleteItemSheet from "./DeleteItemSheet";
 import ItemDetailSheet from "./ItemDetailSheet";
+import AppBadge from "./AppBadge";
 import type { ItemFormData } from "./ItemForm";
 
 type Filter = "all" | "owned" | "gaps";
@@ -78,7 +79,6 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   };
 
   const filteredCategories = activeCategory === "all" ? allCategories : allCategories.filter((c) => c.id === activeCategory);
-  const categories = filteredCategories;
   const totalPieces = filteredCategories.reduce((s, c) => s + c.items.length, 0);
   const ownedCount = filteredCategories.reduce((s, c) => s + c.items.filter((i) => i.owned).length, 0);
   const gapCount = filteredCategories.reduce((s, c) => s + c.items.filter((i) => i.gap).length, 0);
@@ -89,35 +89,24 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
 
   return (
     <div className="px-4 pb-6 space-y-5 pt-5">
-      {/* Header */}
+      {/* Header — title only */}
       <div className="animate-reveal-up">
-        <h2 className="text-4xl font-medium text-foreground" style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
+        <h2 className="text-[34px] font-bold text-foreground tracking-tight leading-none">
           Wardrobe
         </h2>
-        <p className="text-muted-foreground text-xs mt-1.5 tracking-wide" style={{ letterSpacing: "0.06em" }}>
-          {ownedCount} owned · {gapCount} rentals · {totalPieces} total
-        </p>
-        <div className="flex gap-1.5 mt-3">
-          {swatches.map((s) => (
-            <div key={s.name} className="w-5 h-5 rounded-full border border-black/10 dark:border-white/10 flex-shrink-0" style={{ backgroundColor: s.hex }} title={s.name} />
-          ))}
-        </div>
       </div>
 
-      {/* Liquid Glass FAB */}
+      {/* Solid FAB */}
       <button
         onClick={() => setSheetOpen(true)}
         className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-[0.92] active:opacity-90"
         style={{
           bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))",
-          background: "linear-gradient(145deg, rgba(184,128,48,0.82) 0%, rgba(160,104,28,0.70) 100%)",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          border: "1px solid rgba(255, 200, 100, 0.45)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.28), inset 0 1.5px 0 rgba(255,255,255,0.32), inset 0 -1px 0 rgba(0,0,0,0.18)",
+          backgroundColor: "hsl(var(--primary))",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.22)",
         }}
       >
-        <Plus size={22} color="rgba(255,255,255,0.95)" strokeWidth={2.5} />
+        <Plus size={22} color="white" strokeWidth={2.5} />
       </button>
 
       {/* Category chips */}
@@ -128,7 +117,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         ))}
       </div>
 
-      {/* iOS-style segmented filter */}
+      {/* Segmented filter */}
       <div className="flex gap-0.5 bg-muted/70 rounded-[10px] p-0.5 animate-reveal-up border border-border/30" style={{ animationDelay: "100ms" }}>
         {[
           { key: "all" as Filter, label: "All", count: totalPieces },
@@ -140,7 +129,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
             onClick={() => setFilter(f.key)}
             className={`flex-1 text-center py-[7px] rounded-[8px] text-[13px] font-medium transition-all duration-150 active:scale-[0.97] ${
               filter === f.key
-                ? "bg-card text-foreground shadow-sm dark:shadow-black/40"
+                ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground"
             }`}
           >
@@ -150,7 +139,6 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         ))}
       </div>
 
-      {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-16 animate-reveal-up">
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
@@ -158,7 +146,6 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         </div>
       )}
 
-      {/* Error */}
       {error && !loading && (
         <div className="text-center py-16 animate-reveal-up">
           <p className="text-destructive text-sm mb-2">Failed to load items</p>
@@ -166,8 +153,8 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         </div>
       )}
 
-      {/* Item list — iOS inset grouped style */}
-      {!loading && !error && categories.map((cat) => {
+      {/* Grouped item list */}
+      {!loading && !error && filteredCategories.map((cat) => {
         const filtered = cat.items.filter(filterItem);
         if (filtered.length === 0) return null;
         return (
@@ -177,7 +164,6 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
                 {cat.icon}  {cat.label}
               </p>
             )}
-            {/* Grouped list container */}
             <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-sm dark:shadow-none">
               {filtered.map((item, i) => {
                 const row = cat.rows.find((r: any) => r.id === item.id);
@@ -198,7 +184,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         );
       })}
 
-      {!loading && !error && categories.every((c) => c.items.filter(filterItem).length === 0) && (
+      {!loading && !error && filteredCategories.every((c) => c.items.filter(filterItem).length === 0) && (
         <div className="text-center py-20 animate-reveal-up">
           <p className="text-muted-foreground text-sm">No items match this filter.</p>
         </div>
@@ -276,26 +262,17 @@ function ItemRow({
         className={`flex items-center px-4 py-3 active:bg-muted/40 transition-colors cursor-pointer ${!isLast ? "border-b border-border/40" : ""}`}
         onClick={onTap}
       >
-        {/* Color swatch */}
-        <div className="w-9 h-9 rounded-xl flex-shrink-0 border border-black/10 dark:border-white/10 shadow-sm" style={{ backgroundColor: item.hex }} />
-
-        {/* Details */}
+        <div className="w-9 h-9 rounded-xl flex-shrink-0 border border-black/10 dark:border-white/10" style={{ backgroundColor: item.hex }} />
         <div className="flex-1 min-w-0 ml-3">
           <p className="text-foreground text-[15px] font-medium leading-snug truncate">{item.name}</p>
           <p className="text-muted-foreground text-[13px] mt-0.5 truncate">
             {item.brand ? `${item.brand} · ` : ""}{item.color}
           </p>
         </div>
-
-        {/* Status + menu */}
         <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-          <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-md ${
-            item.owned
-              ? "bg-teal/15 text-teal"
-              : "bg-rust/15 text-rust"
-          }`}>
+          <AppBadge size="sm" variant={item.owned ? "owned" : "rental"}>
             {item.owned ? "Own" : "Rental"}
-          </span>
+          </AppBadge>
           <div className="relative" ref={menuRef}>
             <button
               onClick={(e) => { e.stopPropagation(); setMenuOpen((p) => !p); }}

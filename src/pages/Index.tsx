@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import WardrobeGuide from "@/components/WardrobeGuide";
 import OutfitCombinations from "@/components/OutfitCombinations";
 import WeeklyPlanner from "@/components/WeeklyPlanner";
+import { AppDataProvider } from "@/contexts/AppDataContext";
 
 type Tab = "wardrobe" | "outfits" | "planner";
 
@@ -59,6 +60,7 @@ const Index = () => {
   }, []);
 
   return (
+    <AppDataProvider>
     <div
       className="min-h-screen flex flex-col max-w-lg mx-auto"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
@@ -113,6 +115,7 @@ const Index = () => {
         </nav>
       )}
     </div>
+    </AppDataProvider>
   );
 };
 
