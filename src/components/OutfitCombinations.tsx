@@ -73,7 +73,6 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
   const handleAiGenerate = async (criteria: AiCriteria) => {
     setAiGenerating(true);
     try {
-      // Prepare wardrobe data
       const wardrobeData = allWardrobeItems.map((i) => ({
         id: i.id,
         name: i.name,
@@ -84,7 +83,6 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         owned: i.owned,
       }));
 
-      // Prepare existing outfits
       const existingData = outfits.map((o) => ({
         name: o.name,
         pieces: o.pieces as OutfitPiece[],
@@ -116,7 +114,6 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         return;
       }
 
-      // Close the add sheet and open builder with preset
       setAddSheetOpen(false);
       setBuilderPreset({
         selectedIds: validIds,
@@ -167,37 +164,45 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
   const outfitsForOccasion = outfits.filter((o) => o.occasion_id === activeOccasion);
 
   return (
-    <div className="px-4 pb-6 space-y-5">
-      <div className="pt-2 animate-reveal-up">
-        <h2 className="text-3xl font-semibold text-foreground text-balance">Outfits</h2>
-        <p className="text-secondary text-sm mt-1">
-          {outfits.length} curated looks across {occasionDefs.length} occasions
+    <div className="px-4 pb-6 space-y-5 pt-5">
+      {/* Header */}
+      <div className="animate-reveal-up">
+        <h2 className="text-4xl font-medium text-foreground" style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
+          Outfits
+        </h2>
+        <p className="text-muted-foreground text-xs mt-1.5 tracking-wide uppercase" style={{ letterSpacing: "0.08em" }}>
+          {outfits.length} curated looks · {occasionDefs.length} occasions
         </p>
       </div>
 
       {/* Floating Action Button */}
       <button
         onClick={() => setAddSheetOpen(true)}
-        className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center active:scale-[0.93] transition-all shadow-lg shadow-black/30"
-        style={{ backgroundColor: "#B08030", bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))" }}
+        className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center active:scale-[0.93] transition-all shadow-xl"
+        style={{
+          backgroundColor: "hsl(38 80% 54%)",
+          bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)"
+        }}
         aria-label="Add outfit"
       >
-        <Plus size={24} color="#141008" strokeWidth={2.5} />
+        <Plus size={22} color="hsl(26 22% 5%)" strokeWidth={2.5} />
       </button>
 
       {/* Occasion tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 animate-reveal-up" style={{ animationDelay: "60ms" }}>
+      <div className="flex gap-2 overflow-x-auto pb-1 animate-reveal-up -mx-4 px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ animationDelay: "60ms" }}>
         {occasionDefs.map((occ) => (
           <button
             key={occ.id}
             onClick={() => setActiveOccasion(occ.id)}
-            className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-150 active:scale-[0.96] ${
+            className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-150 active:scale-[0.96] border ${
               activeOccasion === occ.id
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:text-foreground"
+                ? "bg-primary text-primary-foreground border-primary/80"
+                : "bg-muted/60 text-muted-foreground hover:text-foreground border-border/40"
             }`}
+            style={{ letterSpacing: "0.03em" }}
           >
-            <span className="mr-1.5">{occ.icon}</span>
+            <span className="mr-1.5 text-sm">{occ.icon}</span>
             {occ.label}
           </button>
         ))}
@@ -206,8 +211,8 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-16 animate-reveal-up">
-          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">Loading outfits…</span>
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-xs text-muted-foreground tracking-wide">Loading outfits…</span>
         </div>
       )}
 
@@ -215,31 +220,33 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
       {error && !loading && (
         <div className="text-center py-16 animate-reveal-up">
           <p className="text-destructive text-sm mb-2">Failed to load outfits</p>
-          <button onClick={refetch} className="text-sm text-gold underline">Retry</button>
+          <button onClick={refetch} className="text-xs text-gold underline">Retry</button>
         </div>
       )}
 
       {/* Outfit cards */}
-      {!loading && !error && outfitsForOccasion.map((outfit, i) => {
-        const tempBadge = temperatureBadges[outfit.temp];
-        const pieces = outfit.pieces as OutfitPiece[];
-        return (
-          <OutfitCard
-            key={outfit.id}
-            outfit={outfit}
-            tempBadge={tempBadge}
-            pieces={pieces}
-            delay={i * 50}
-            onTap={() => setDetailOutfit(outfit)}
-            onEdit={() => openBuilder(outfit)}
-            onDelete={() => setDeleteOutfit({ id: outfit.id, name: outfit.name })}
-            onAddToDay={() => setAddToDayOutfit({ id: outfit.id, name: outfit.name })}
-          />
-        );
-      })}
+      <div className="space-y-3">
+        {!loading && !error && outfitsForOccasion.map((outfit, i) => {
+          const tempBadge = temperatureBadges[outfit.temp];
+          const pieces = outfit.pieces as OutfitPiece[];
+          return (
+            <OutfitCard
+              key={outfit.id}
+              outfit={outfit}
+              tempBadge={tempBadge}
+              pieces={pieces}
+              delay={i * 50}
+              onTap={() => setDetailOutfit(outfit)}
+              onEdit={() => openBuilder(outfit)}
+              onDelete={() => setDeleteOutfit({ id: outfit.id, name: outfit.name })}
+              onAddToDay={() => setAddToDayOutfit({ id: outfit.id, name: outfit.name })}
+            />
+          );
+        })}
+      </div>
 
       {!loading && !error && outfitsForOccasion.length === 0 && (
-        <div className="text-center py-16 animate-reveal-up">
+        <div className="text-center py-20 animate-reveal-up">
           <p className="text-muted-foreground text-sm">No outfits for this occasion yet.</p>
         </div>
       )}
@@ -322,75 +329,93 @@ function OutfitCard({
 
   return (
     <div
-      className={`w-full text-left bg-card rounded-xl border border-border animate-reveal-up cursor-pointer active:scale-[0.99] transition-transform relative ${menuOpen ? "z-40" : ""}`}
+      className={`w-full text-left bg-card rounded-2xl border border-border/60 animate-reveal-up cursor-pointer active:scale-[0.99] transition-transform overflow-hidden relative ${menuOpen ? "z-40" : ""}`}
       style={{ animationDelay: `${delay}ms` }}
       onClick={onTap}
     >
-      <div className="flex">
-        {/* Vertical color strips */}
-        <div className="flex flex-shrink-0 py-3 pl-3 items-center" style={{ gap: "2px" }}>
+      {/* Full-width color palette strip */}
+      <div className="flex h-2.5 w-full">
+        {pieces.map((piece, pi) => (
+          <div
+            key={pi}
+            style={{ backgroundColor: piece.hex, flex: 1 }}
+          />
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="p-3.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-foreground font-medium text-sm leading-snug truncate">{outfit.name}</h3>
+            <p className="text-muted-foreground text-[11px] mt-1 leading-relaxed line-clamp-1">
+              {pieces.map((p) => p.name).join("  ·  ")}
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {tempBadge && (
+              <span
+                className="text-[10px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap"
+                style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
+              >
+                {outfit.temp}
+              </span>
+            )}
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuOpen((p) => !p);
+                }}
+                className="w-8 h-8 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors active:scale-[0.92]"
+              >
+                <MoreHorizontal size={15} />
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 top-9 z-50 min-w-[150px] rounded-xl border border-border bg-card shadow-xl py-1 animate-in fade-in-0 zoom-in-95 duration-150">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }}
+                    className="flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    <Pencil size={13} className="text-muted-foreground" />
+                    Edit outfit
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onAddToDay(); }}
+                    className="flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    <CalendarPlus size={13} className="text-muted-foreground" />
+                    Add to day
+                  </button>
+                  <div className="my-1 h-px bg-border/60" />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
+                    className="flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-destructive hover:bg-muted transition-colors"
+                  >
+                    <Trash2 size={13} />
+                    Delete outfit
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Color dot row */}
+        <div className="flex items-center gap-1.5 mt-2.5">
           {pieces.map((piece, pi) => (
             <div
               key={pi}
-              style={{ backgroundColor: piece.hex, width: "10px", height: "36px", borderRadius: "2px" }}
+              className="w-3 h-3 rounded-full border border-black/20 flex-shrink-0"
+              style={{ backgroundColor: piece.hex }}
+              title={piece.name}
             />
           ))}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 p-3 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-foreground font-medium text-sm truncate">{outfit.name}</h3>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              {tempBadge && (
-                <span
-                  className="text-[10px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap"
-                  style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
-                >
-                  {outfit.temp} · {tempBadge.range}
-                </span>
-              )}
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMenuOpen((p) => !p);
-                  }}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
-                >
-                  <MoreHorizontal size={16} />
-                </button>
-                {menuOpen && (
-                  <div className="absolute right-0 top-9 z-50 min-w-[140px] rounded-lg border border-border bg-card shadow-lg py-1 animate-in fade-in-0 zoom-in-95 duration-150">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }}
-                      className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
-                    >
-                      <Pencil size={14} className="text-muted-foreground" />
-                      Edit outfit
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onAddToDay(); }}
-                      className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
-                    >
-                      <CalendarPlus size={14} className="text-muted-foreground" />
-                      Add to day
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
-                      className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-destructive hover:bg-muted transition-colors active:scale-[0.97]"
-                    >
-                      <Trash2 size={14} />
-                      Delete outfit
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          <p className="text-muted-foreground text-xs mt-1">
-            {pieces.map((p) => p.name).join(" · ")}
-          </p>
+          {tempBadge && (
+            <span className="text-[10px] text-muted-foreground/60 ml-auto">
+              {tempBadge.range}
+            </span>
+          )}
         </div>
       </div>
     </div>

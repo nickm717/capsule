@@ -2,54 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap');
 
 @layer base {
   :root {
-    --background: 30 30% 5%;
-    --foreground: 35 50% 80%;
+    --background: 26 22% 5%;
+    --foreground: 38 28% 88%;
 
-    --card: 30 25% 9%;
-    --card-foreground: 35 50% 80%;
+    --card: 26 20% 8%;
+    --card-foreground: 38 28% 88%;
 
-    --popover: 30 25% 9%;
-    --popover-foreground: 35 50% 80%;
+    --popover: 26 20% 8%;
+    --popover-foreground: 38 28% 88%;
 
-    --primary: 35 58% 44%;
-    --primary-foreground: 30 30% 5%;
+    --primary: 38 80% 54%;
+    --primary-foreground: 26 22% 5%;
 
-    --secondary: 35 30% 65%;
-    --secondary-foreground: 30 30% 5%;
+    --secondary: 38 20% 68%;
+    --secondary-foreground: 26 22% 5%;
 
-    --muted: 30 20% 14%;
-    --muted-foreground: 35 25% 55%;
+    --muted: 26 14% 13%;
+    --muted-foreground: 38 12% 50%;
 
-    --accent: 15 58% 38%;
-    --accent-foreground: 35 50% 90%;
+    --accent: 14 62% 40%;
+    --accent-foreground: 38 28% 92%;
 
-    --destructive: 0 62% 40%;
-    --destructive-foreground: 35 50% 90%;
+    --destructive: 0 65% 42%;
+    --destructive-foreground: 38 28% 92%;
 
-    --border: 30 15% 18%;
-    --input: 30 15% 18%;
-    --ring: 35 58% 44%;
+    --border: 26 10% 17%;
+    --input: 26 10% 17%;
+    --ring: 38 80% 54%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
     /* Custom palette */
-    --gold: 35 58% 44%;
-    --rust: 15 58% 38%;
+    --gold: 38 80% 54%;
+    --rust: 14 62% 40%;
     --olive: 78 35% 35%;
     --teal: 176 41% 30%;
 
-    --sidebar-background: 30 25% 7%;
-    --sidebar-foreground: 35 50% 80%;
-    --sidebar-primary: 35 58% 44%;
-    --sidebar-primary-foreground: 30 30% 5%;
-    --sidebar-accent: 30 20% 14%;
-    --sidebar-accent-foreground: 35 50% 80%;
-    --sidebar-border: 30 15% 18%;
-    --sidebar-ring: 35 58% 44%;
+    --sidebar-background: 26 20% 6%;
+    --sidebar-foreground: 38 28% 88%;
+    --sidebar-primary: 38 80% 54%;
+    --sidebar-primary-foreground: 26 22% 5%;
+    --sidebar-accent: 26 14% 13%;
+    --sidebar-accent-foreground: 38 28% 88%;
+    --sidebar-border: 26 10% 17%;
+    --sidebar-ring: 38 80% 54%;
   }
 }
 
@@ -60,13 +60,13 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 400;
   }
 
   h1, h2, h3, h4 {
     font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
   }
-
 
   /* Prevent iOS zoom on focus — inputs must be ≥16px */
   input, select, textarea {
@@ -78,14 +78,30 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  .font-serif {
+    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  }
+
+  .font-sans {
+    font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+
+  .text-gold {
+    color: hsl(var(--gold));
+  }
+
+  .bg-gold {
+    background-color: hsl(var(--gold));
+  }
 }
 
 /* Scroll reveal animation */
 @keyframes reveal-up {
   from {
     opacity: 0;
-    transform: translateY(16px);
-    filter: blur(4px);
+    transform: translateY(12px);
+    filter: blur(3px);
   }
   to {
     opacity: 1;
@@ -95,7 +111,7 @@
 }
 
 .animate-reveal-up {
-  animation: reveal-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: reveal-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Bottom sheet animations */
@@ -128,4 +144,21 @@
 
 .animate-sheet-down {
   animation: sheet-down 0.28s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to { background-position: 200% center; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--card)) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% auto;
+  animation: shimmer 1.5s linear infinite;
 }

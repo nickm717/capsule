@@ -21,6 +21,7 @@ function conditionEmoji(condition: string): string {
 }
 
 const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_SHORT = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 function getWeekDates(offset: number): Date[] {
   const now = new Date();
@@ -86,7 +87,6 @@ const WeeklyPlanner = () => {
 
   const getOutfit = (id: string): DbOutfit | undefined => outfits.find((o) => o.id === id);
 
-  // Convert DbOutfit[] to the Outfit shape expected by OutfitPickerSheet
   const allOutfitsForPicker = useMemo(() =>
     outfits.map((o) => ({
       id: o.id,
@@ -98,126 +98,148 @@ const WeeklyPlanner = () => {
     })),
   [outfits]);
 
+  // Determine today's date key
+  const todayKey = new Date().toISOString().slice(0, 10);
+
   return (
-    <div className="px-4 pb-6 space-y-2">
-      <div className="pt-2 pb-2 animate-reveal-up">
-        <h2 className="text-3xl font-semibold text-foreground text-balance">Planner</h2>
+    <div className="px-4 pb-6 pt-5 space-y-4">
+      {/* Header */}
+      <div className="animate-reveal-up">
+        <h2 className="text-4xl font-medium text-foreground" style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
+          Planner
+        </h2>
       </div>
 
       {/* Week navigation */}
-      <div className="flex items-center justify-between bg-card rounded-xl border border-border px-2 py-2.5 animate-reveal-up" style={{ animationDelay: "30ms" }}>
+      <div
+        className="flex items-center justify-between bg-card rounded-2xl border border-border/60 px-2 py-2 animate-reveal-up"
+        style={{ animationDelay: "30ms" }}
+      >
         <button
           onClick={() => setWeekOffset((o) => o - 1)}
-          className="p-2 text-muted-foreground hover:text-foreground active:scale-[0.92] transition-all rounded-lg hover:bg-muted"
+          className="p-2 text-muted-foreground hover:text-foreground active:scale-[0.9] transition-all rounded-xl hover:bg-muted/60"
           aria-label="Previous week"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
         <button
           onClick={() => setWeekOffset(0)}
-          className={`text-sm font-medium tracking-wide transition-colors active:scale-[0.97] px-3 py-1 rounded-lg ${
+          className={`text-xs font-medium tracking-widest transition-colors active:scale-[0.97] px-3 py-1 rounded-lg uppercase ${
             weekOffset === 0 ? "text-gold" : "text-foreground hover:text-gold"
           }`}
+          style={{ letterSpacing: "0.1em" }}
         >
           {formatRange(weekDates)}
         </button>
         <button
           onClick={() => setWeekOffset((o) => o + 1)}
-          className="p-2 text-muted-foreground hover:text-foreground active:scale-[0.92] transition-all rounded-lg hover:bg-muted"
+          className="p-2 text-muted-foreground hover:text-foreground active:scale-[0.9] transition-all rounded-xl hover:bg-muted/60"
           aria-label="Next week"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
       </div>
 
-      {weekDates.map((date, i) => {
-        const dayKey = date.toISOString().slice(0, 10);
-        const outfit = plan[dayKey] ? getOutfit(plan[dayKey]) : undefined;
-        const tempBadge = outfit ? temperatureBadges[outfit.temp] : undefined;
-        const dayNum = date.getDate();
-        const dayLabel = `${DAY_LABELS[i].slice(0, 3)} ${dayNum}`;
+      {/* Day rows */}
+      <div className="space-y-2">
+        {weekDates.map((date, i) => {
+          const dayKey = date.toISOString().slice(0, 10);
+          const outfit = plan[dayKey] ? getOutfit(plan[dayKey]) : undefined;
+          const tempBadge = outfit ? temperatureBadges[outfit.temp] : undefined;
+          const dayNum = date.getDate();
+          const isToday = dayKey === todayKey;
+          const weather = forecast[dayKey];
 
-        const weather = forecast[dayKey];
-
-        return (
-          <div key={dayKey}>
-            {/* Day/date + weather header */}
-            <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5 mb-1">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-gold leading-none">
-                  {DAY_LABELS[i].slice(0, 3)}
-                </span>
-                <span className="text-sm text-foreground leading-none" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-                  {dayNum}
-                </span>
-              </div>
-              {weather && (
-                <span className="text-[11px] text-muted-foreground">
-                  {conditionEmoji(weather.condition)} H:{weather.high}° L:{weather.low}°
-                </span>
-              )}
-            </div>
-
+          return (
             <div
-              className={`bg-card rounded-xl border animate-reveal-up overflow-hidden ${outfit ? "border-border" : "border-dashed border-border"}`}
-              style={{ animationDelay: `${(i + 1) * 50 + 30}ms` }}
+              key={dayKey}
+              className="animate-reveal-up"
+              style={{ animationDelay: `${(i + 1) * 45 + 30}ms` }}
             >
-            <button
-              onClick={() => setSheetDay({ key: dayKey, label: dayLabel })}
-              className="w-full flex items-stretch gap-0 text-left active:scale-[0.99] transition-transform"
-            >
-              {outfit ? (
-                <div className="flex flex-1 min-w-0">
-                  {/* Vertical color strips */}
-                  <div className="flex flex-shrink-0 py-2.5 pl-2 gap-0.5">
-                    {outfit.pieces.map((p, pi) => (
-                      <div
-                        key={pi}
-                        className="w-1.5"
-                        style={{ backgroundColor: p.hex, minHeight: "24px", borderRadius: "2px" }}
-                      />
-                    ))}
+              <button
+                onClick={() => setSheetDay({ key: dayKey, label: `${DAY_LABELS[i].slice(0, 3)} ${dayNum}` })}
+                className={`w-full text-left bg-card rounded-2xl border overflow-hidden transition-all active:scale-[0.99] ${
+                  isToday ? "border-gold/30" : "border-border/60"
+                }`}
+              >
+                <div className="flex items-stretch min-h-[60px]">
+                  {/* Day label column */}
+                  <div className={`flex flex-col items-center justify-center px-3.5 py-3 min-w-[52px] border-r ${
+                    isToday ? "border-gold/20 bg-gold/8" : "border-border/40"
+                  }`}>
+                    <span className={`text-[9px] font-bold uppercase tracking-widest leading-none ${
+                      isToday ? "text-gold" : "text-muted-foreground"
+                    }`} style={{ letterSpacing: "0.12em" }}>
+                      {DAY_SHORT[i]}
+                    </span>
+                    <span className={`text-lg font-medium leading-none mt-1 ${
+                      isToday ? "text-gold" : "text-foreground"
+                    }`} style={{ fontFamily: "'EB Garamond', serif" }}>
+                      {dayNum}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0 px-2.5 py-2.5 flex flex-col justify-center">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-foreground font-medium text-sm truncate">{outfit.name}</p>
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        {tempBadge && (
-                          <span
-                            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full border whitespace-nowrap"
-                            style={{ backgroundColor: tempBadge.bg, borderColor: tempBadge.border, color: tempBadge.text }}
-                          >
-                            {outfit.temp} · {tempBadge.range}
-                          </span>
-                        )}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); clearDay(dayKey); }}
-                          className="text-muted-foreground hover:text-foreground text-xs p-0.5"
-                        >
-                          ✕
-                        </button>
+
+                  {/* Outfit content */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    {outfit ? (
+                      <>
+                        {/* Color palette strip */}
+                        <div className="flex h-1.5 mx-3 mt-3 rounded-full overflow-hidden">
+                          {outfit.pieces.map((p, pi) => (
+                            <div
+                              key={pi}
+                              style={{ backgroundColor: p.hex, flex: 1 }}
+                            />
+                          ))}
+                        </div>
+                        <div className="px-3 py-2 flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-foreground font-medium text-sm truncate leading-snug">{outfit.name}</p>
+                            <p className="text-muted-foreground text-[10px] mt-0.5 leading-relaxed truncate">
+                              {outfit.pieces.map((p) => p.name).join(" · ")}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {weather && (
+                              <span className="text-[10px] text-muted-foreground/70">
+                                {conditionEmoji(weather.condition)} {weather.high}°
+                              </span>
+                            )}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); clearDay(dayKey); }}
+                              className="w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-xs"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="px-3 py-3 flex items-center justify-between">
+                        <span className="text-muted-foreground/50 text-xs" style={{ letterSpacing: "0.04em" }}>
+                          No outfit planned
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {weather && (
+                            <span className="text-[10px] text-muted-foreground/60">
+                              {conditionEmoji(weather.condition)} {weather.high}°
+                            </span>
+                          )}
+                          <span className="text-muted-foreground/40 text-base leading-none">+</span>
+                        </div>
                       </div>
-                    </div>
-                    <p className="text-muted-foreground text-[10px] mt-0.5">
-                      {outfit.pieces.map((p) => p.name).join(" · ")}
-                    </p>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <div className="flex-1 min-w-0 px-3 py-4 flex items-center justify-between">
-                  <p className="text-muted-foreground text-sm">No outfit planned</p>
-                  <span className="text-muted-foreground text-lg leading-none">+</span>
-                </div>
-              )}
-            </button>
+              </button>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
       {/* Bottom sheet picker */}
       <OutfitPickerSheet
