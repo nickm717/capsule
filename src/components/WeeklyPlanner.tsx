@@ -101,7 +101,7 @@ const WeeklyPlanner = () => {
   return (
     <div className="px-4 pb-6 space-y-2">
       <div className="pt-2 pb-2 animate-reveal-up">
-        <h2 className="text-3xl font-semibold text-foreground text-balance">Weekly Planner</h2>
+        <h2 className="text-3xl font-semibold text-foreground text-balance">Planner</h2>
       </div>
 
       {/* Week navigation */}
