@@ -13,41 +13,44 @@ serve(async (req) => {
 
   try {
     const { pieces } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
 
     const pieceList = pieces
       .map((p: { name: string; color: string }) => `${p.name} (${p.color})`)
       .join(", ");
 
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are a personal stylist for a Dark Autumn color palette wardrobe. Respond with JSON: {\"name\": \"<short creative outfit name, 2-4 words>\", \"note\": \"<1-2 sentence styling note in second person. Be specific about how to wear the pieces together (tuck, layer, roll sleeves, etc). No quotes or greetings.>\"}",
-            },
-            {
-              role: "user",
-              content: `Generate an outfit name and styling note for these pieces: ${pieceList}`,
-            },
-          ],
-          response_format: { type: "json_object" },
-        }),
-      }
-    );
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 512,
+        system:
+          "You are a personal stylist for a Dark Autumn color palette wardrobe. Respond with JSON: {\"name\": \"<short creative outfit name, 2-4 words>\", \"note\": \"<1-2 sentence styling note in second person. Be specific about how to wear the pieces together (tuck, layer, roll sleeves, etc). No quotes or greetings.>\"}",
+        messages: [
+          {
+            role: "user",
+            content: `Generate an outfit name and styling note for these pieces: ${pieceList}`,
+          },
+        ],
+      }),
+    });
 
     if (!response.ok) {
       const status = response.status;
+      const errorBody = await response.text();
+      console.error("Anthropic API error:", status, errorBody);
+      if (status === 401) {
+        return new Response(
+          JSON.stringify({ error: "Invalid Anthropic API key." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       if (status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limited, try again shortly." }),
@@ -60,13 +63,11 @@ serve(async (req) => {
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const t = await response.text();
-      console.error("AI error:", status, t);
-      throw new Error("AI gateway error");
+      throw new Error(`Anthropic API error [${status}]: ${errorBody}`);
     }
 
     const data = await response.json();
-    const raw = data.choices?.[0]?.message?.content?.trim() ?? "{}";
+    const raw = data.content?.[0]?.text?.trim() ?? "{}";
     let parsed: { name?: string; note?: string } = {};
     try { parsed = JSON.parse(raw); } catch { parsed = { note: raw }; }
 
@@ -80,4 +81,4 @@ serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-});
+}, { verify: false });

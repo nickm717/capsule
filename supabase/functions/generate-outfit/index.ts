@@ -13,8 +13,8 @@ serve(async (req) => {
 
   try {
     const { wardrobeItems, existingOutfits, criteria } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
 
     const { anchorPieceId, occasion, temperature, mustIncludeCategory } = criteria;
 
@@ -69,59 +69,63 @@ ${anchorNote}${categoryNote}
 TASK: Create ONE outfit for occasion "${occasion}" in "${temperature}" weather.
 Select piece IDs from the wardrobe above. Return structured JSON via the tool call.`;
 
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            { role: "system", content: systemPrompt },
-            {
-              role: "user",
-              content: `Generate an outfit for ${occasion} in ${temperature} weather. Pick the best combination of pieces from my wardrobe.`,
-            },
-          ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "create_outfit",
-                description: "Create a curated outfit from wardrobe pieces",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    name: {
-                      type: "string",
-                      description: "Creative outfit name, 2-4 words, evocative and specific",
-                    },
-                    piece_ids: {
-                      type: "array",
-                      items: { type: "string" },
-                      description: "Array of wardrobe item IDs to include in the outfit",
-                    },
-                    notes: {
-                      type: "string",
-                      description: "1-2 sentence styling note in second person about how to wear the pieces together",
-                    },
-                  },
-                  required: ["name", "piece_ids", "notes"],
-                  additionalProperties: false,
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: [
+          {
+            role: "user",
+            content: `Generate an outfit for ${occasion} in ${temperature} weather. Pick the best combination of pieces from my wardrobe.`,
+          },
+        ],
+        tools: [
+          {
+            name: "create_outfit",
+            description: "Create a curated outfit from wardrobe pieces",
+            input_schema: {
+              type: "object",
+              properties: {
+                name: {
+                  type: "string",
+                  description: "Creative outfit name, 2-4 words, evocative and specific",
+                },
+                piece_ids: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "Array of wardrobe item IDs to include in the outfit",
+                },
+                notes: {
+                  type: "string",
+                  description: "1-2 sentence styling note in second person about how to wear the pieces together",
                 },
               },
+              required: ["name", "piece_ids", "notes"],
+              additionalProperties: false,
             },
-          ],
-          tool_choice: { type: "function", function: { name: "create_outfit" } },
-        }),
-      }
-    );
+          },
+        ],
+        tool_choice: { type: "tool", name: "create_outfit" },
+      }),
+    });
 
     if (!response.ok) {
       const status = response.status;
+      const errorBody = await response.text();
+      console.error("Anthropic API error:", status, errorBody);
+      if (status === 401) {
+        return new Response(
+          JSON.stringify({ error: "Invalid Anthropic API key." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       if (status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limited, try again shortly." }),
@@ -134,18 +138,16 @@ Select piece IDs from the wardrobe above. Return structured JSON via the tool ca
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const t = await response.text();
-      console.error("AI error:", status, t);
-      throw new Error(`AI gateway error [${status}]`);
+      throw new Error(`Anthropic API error [${status}]: ${errorBody}`);
     }
 
     const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) {
+    const toolUse = data.content?.find((block: any) => block.type === "tool_use");
+    if (!toolUse) {
       throw new Error("No tool call in AI response");
     }
 
-    const result = JSON.parse(toolCall.function.arguments);
+    const result = toolUse.input;
 
     return new Response(
       JSON.stringify({
@@ -164,4 +166,4 @@ Select piece IDs from the wardrobe above. Return structured JSON via the tool ca
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-});
+}, { verify: false });
