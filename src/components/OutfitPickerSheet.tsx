@@ -80,12 +80,17 @@ const OutfitPickerSheet = ({
     return Array.from(temps);
   }, [allOutfits]);
 
-  const filtered = allOutfits.filter((o) => {
-    const matchesSearch = o.name.toLowerCase().includes(search.toLowerCase());
-    const matchesTemp = !tempFilter || o.temp === tempFilter;
-    const matchesOccasion = !occasionFilter || o.occasion_id === occasionFilter;
-    return matchesSearch && matchesTemp && matchesOccasion;
-  });
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return allOutfits.filter((o) => {
+      const matchesSearch = !q ||
+        o.name.toLowerCase().includes(q) ||
+        o.pieces.some((p) => p.name.toLowerCase().includes(q) || p.color.toLowerCase().includes(q));
+      const matchesTemp = !tempFilter || o.temp === tempFilter;
+      const matchesOccasion = !occasionFilter || o.occasion_id === occasionFilter;
+      return matchesSearch && matchesTemp && matchesOccasion;
+    });
+  }, [allOutfits, search, tempFilter, occasionFilter]);
 
   if (!open && !closing) return null;
 

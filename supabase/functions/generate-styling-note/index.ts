@@ -68,8 +68,10 @@ serve(async (req) => {
 
     const data = await response.json();
     const raw = data.content?.[0]?.text?.trim() ?? "{}";
+    // Strip markdown code fences (```json ... ``` or ``` ... ```)
+    const stripped = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
     let parsed: { name?: string; note?: string } = {};
-    try { parsed = JSON.parse(raw); } catch { parsed = { note: raw }; }
+    try { parsed = JSON.parse(stripped); } catch { parsed = { note: stripped }; }
 
     return new Response(JSON.stringify({ name: parsed.name ?? "", note: parsed.note ?? "" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
