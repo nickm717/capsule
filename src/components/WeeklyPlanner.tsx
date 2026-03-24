@@ -4,7 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
 import { useWeatherForecast } from "@/hooks/use-weather-forecast";
 import OutfitPickerSheet from "./OutfitPickerSheet";
-import DayWeatherSummary from "./DayWeatherSummary";
+
+function conditionEmoji(condition: string): string {
+  switch (condition) {
+    case "Sunny": return "☀️";
+    case "Cloudy": return "⛅";
+    case "Foggy": return "🌫️";
+    case "Drizzle": return "🌦️";
+    case "Rainy": return "🌧️";
+    case "Snowy":
+    case "Snow": return "❄️";
+    case "Showers": return "🌦️";
+    case "Stormy": return "⛈️";
+    default: return "";
+  }
+}
 
 const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -85,10 +99,9 @@ const WeeklyPlanner = () => {
   [outfits]);
 
   return (
-    <div className="px-4 pb-6 space-y-4">
-      <div className="pt-2 animate-reveal-up">
+    <div className="px-4 pb-6 space-y-2">
+      <div className="pt-2 pb-2 animate-reveal-up">
         <h2 className="text-3xl font-semibold text-foreground text-balance">Weekly Planner</h2>
-        <p className="text-secondary text-sm mt-1">Tap a day to assign an outfit</p>
       </div>
 
       {/* Week navigation */}
@@ -131,26 +144,32 @@ const WeeklyPlanner = () => {
         const weather = forecast[dayKey];
 
         return (
-          <div
-            key={dayKey}
-            className="bg-card rounded-xl border border-border animate-reveal-up overflow-hidden"
-            style={{ animationDelay: `${(i + 1) * 50 + 30}ms` }}
-          >
+          <div key={dayKey}>
+            {/* Day/date + weather header */}
+            <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5 mb-1">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-gold leading-none">
+                  {DAY_LABELS[i].slice(0, 3)}
+                </span>
+                <span className="text-sm text-foreground leading-none" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+                  {dayNum}
+                </span>
+              </div>
+              {weather && (
+                <span className="text-[11px] text-muted-foreground">
+                  {conditionEmoji(weather.condition)} H:{weather.high}° L:{weather.low}°
+                </span>
+              )}
+            </div>
+
+            <div
+              className={`bg-card rounded-xl border animate-reveal-up overflow-hidden ${outfit ? "border-border" : "border-dashed border-border"}`}
+              style={{ animationDelay: `${(i + 1) * 50 + 30}ms` }}
+            >
             <button
               onClick={() => setSheetDay({ key: dayKey, label: dayLabel })}
               className="w-full flex items-stretch gap-0 text-left active:scale-[0.99] transition-transform"
             >
-              {/* Date block */}
-              <div className="w-12 flex-shrink-0 bg-muted/60 flex flex-col items-center justify-center py-3">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-gold leading-none">
-                  {DAY_LABELS[i].slice(0, 3)}
-                </span>
-                <span className="text-xl text-foreground leading-tight mt-0.5" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-                  {dayNum}
-                </span>
-                {weather && <DayWeatherSummary weather={weather} />}
-              </div>
-
               {outfit ? (
                 <div className="flex flex-1 min-w-0">
                   {/* Vertical color strips */}
@@ -189,11 +208,13 @@ const WeeklyPlanner = () => {
                   </div>
                 </div>
               ) : (
-                <div className="flex-1 min-w-0 px-3 py-4 flex items-center">
+                <div className="flex-1 min-w-0 px-3 py-4 flex items-center justify-between">
                   <p className="text-muted-foreground text-sm">No outfit planned</p>
+                  <span className="text-muted-foreground text-lg leading-none">+</span>
                 </div>
               )}
             </button>
+            </div>
           </div>
         );
       })}

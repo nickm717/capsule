@@ -105,7 +105,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
       <div className="pt-2 animate-reveal-up">
         <h2 className="text-3xl font-semibold text-foreground text-balance">Wardrobe</h2>
         <p className="text-secondary text-sm mt-1">
-          {ownedCount} owned · {gapCount} gaps · {totalPieces} total
+          {ownedCount} owned · {gapCount} rentals · {totalPieces} total
         </p>
         <div className="flex gap-1.5 mt-3">
           {swatches.map((s) => (
