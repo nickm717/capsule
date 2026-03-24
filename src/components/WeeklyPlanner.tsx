@@ -2,7 +2,9 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { temperatureBadges } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
+import { useWeatherForecast } from "@/hooks/use-weather-forecast";
 import OutfitPickerSheet from "./OutfitPickerSheet";
+import DayWeatherSummary from "./DayWeatherSummary";
 
 const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -26,6 +28,7 @@ function formatRange(dates: Date[]): string {
 
 const WeeklyPlanner = () => {
   const { outfits } = useOutfits();
+  const { forecast } = useWeatherForecast();
   const [plan, setPlan] = useState<Record<string, string>>({});
   const [weekOffset, setWeekOffset] = useState(0);
   const [sheetDay, setSheetDay] = useState<{ key: string; label: string } | null>(null);
@@ -125,6 +128,8 @@ const WeeklyPlanner = () => {
         const dayNum = date.getDate();
         const dayLabel = `${DAY_LABELS[i].slice(0, 3)} ${dayNum}`;
 
+        const weather = forecast[dayKey];
+
         return (
           <div
             key={dayKey}
@@ -143,6 +148,7 @@ const WeeklyPlanner = () => {
                 <span className="text-xl text-foreground leading-tight mt-0.5" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
                   {dayNum}
                 </span>
+                {weather && <DayWeatherSummary weather={weather} />}
               </div>
 
               {outfit ? (
