@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import WardrobeGuide from "@/components/WardrobeGuide";
 import OutfitCombinations from "@/components/OutfitCombinations";
 import WeeklyPlanner from "@/components/WeeklyPlanner";
@@ -59,10 +59,22 @@ const Index = () => {
     setEditItemId(null);
   }, []);
 
-  const tabGradients: Record<Tab, string> = {
+  const [isDark, setIsDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  const tabGradients: Record<Tab, string> = isDark ? {
     wardrobe: "linear-gradient(180deg, rgba(155,74,42,0.55) 0%, rgba(184,92,56,0.28) 50%, transparent 100%)",
     outfits:  "linear-gradient(180deg, rgba(107,122,58,0.55) 0%, rgba(160,104,42,0.28) 50%, transparent 100%)",
     planner:  "linear-gradient(180deg, rgba(46,110,104,0.55) 0%, rgba(58,74,92,0.28) 50%, transparent 100%)",
+  } : {
+    wardrobe: "linear-gradient(180deg, rgba(155,74,42,0.22) 0%, rgba(184,92,56,0.10) 55%, transparent 100%)",
+    outfits:  "linear-gradient(180deg, rgba(107,122,58,0.22) 0%, rgba(160,104,42,0.10) 55%, transparent 100%)",
+    planner:  "linear-gradient(180deg, rgba(46,110,104,0.22) 0%, rgba(58,74,92,0.10) 55%, transparent 100%)",
   };
 
   return (
