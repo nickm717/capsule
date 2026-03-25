@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import WardrobeGuide from "@/components/WardrobeGuide";
 import OutfitCombinations from "@/components/OutfitCombinations";
 import WeeklyPlanner from "@/components/WeeklyPlanner";
@@ -59,19 +59,6 @@ const Index = () => {
     setEditItemId(null);
   }, []);
 
-  const [scrolled, setScrolled] = useState(false);
-  const mainRef = useRef<HTMLElement>(null);
-
-  // Reset scroll position and title state on tab switch
-  useEffect(() => {
-    if (mainRef.current) mainRef.current.scrollTop = 0;
-    setScrolled(false);
-  }, [activeTab]);
-
-  const handleScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
-    setScrolled(e.currentTarget.scrollTop > 48);
-  }, []);
-
   const [isDark, setIsDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
@@ -80,25 +67,11 @@ const Index = () => {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  // Two radial glows anchored at top-left and top-right — alpha baked in, no mask needed
-  const a1 = isDark ? 0.65 : 0.28;
-  const a2 = isDark ? 0.50 : 0.20;
   const tabGradients: Record<Tab, string> = {
-    wardrobe: [
-      `radial-gradient(ellipse 80% 55% at 18% 0%, rgba(155,74,42,${a1}) 0%, transparent 70%)`,
-      `radial-gradient(ellipse 70% 45% at 82% 0%, rgba(184,92,56,${a2}) 0%, transparent 65%)`,
-    ].join(", "),
-    outfits: [
-      `radial-gradient(ellipse 80% 55% at 18% 0%, rgba(107,122,58,${a1}) 0%, transparent 70%)`,
-      `radial-gradient(ellipse 70% 45% at 82% 0%, rgba(160,104,42,${a2}) 0%, transparent 65%)`,
-    ].join(", "),
-    planner: [
-      `radial-gradient(ellipse 80% 55% at 18% 0%, rgba(46,110,104,${a1}) 0%, transparent 70%)`,
-      `radial-gradient(ellipse 70% 45% at 82% 0%, rgba(58,74,92,${a2}) 0%, transparent 65%)`,
-    ].join(", "),
+    wardrobe: "linear-gradient(90deg, #9B4A2A, #B85C38)",
+    outfits:  "linear-gradient(90deg, #6B7A3A, #A0682A)",
+    planner:  "linear-gradient(90deg, #2E6E68, #3A4A5C)",
   };
-
-  const activeLabel = tabs.find(t => t.key === activeTab)?.label ?? "";
 
   return (
     <AppDataProvider>
@@ -106,50 +79,19 @@ const Index = () => {
       className="min-h-screen flex flex-col max-w-lg mx-auto"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      {/* Sticky glass header — always present for blur/gradient, title fades in on scroll */}
-      {!hideNav && (
-        <div
-          className="fixed top-0 left-0 right-0 z-40 pointer-events-none"
-          style={{
-            paddingTop: "env(safe-area-inset-top, 0px)",
-            backdropFilter: "blur(16px) saturate(160%)",
-            WebkitBackdropFilter: "blur(16px) saturate(160%)",
-            background: isDark
-              ? "linear-gradient(180deg, rgba(11,8,6,0.92) 0%, rgba(11,8,6,0.72) 55%, transparent 100%)"
-              : "linear-gradient(180deg, rgba(247,243,237,0.92) 0%, rgba(247,243,237,0.72) 55%, transparent 100%)",
-            height: "calc(env(safe-area-inset-top, 0px) + 58px)",
-          }}
-        >
-          <div className="max-w-lg mx-auto h-full flex items-end justify-center pb-3">
-            <span
-              className="text-[17px] font-semibold text-foreground"
-              style={{
-                opacity: scrolled ? 1 : 0,
-                transform: scrolled ? "translateY(0)" : "translateY(5px)",
-                transition: "opacity 0.2s ease, transform 0.2s ease",
-              }}
-            >
-              {activeLabel}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Content */}
-      <main
-        ref={mainRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto pb-24 pt-4"
-        style={{ position: "relative" }}
-      >
+      <main className="flex-1 overflow-y-auto pb-24 pt-4" style={{ position: "relative" }}>
         {/* Scrolling header gradient — fades out after one full page scroll */}
         <div
           className="absolute top-0 left-0 right-0 pointer-events-none"
           style={{
             height: "50vh",
             background: tabGradients[activeTab],
+            WebkitMask: "linear-gradient(180deg, black 0%, transparent 100%)",
+            mask: "linear-gradient(180deg, black 0%, transparent 100%)",
+            opacity: isDark ? 0.55 : 0.22,
             zIndex: 0,
-            transition: "background 0.4s ease",
+            transition: "background 0.4s ease, opacity 0.4s ease",
           }}
         />
         <div style={{ position: "relative", zIndex: 1 }}>
