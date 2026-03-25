@@ -80,10 +80,22 @@ const Index = () => {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
+  // Two radial glows anchored at top-left and top-right — alpha baked in, no mask needed
+  const a1 = isDark ? 0.65 : 0.28;
+  const a2 = isDark ? 0.50 : 0.20;
   const tabGradients: Record<Tab, string> = {
-    wardrobe: "linear-gradient(90deg, #9B4A2A, #B85C38)",
-    outfits:  "linear-gradient(90deg, #6B7A3A, #A0682A)",
-    planner:  "linear-gradient(90deg, #2E6E68, #3A4A5C)",
+    wardrobe: [
+      `radial-gradient(ellipse 80% 55% at 18% 0%, rgba(155,74,42,${a1}) 0%, transparent 70%)`,
+      `radial-gradient(ellipse 70% 45% at 82% 0%, rgba(184,92,56,${a2}) 0%, transparent 65%)`,
+    ].join(", "),
+    outfits: [
+      `radial-gradient(ellipse 80% 55% at 18% 0%, rgba(107,122,58,${a1}) 0%, transparent 70%)`,
+      `radial-gradient(ellipse 70% 45% at 82% 0%, rgba(160,104,42,${a2}) 0%, transparent 65%)`,
+    ].join(", "),
+    planner: [
+      `radial-gradient(ellipse 80% 55% at 18% 0%, rgba(46,110,104,${a1}) 0%, transparent 70%)`,
+      `radial-gradient(ellipse 70% 45% at 82% 0%, rgba(58,74,92,${a2}) 0%, transparent 65%)`,
+    ].join(", "),
   };
 
   const activeLabel = tabs.find(t => t.key === activeTab)?.label ?? "";
@@ -102,7 +114,9 @@ const Index = () => {
             paddingTop: "env(safe-area-inset-top, 0px)",
             backdropFilter: "blur(16px) saturate(160%)",
             WebkitBackdropFilter: "blur(16px) saturate(160%)",
-            background: "linear-gradient(180deg, hsl(var(--background) / 0.90) 0%, hsl(var(--background) / 0.72) 58%, transparent 100%)",
+            background: isDark
+              ? "linear-gradient(180deg, rgba(11,8,6,0.92) 0%, rgba(11,8,6,0.72) 55%, transparent 100%)"
+              : "linear-gradient(180deg, rgba(247,243,237,0.92) 0%, rgba(247,243,237,0.72) 55%, transparent 100%)",
             height: "calc(env(safe-area-inset-top, 0px) + 58px)",
           }}
         >
@@ -134,11 +148,8 @@ const Index = () => {
           style={{
             height: "50vh",
             background: tabGradients[activeTab],
-            WebkitMask: "linear-gradient(180deg, black 0%, transparent 100%)",
-            mask: "linear-gradient(180deg, black 0%, transparent 100%)",
-            opacity: isDark ? 0.55 : 0.22,
             zIndex: 0,
-            transition: "background 0.4s ease, opacity 0.4s ease",
+            transition: "background 0.4s ease",
           }}
         />
         <div style={{ position: "relative", zIndex: 1 }}>
