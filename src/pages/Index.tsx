@@ -59,6 +59,12 @@ const Index = () => {
     setEditItemId(null);
   }, []);
 
+  const tabGradients: Record<Tab, string> = {
+    wardrobe: "linear-gradient(180deg, rgba(155,74,42,0.55) 0%, rgba(184,92,56,0.28) 50%, transparent 100%)",
+    outfits:  "linear-gradient(180deg, rgba(107,122,58,0.55) 0%, rgba(160,104,42,0.28) 50%, transparent 100%)",
+    planner:  "linear-gradient(180deg, rgba(46,110,104,0.55) 0%, rgba(58,74,92,0.28) 50%, transparent 100%)",
+  };
+
   return (
     <AppDataProvider>
     <div
@@ -66,18 +72,30 @@ const Index = () => {
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       {/* Content */}
-      <main className="flex-1 overflow-y-auto pb-24 pt-4">
-        {activeTab === "wardrobe" && (
-          <WardrobeGuide
-            onFormOpen={handleWardrobeFormOpen}
-            openItemId={editItemId}
-            onOpenItemConsumed={handleEditItemConsumed}
-          />
-        )}
-        {activeTab === "outfits" && (
-          <OutfitCombinations onBuilderOpen={setHideNav} onPieceTap={handlePieceTap} />
-        )}
-        {activeTab === "planner" && <WeeklyPlanner />}
+      <main className="flex-1 overflow-y-auto pb-24 pt-4" style={{ position: "relative" }}>
+        {/* Scrolling header gradient — fades out after one full page scroll */}
+        <div
+          className="absolute top-0 left-0 right-0 pointer-events-none"
+          style={{
+            height: "100vh",
+            background: tabGradients[activeTab],
+            zIndex: 0,
+            transition: "background 0.4s ease",
+          }}
+        />
+        <div style={{ position: "relative", zIndex: 1 }}>
+          {activeTab === "wardrobe" && (
+            <WardrobeGuide
+              onFormOpen={handleWardrobeFormOpen}
+              openItemId={editItemId}
+              onOpenItemConsumed={handleEditItemConsumed}
+            />
+          )}
+          {activeTab === "outfits" && (
+            <OutfitCombinations onBuilderOpen={setHideNav} onPieceTap={handlePieceTap} />
+          )}
+          {activeTab === "planner" && <WeeklyPlanner />}
+        </div>
       </main>
 
       {/* Bottom Tab Bar */}
