@@ -67,14 +67,10 @@ const Index = () => {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  const tabGradients: Record<Tab, string> = isDark ? {
-    wardrobe: "linear-gradient(180deg, rgba(155,74,42,0.55) 0%, rgba(184,92,56,0.28) 50%, transparent 100%)",
-    outfits:  "linear-gradient(180deg, rgba(107,122,58,0.55) 0%, rgba(160,104,42,0.28) 50%, transparent 100%)",
-    planner:  "linear-gradient(180deg, rgba(46,110,104,0.55) 0%, rgba(58,74,92,0.28) 50%, transparent 100%)",
-  } : {
-    wardrobe: "linear-gradient(180deg, rgba(155,74,42,0.22) 0%, rgba(184,92,56,0.10) 55%, transparent 100%)",
-    outfits:  "linear-gradient(180deg, rgba(107,122,58,0.22) 0%, rgba(160,104,42,0.10) 55%, transparent 100%)",
-    planner:  "linear-gradient(180deg, rgba(46,110,104,0.22) 0%, rgba(58,74,92,0.10) 55%, transparent 100%)",
+  const tabGradients: Record<Tab, string> = {
+    wardrobe: "linear-gradient(90deg, #9B4A2A, #B85C38)",
+    outfits:  "linear-gradient(90deg, #6B7A3A, #A0682A)",
+    planner:  "linear-gradient(90deg, #2E6E68, #3A4A5C)",
   };
 
   return (
@@ -91,8 +87,11 @@ const Index = () => {
           style={{
             height: "50vh",
             background: tabGradients[activeTab],
+            WebkitMask: "linear-gradient(180deg, black 0%, transparent 100%)",
+            mask: "linear-gradient(180deg, black 0%, transparent 100%)",
+            opacity: isDark ? 0.55 : 0.22,
             zIndex: 0,
-            transition: "background 0.4s ease",
+            transition: "background 0.4s ease, opacity 0.4s ease",
           }}
         />
         <div style={{ position: "relative", zIndex: 1 }}>
