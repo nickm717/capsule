@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import WardrobeGuide from "@/components/WardrobeGuide";
 import OutfitCombinations from "@/components/OutfitCombinations";
 import WeeklyPlanner from "@/components/WeeklyPlanner";
@@ -59,6 +59,19 @@ const Index = () => {
     setEditItemId(null);
   }, []);
 
+  const [scrolled, setScrolled] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
+
+  // Reset scroll position and title state on tab switch
+  useEffect(() => {
+    if (mainRef.current) mainRef.current.scrollTop = 0;
+    setScrolled(false);
+  }, [activeTab]);
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
+    setScrolled(e.currentTarget.scrollTop > 48);
+  }, []);
+
   const [isDark, setIsDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
@@ -73,14 +86,48 @@ const Index = () => {
     planner:  "linear-gradient(90deg, #2E6E68, #3A4A5C)",
   };
 
+  const activeLabel = tabs.find(t => t.key === activeTab)?.label ?? "";
+
   return (
     <AppDataProvider>
     <div
       className="min-h-screen flex flex-col max-w-lg mx-auto"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
+      {/* Sticky glass header — always present for blur/gradient, title fades in on scroll */}
+      {!hideNav && (
+        <div
+          className="fixed top-0 left-0 right-0 z-40 pointer-events-none"
+          style={{
+            paddingTop: "env(safe-area-inset-top, 0px)",
+            backdropFilter: "blur(16px) saturate(160%)",
+            WebkitBackdropFilter: "blur(16px) saturate(160%)",
+            background: "linear-gradient(180deg, hsl(var(--background) / 0.90) 0%, hsl(var(--background) / 0.72) 58%, transparent 100%)",
+            height: "calc(env(safe-area-inset-top, 0px) + 58px)",
+          }}
+        >
+          <div className="max-w-lg mx-auto h-full flex items-end justify-center pb-3">
+            <span
+              className="text-[17px] font-semibold text-foreground"
+              style={{
+                opacity: scrolled ? 1 : 0,
+                transform: scrolled ? "translateY(0)" : "translateY(5px)",
+                transition: "opacity 0.2s ease, transform 0.2s ease",
+              }}
+            >
+              {activeLabel}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
-      <main className="flex-1 overflow-y-auto pb-24 pt-4" style={{ position: "relative" }}>
+      <main
+        ref={mainRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto pb-24 pt-4"
+        style={{ position: "relative" }}
+      >
         {/* Scrolling header gradient — fades out after one full page scroll */}
         <div
           className="absolute top-0 left-0 right-0 pointer-events-none"
