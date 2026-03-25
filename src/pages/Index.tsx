@@ -77,7 +77,7 @@ const Index = () => {
         <div
           className="absolute top-0 left-0 right-0 pointer-events-none"
           style={{
-            height: "100vh",
+            height: "50vh",
             background: tabGradients[activeTab],
             zIndex: 0,
             transition: "background 0.4s ease",
