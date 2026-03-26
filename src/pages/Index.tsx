@@ -80,7 +80,7 @@ const Index = () => {
   }, []);
 
   const baseOpacity = isDark ? 0.55 : 0.22;
-  const gradientOpacity = baseOpacity * Math.max(0, 1 - scrollY / window.innerHeight);
+  const gradientOpacity = baseOpacity * Math.max(0, 1 - scrollY / (mainRef.current?.clientHeight ?? window.innerHeight));
 
   const tabGradients: Record<Tab, string> = {
     wardrobe: "linear-gradient(90deg, #9B4A2A, #B85C38)",
