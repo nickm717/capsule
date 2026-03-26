@@ -133,7 +133,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`flex-1 text-center py-[7px] rounded-[8px] text-[13px] font-medium transition-all duration-150 active:scale-[0.97] ${
+            className={`flex-1 text-center py-[7px] rounded-[8px] text-[14px] font-medium transition-all duration-150 active:scale-[0.97] ${
               filter === f.key
                 ? "text-foreground"
                 : "text-muted-foreground"
@@ -145,7 +145,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
             } : undefined}
           >
             {f.label}
-            <span className="ml-1 text-[11px] opacity-50">{f.count}</span>
+            <span className="ml-1 text-[12px] opacity-50">{f.count}</span>
           </button>
         ))}
       </div>
