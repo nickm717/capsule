@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import WardrobeGuide from "@/components/WardrobeGuide";
 import OutfitCombinations from "@/components/OutfitCombinations";
 import WeeklyPlanner from "@/components/WeeklyPlanner";
@@ -67,6 +67,21 @@ const Index = () => {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
+  const [scrollY, setScrollY] = useState(0);
+  const mainRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (mainRef.current) mainRef.current.scrollTop = 0;
+    setScrollY(0);
+  }, [activeTab]);
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
+    setScrollY(e.currentTarget.scrollTop);
+  }, []);
+
+  const baseOpacity = isDark ? 0.55 : 0.22;
+  const gradientOpacity = baseOpacity * Math.max(0, 1 - scrollY / window.innerHeight);
+
   const tabGradients: Record<Tab, string> = {
     wardrobe: "linear-gradient(90deg, #9B4A2A, #B85C38)",
     outfits:  "linear-gradient(90deg, #6B7A3A, #A0682A)",
@@ -79,21 +94,27 @@ const Index = () => {
       className="min-h-screen flex flex-col max-w-lg mx-auto"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
+      {/* Fixed header gradient — stays at top, fades as user scrolls */}
+      <div
+        className="fixed top-0 left-0 right-0 pointer-events-none"
+        style={{
+          height: "50vh",
+          background: tabGradients[activeTab],
+          WebkitMask: "linear-gradient(180deg, black 0%, transparent 100%)",
+          mask: "linear-gradient(180deg, black 0%, transparent 100%)",
+          opacity: gradientOpacity,
+          zIndex: 0,
+          transition: "background 0.4s ease",
+        }}
+      />
+
       {/* Content */}
-      <main className="flex-1 overflow-y-auto pb-24 pt-4" style={{ position: "relative" }}>
-        {/* Scrolling header gradient — fades out after one full page scroll */}
-        <div
-          className="absolute top-0 left-0 right-0 pointer-events-none"
-          style={{
-            height: "50vh",
-            background: tabGradients[activeTab],
-            WebkitMask: "linear-gradient(180deg, black 0%, transparent 100%)",
-            mask: "linear-gradient(180deg, black 0%, transparent 100%)",
-            opacity: isDark ? 0.55 : 0.22,
-            zIndex: 0,
-            transition: "background 0.4s ease, opacity 0.4s ease",
-          }}
-        />
+      <main
+        ref={mainRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto pb-24 pt-4"
+        style={{ position: "relative" }}
+      >
         <div style={{ position: "relative", zIndex: 1 }}>
           {activeTab === "wardrobe" && (
             <WardrobeGuide
