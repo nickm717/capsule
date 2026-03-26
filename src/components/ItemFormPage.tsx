@@ -134,7 +134,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
                 value={form.name}
                 onChange={(e) => update("name", e.target.value)}
                 placeholder="e.g. Cashmere Crewneck"
-                className="flex-1 bg-transparent text-[17px] text-foreground text-right outline-none placeholder:text-muted-foreground/40 min-w-0"
+                className="flex-1 bg-transparent text-[17px] text-foreground text-right outline-none placeholder:text-muted-foreground min-w-0"
                 autoFocus={!isEdit}
               />
             </FormRow>
@@ -143,7 +143,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
                 value={form.brand}
                 onChange={(e) => update("brand", e.target.value)}
                 placeholder="Optional"
-                className="flex-1 bg-transparent text-[17px] text-foreground text-right outline-none placeholder:text-muted-foreground/40 min-w-0"
+                className="flex-1 bg-transparent text-[17px] text-foreground text-right outline-none placeholder:text-muted-foreground min-w-0"
               />
             </FormRow>
             <FormRow label="Category" isFirst={false} isLast={false}>
@@ -151,7 +151,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
                 <span className="text-[17px] text-muted-foreground">
                   {CATEGORIES.find((c) => c.value === form.category)?.label}
                 </span>
-                <ChevronDown size={16} className="text-muted-foreground/50" />
+                <ChevronDown size={16} className="text-muted-foreground" />
                 <select
                   value={form.category}
                   onChange={(e) => update("category", e.target.value)}
@@ -165,7 +165,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
                 value={form.color}
                 onChange={(e) => update("color", e.target.value)}
                 placeholder="e.g. Olive, Rust"
-                className="flex-1 bg-transparent text-[17px] text-foreground text-right outline-none placeholder:text-muted-foreground/40 min-w-0"
+                className="flex-1 bg-transparent text-[17px] text-foreground text-right outline-none placeholder:text-muted-foreground min-w-0"
               />
             </FormRow>
           </FormSection>
@@ -234,7 +234,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
                 onChange={(e) => update("notes", e.target.value)}
                 placeholder="Styling tips, pairing ideas…"
                 rows={3}
-                className="w-full bg-transparent text-[17px] text-foreground outline-none placeholder:text-muted-foreground/40 resize-none leading-relaxed"
+                className="w-full bg-transparent text-[17px] text-foreground outline-none placeholder:text-muted-foreground resize-none leading-relaxed"
                 style={{ fontSize: "16px" }}
               />
             </div>

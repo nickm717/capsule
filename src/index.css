@@ -16,14 +16,14 @@
     --popover: 38 22% 100%;
     --popover-foreground: 26 30% 14%;
 
-    --primary: 38 76% 44%;
+    --primary: 38 76% 32%;
     --primary-foreground: 38 28% 97%;
 
     --secondary: 38 15% 88%;
     --secondary-foreground: 26 30% 14%;
 
     --muted: 38 14% 92%;
-    --muted-foreground: 38 12% 48%;
+    --muted-foreground: 38 12% 40%;
 
     --accent: 14 58% 40%;
     --accent-foreground: 38 28% 97%;
@@ -37,7 +37,7 @@
 
     --radius: 0.75rem;
 
-    --gold: 38 76% 44%;
+    --gold: 38 76% 32%;
     --rust: 14 58% 40%;
     --olive: 78 35% 35%;
     --teal: 176 41% 30%;
@@ -72,7 +72,7 @@
     --secondary-foreground: 26 22% 5%;
 
     --muted: 26 14% 16%;
-    --muted-foreground: 38 12% 50%;
+    --muted-foreground: 38 12% 55%;
 
     --accent: 14 62% 40%;
     --accent-foreground: 38 28% 92%;
@@ -85,9 +85,9 @@
     --ring: 38 80% 54%;
 
     --gold: 38 80% 54%;
-    --rust: 14 62% 40%;
+    --rust: 14 60% 62%;
     --olive: 78 35% 35%;
-    --teal: 176 41% 30%;
+    --teal: 176 50% 58%;
 
     --sidebar-background: 26 20% 6%;
     --sidebar-foreground: 38 28% 88%;

@@ -145,7 +145,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
             } : undefined}
           >
             {f.label}
-            <span className="ml-1 text-[12px] opacity-50">{f.count}</span>
+            <span className="ml-1 text-[12px]">{f.count}</span>
           </button>
         ))}
       </div>

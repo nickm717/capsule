@@ -207,8 +207,8 @@ const WeeklyPlanner = () => {
                 </div>
               ) : (
                 <div className="px-4 py-4 flex items-center justify-between">
-                  <span className="text-muted-foreground/50 text-[15px]">No outfit planned</span>
-                  <span className="text-muted-foreground/40 text-xl leading-none">+</span>
+                  <span className="text-muted-foreground text-[15px]">No outfit planned</span>
+                  <span className="text-muted-foreground text-xl leading-none">+</span>
                 </div>
               )}
             </button>
