@@ -118,7 +118,13 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
       </div>
 
       {/* Segmented filter */}
-      <div className="flex gap-0.5 bg-muted/70 rounded-[10px] p-0.5 animate-reveal-up border border-border/30" style={{ animationDelay: "100ms" }}>
+      <div
+        className="flex gap-0.5 rounded-[10px] p-0.5 animate-reveal-up border border-border/60 shadow-sm glass"
+        style={{
+          backgroundColor: "color-mix(in srgb, hsl(var(--muted)) 70%, transparent)",
+          animationDelay: "100ms",
+        }}
+      >
         {[
           { key: "all" as Filter, label: "All", count: totalPieces },
           { key: "owned" as Filter, label: "Owned", count: ownedCount },
@@ -129,9 +135,14 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
             onClick={() => setFilter(f.key)}
             className={`flex-1 text-center py-[7px] rounded-[8px] text-[13px] font-medium transition-all duration-150 active:scale-[0.97] ${
               filter === f.key
-                ? "bg-card text-foreground shadow-sm"
+                ? "text-foreground"
                 : "text-muted-foreground"
             }`}
+            style={filter === f.key ? {
+              backgroundColor: "hsl(var(--card))",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.18), 0 0.5px 0 rgba(255,255,255,0.06)",
+              border: "0.5px solid hsl(var(--border))",
+            } : undefined}
           >
             {f.label}
             <span className="ml-1 text-[11px] opacity-50">{f.count}</span>
