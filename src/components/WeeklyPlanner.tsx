@@ -192,10 +192,10 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
                     ))}
                   </div>
                   <div className="flex-1 min-w-0 px-4 py-3.5">
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2">
                       <p className="text-foreground font-semibold text-[15px] leading-snug flex-1">{outfit.name}</p>
                       {tempBadge && (
-                        <div className="flex-shrink-0 mt-0.5">
+                        <div className="flex-shrink-0">
                           <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
                             {outfit.temp} · {tempBadge.range}
                           </AppBadge>
@@ -203,7 +203,7 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
                       )}
                       <button
                         onClick={(e) => { e.stopPropagation(); clearDay(dayKey); }}
-                        className="w-8 h-8 flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92] -mt-0.5 flex-shrink-0"
+                        className="w-8 h-8 flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92] flex-shrink-0"
                       >
                         ✕
                       </button>

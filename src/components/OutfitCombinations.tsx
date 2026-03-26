@@ -351,10 +351,10 @@ function OutfitCard({
       {/* Content */}
       <div className="flex-1 min-w-0 px-4 py-3.5">
         {/* Top row: name + temp badge + menu */}
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center justify-between gap-2">
           <h3 className="text-foreground font-semibold text-[15px] leading-snug flex-1">{outfit.name}</h3>
           {tempBadge && (
-            <div className="flex-shrink-0 mt-0.5">
+            <div className="flex-shrink-0">
               <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
                 {outfit.temp} · {tempBadge.range}
               </AppBadge>
@@ -364,7 +364,7 @@ function OutfitCard({
           <div className="relative flex-shrink-0" ref={menuRef}>
             <button
               onClick={(e) => { e.stopPropagation(); setMenuOpen((p) => !p); }}
-              className="w-8 h-8 flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92] -mt-0.5"
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92]"
             >
               <MoreHorizontal size={15} />
             </button>
