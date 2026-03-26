@@ -193,12 +193,21 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
           <button
             key={occ.id}
             onClick={() => setActiveOccasion(occ.id)}
-            className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-150 active:scale-[0.96] border ${
+            className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-150 active:scale-[0.96] border ${
               activeOccasion === occ.id
                 ? "bg-primary text-primary-foreground border-primary/80"
-                : "bg-muted/60 text-muted-foreground hover:text-foreground border-border/40"
+                : "text-muted-foreground hover:text-foreground border-border/60"
             }`}
-            style={{ letterSpacing: "0.03em" }}
+            style={activeOccasion === occ.id ? {
+              letterSpacing: "0.03em",
+              boxShadow: "0 1px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
+            } : {
+              letterSpacing: "0.03em",
+              backdropFilter: "blur(10px) saturate(140%)",
+              WebkitBackdropFilter: "blur(10px) saturate(140%)",
+              backgroundColor: "color-mix(in srgb, hsl(var(--card)) 45%, transparent)",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+            }}
           >
             <span className="mr-1.5 text-sm">{occ.icon}</span>
             {occ.label}

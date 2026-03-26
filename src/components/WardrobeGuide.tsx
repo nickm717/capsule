@@ -225,11 +225,19 @@ function CategoryChip({ label, icon, active, onClick }: { label: string; icon: s
   return (
     <button
       onClick={onClick}
-      className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-150 active:scale-[0.96] border ${
+      className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-150 active:scale-[0.96] border ${
         active
-          ? "bg-primary text-primary-foreground border-primary/70 shadow-sm"
-          : "bg-muted/60 text-muted-foreground border-border/40"
+          ? "bg-primary text-primary-foreground border-primary/70"
+          : "text-muted-foreground border-border/60"
       }`}
+      style={active ? {
+        boxShadow: "0 1px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
+      } : {
+        backdropFilter: "blur(10px) saturate(140%)",
+        WebkitBackdropFilter: "blur(10px) saturate(140%)",
+        backgroundColor: "color-mix(in srgb, hsl(var(--card)) 45%, transparent)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+      }}
     >
       <span className="text-sm">{icon}</span>
       {label}
