@@ -350,9 +350,16 @@ function OutfitCard({
 
       {/* Content */}
       <div className="flex-1 min-w-0 px-4 py-3.5">
-        {/* Top row: name + menu */}
-        <div className="flex items-start justify-between gap-3">
+        {/* Top row: name + temp badge + menu */}
+        <div className="flex items-start justify-between gap-2">
           <h3 className="text-foreground font-semibold text-[15px] leading-snug flex-1">{outfit.name}</h3>
+          {tempBadge && (
+            <div className="flex-shrink-0 mt-0.5">
+              <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
+                {outfit.temp} · {tempBadge.range}
+              </AppBadge>
+            </div>
+          )}
           {/* Menu — z-[60] so it sits above adjacent cards */}
           <div className="relative flex-shrink-0" ref={menuRef}>
             <button
@@ -394,15 +401,6 @@ function OutfitCard({
         <p className="text-muted-foreground text-[13px] mt-1.5 leading-relaxed">
           {pieces.map((p) => p.name).join(" · ")}
         </p>
-
-        {/* Temp badge with full range inside */}
-        {tempBadge && (
-          <div className="mt-2.5">
-            <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
-              {outfit.temp} · {tempBadge.range}
-            </AppBadge>
-          </div>
-        )}
       </div>
     </div>
   );
