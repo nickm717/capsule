@@ -183,26 +183,26 @@ const WeeklyPlanner = () => {
                       <div key={pi} style={{ backgroundColor: p.hex, flex: 1 }} />
                     ))}
                   </div>
-                  <div className="flex items-center px-3.5 py-3 gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-foreground font-semibold text-[15px] truncate leading-snug">{outfit.name}</p>
-                      <p className="text-muted-foreground text-[12px] mt-0.5 truncate">
-                        {outfit.pieces.map((p) => p.name).join(" · ")}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {tempBadge && (
-                        <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
-                          {outfit.temp}
-                        </AppBadge>
-                      )}
+                  <div className="px-4 py-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-foreground font-semibold text-[15px] leading-snug flex-1">{outfit.name}</p>
                       <button
                         onClick={(e) => { e.stopPropagation(); clearDay(dayKey); }}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground active:bg-muted/60 transition-colors text-sm"
+                        className="w-8 h-8 flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92] -mt-0.5 flex-shrink-0"
                       >
                         ✕
                       </button>
                     </div>
+                    <p className="text-muted-foreground text-[13px] mt-1.5 leading-relaxed">
+                      {outfit.pieces.map((p) => p.name).join(" · ")}
+                    </p>
+                    {tempBadge && (
+                      <div className="mt-2.5">
+                        <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
+                          {outfit.temp} · {tempBadge.range}
+                        </AppBadge>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
