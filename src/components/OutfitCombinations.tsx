@@ -337,19 +337,19 @@ function OutfitCard({
   return (
     // No overflow-hidden on the card so the dropdown menu can escape its bounds
     <div
-      className={`w-full text-left bg-card rounded-2xl border border-border/60 animate-reveal-up cursor-pointer active:scale-[0.99] transition-transform relative ${menuOpen ? "z-40" : ""}`}
+      className={`w-full text-left bg-card rounded-2xl border border-border/60 animate-reveal-up cursor-pointer active:scale-[0.99] transition-transform relative flex ${menuOpen ? "z-40" : ""}`}
       style={{ animationDelay: `${delay}ms` }}
       onClick={onTap}
     >
-      {/* Full-width color palette strip — rounded top clipped independently */}
-      <div className="flex h-2 w-full rounded-t-2xl overflow-hidden">
+      {/* Vertical color bars — left edge, clipped independently so menu can still escape */}
+      <div className="flex flex-shrink-0 rounded-l-2xl overflow-hidden" style={{ width: 36 }}>
         {pieces.map((piece, pi) => (
           <div key={pi} style={{ backgroundColor: piece.hex, flex: 1 }} />
         ))}
       </div>
 
       {/* Content */}
-      <div className="px-4 py-3.5">
+      <div className="flex-1 min-w-0 px-4 py-3.5">
         {/* Top row: name + menu */}
         <div className="flex items-start justify-between gap-3">
           <h3 className="text-foreground font-semibold text-[15px] leading-snug flex-1">{outfit.name}</h3>
