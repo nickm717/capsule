@@ -177,21 +177,21 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
             {/* Outfit card */}
             <button
               onClick={() => setSheetDay({ key: dayKey, label: `${DAY_LABELS[i].slice(0, 3)} ${dayNum}` })}
-              className={`w-full text-left rounded-2xl border transition-all active:scale-[0.99] bg-card shadow-sm dark:shadow-none ${
+              className={`w-full text-left rounded-2xl border overflow-hidden transition-all active:scale-[0.99] bg-card shadow-sm dark:shadow-none ${
                 outfit
                   ? isToday ? "border-gold/30" : "border-border/50"
                   : "border-dashed border-border/50"
               }`}
             >
               {outfit ? (
-                <div>
-                  {/* Full-width color palette strip — clip rounded top independently */}
-                  <div className="flex h-2 rounded-t-2xl overflow-hidden">
+                <div className="flex">
+                  {/* Vertical color bars — left edge */}
+                  <div className="flex flex-shrink-0" style={{ width: 36 }}>
                     {outfit.pieces.map((p, pi) => (
                       <div key={pi} style={{ backgroundColor: p.hex, flex: 1 }} />
                     ))}
                   </div>
-                  <div className="px-4 py-3.5">
+                  <div className="flex-1 min-w-0 px-4 py-3.5">
                     <div className="flex items-start justify-between gap-3">
                       <p className="text-foreground font-semibold text-[15px] leading-snug flex-1">{outfit.name}</p>
                       <button
