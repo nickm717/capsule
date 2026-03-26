@@ -138,7 +138,7 @@ const WeeklyPlanner = () => {
           <div
             key={dayKey}
             className="animate-reveal-up"
-            style={{ animationDelay: `${(i + 1) * 45 + 30}ms`, marginBottom: "20px" }}
+            style={{ animationDelay: `${(i + 1) * 45 + 30}ms`, marginBottom: "16px" }}
           >
             {/* Day + weather header — outside the card, pure system font */}
             <div className="flex items-center justify-between px-1 mb-1.5">
