@@ -75,8 +75,12 @@ const Index = () => {
     setScrollY(0);
   }, [activeTab]);
 
-  const handleScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
-    setScrollY(e.currentTarget.scrollTop);
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const onScroll = () => setScrollY(el.scrollTop);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
   const baseOpacity = isDark ? 0.55 : 0.22;
@@ -91,7 +95,7 @@ const Index = () => {
   return (
     <AppDataProvider>
     <div
-      className="min-h-screen flex flex-col max-w-lg mx-auto"
+      className="h-screen overflow-hidden flex flex-col max-w-lg mx-auto"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       {/* Fixed header gradient — stays at top, fades as user scrolls */}
@@ -111,7 +115,6 @@ const Index = () => {
       {/* Content */}
       <main
         ref={mainRef}
-        onScroll={handleScroll}
         className="flex-1 overflow-y-auto pb-24 pt-4"
         style={{ position: "relative" }}
       >
