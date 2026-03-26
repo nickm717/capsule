@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import WardrobeGuide from "@/components/WardrobeGuide";
 import OutfitCombinations from "@/components/OutfitCombinations";
 import WeeklyPlanner from "@/components/WeeklyPlanner";
-import { AppDataProvider } from "@/contexts/AppDataContext";
+import { AppDataProvider, useAppData } from "@/contexts/AppDataContext";
 
 type Tab = "wardrobe" | "outfits" | "planner";
 
@@ -43,7 +43,12 @@ const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
   },
 ];
 
-const Index = () => {
+const PULL_THRESHOLD = 64; // px to trigger refresh
+const PULL_RESISTANCE = 0.45; // how much drag vs finger movement
+
+const IndexInner = () => {
+  const { refreshWardrobe, refreshOutfits } = useAppData();
+
   const [activeTab, setActiveTab] = useState<Tab>("wardrobe");
   const [hideNav, setHideNav] = useState(false);
   const [editItemId, setEditItemId] = useState<string | null>(null);
@@ -83,6 +88,80 @@ const Index = () => {
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Pull-to-refresh state
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartYRef = useRef(0);
+  const isPullingRef = useRef(false);
+  const activeTabRef = useRef(activeTab);
+  const plannerRefreshRef = useRef<(() => Promise<void>) | undefined>(undefined);
+
+  useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (el.scrollTop === 0) {
+        touchStartYRef.current = e.touches[0].clientY;
+        isPullingRef.current = true;
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isPullingRef.current) return;
+      const dy = e.touches[0].clientY - touchStartYRef.current;
+      if (dy <= 0) {
+        isPullingRef.current = false;
+        setPullDistance(0);
+        return;
+      }
+      // Prevent native scroll bounce while pulling
+      if (el.scrollTop === 0 && dy > 0) {
+        e.preventDefault();
+      }
+      setPullDistance(dy * PULL_RESISTANCE);
+    };
+
+    const onTouchEnd = async () => {
+      if (!isPullingRef.current) return;
+      isPullingRef.current = false;
+
+      if (pullDistance >= PULL_THRESHOLD) {
+        setIsRefreshing(true);
+        setPullDistance(0);
+        try {
+          const tab = activeTabRef.current;
+          if (tab === "wardrobe") {
+            await refreshWardrobe();
+          } else if (tab === "outfits") {
+            await refreshOutfits();
+          } else if (tab === "planner") {
+            await Promise.all([
+              refreshOutfits(),
+              plannerRefreshRef.current?.(),
+            ]);
+          }
+        } finally {
+          setIsRefreshing(false);
+        }
+      } else {
+        setPullDistance(0);
+      }
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [pullDistance, refreshWardrobe, refreshOutfits]);
+
   const baseOpacity = isDark ? 0.55 : 0.22;
   const gradientOpacity = baseOpacity * Math.max(0, 1 - scrollY / (mainRef.current?.clientHeight ?? window.innerHeight));
 
@@ -92,8 +171,11 @@ const Index = () => {
     planner:  "linear-gradient(90deg, #2E6E68, #3A4A5C)",
   };
 
+  // Pull indicator: how far along the threshold (0–1)
+  const pullProgress = Math.min(pullDistance / PULL_THRESHOLD, 1);
+  const showIndicator = pullDistance > 4 || isRefreshing;
+
   return (
-    <AppDataProvider>
     <div
       className="h-screen overflow-hidden flex flex-col max-w-lg mx-auto"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
@@ -112,11 +194,55 @@ const Index = () => {
         }}
       />
 
+      {/* Pull-to-refresh indicator */}
+      {showIndicator && (
+        <div
+          className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
+          style={{
+            paddingTop: `calc(env(safe-area-inset-top, 0px) + ${isRefreshing ? 16 : Math.max(0, pullDistance - 8)}px)`,
+            transition: isRefreshing ? "padding-top 0.2s ease" : "none",
+          }}
+        >
+          <div
+            className="flex items-center justify-center rounded-full shadow-md"
+            style={{
+              width: 32,
+              height: 32,
+              backgroundColor: isDark ? "rgba(40,32,26,0.92)" : "rgba(255,252,248,0.92)",
+              border: "1px solid hsl(var(--border))",
+              transform: `scale(${0.6 + pullProgress * 0.4})`,
+              transition: isRefreshing ? "transform 0.2s ease" : "none",
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                transform: isRefreshing ? "none" : `rotate(${pullProgress * 270}deg)`,
+                animation: isRefreshing ? "spin 0.7s linear infinite" : "none",
+              }}
+            >
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <main
         ref={mainRef}
         className="flex-1 overflow-y-auto pb-24 pt-4"
-        style={{ position: "relative" }}
+        style={{
+          position: "relative",
+          transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : undefined,
+          transition: isPullingRef.current ? "none" : "transform 0.25s ease",
+        }}
       >
         <div style={{ position: "relative", zIndex: 1 }}>
           {activeTab === "wardrobe" && (
@@ -129,7 +255,7 @@ const Index = () => {
           {activeTab === "outfits" && (
             <OutfitCombinations onBuilderOpen={setHideNav} onPieceTap={handlePieceTap} />
           )}
-          {activeTab === "planner" && <WeeklyPlanner />}
+          {activeTab === "planner" && <WeeklyPlanner refreshRef={plannerRefreshRef} />}
         </div>
       </main>
 
@@ -168,8 +294,13 @@ const Index = () => {
         </nav>
       )}
     </div>
-    </AppDataProvider>
   );
 };
+
+const Index = () => (
+  <AppDataProvider>
+    <IndexInner />
+  </AppDataProvider>
+);
 
 export default Index;

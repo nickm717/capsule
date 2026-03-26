@@ -177,3 +177,8 @@
 .animate-sheet-down {
   animation: sheet-down 0.28s cubic-bezier(0.4, 0, 1, 1) both;
 }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}

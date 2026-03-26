@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { temperatureBadges } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
@@ -41,7 +41,11 @@ function formatRange(dates: Date[]): string {
   return `${fmt(dates[0])} – ${fmt(dates[6])}`;
 }
 
-const WeeklyPlanner = () => {
+interface WeeklyPlannerProps {
+  refreshRef?: React.MutableRefObject<(() => Promise<void>) | undefined>;
+}
+
+const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
   const { outfits } = useOutfits();
   const { forecast } = useWeatherForecast();
   const [plan, setPlan] = useState<Record<string, string>>({});
@@ -61,6 +65,10 @@ const WeeklyPlanner = () => {
   }, []);
 
   useEffect(() => { loadAssignments(); }, [loadAssignments]);
+
+  useEffect(() => {
+    if (refreshRef) refreshRef.current = loadAssignments;
+  }, [refreshRef, loadAssignments]);
 
   const assignOutfit = async (dayKey: string, outfitId: string) => {
     setPlan((prev) => ({ ...prev, [dayKey]: outfitId }));
