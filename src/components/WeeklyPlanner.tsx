@@ -191,7 +191,7 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
                       <div key={pi} style={{ backgroundColor: p.hex, flex: 1 }} />
                     ))}
                   </div>
-                  <div className="flex-1 min-w-0 px-4 py-3.5">
+                  <div className="flex-1 min-w-0 px-4 py-4">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-foreground font-semibold text-[15px] leading-snug flex-1">{outfit.name}</p>
                       {tempBadge && (
@@ -203,12 +203,12 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
                       )}
                       <button
                         onClick={(e) => { e.stopPropagation(); clearDay(dayKey); }}
-                        className="w-8 h-8 flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92] flex-shrink-0"
+                        className="w-8 py-1.5 flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92] flex-shrink-0"
                       >
                         ✕
                       </button>
                     </div>
-                    <p className="text-muted-foreground text-[13px] mt-1.5 leading-relaxed">
+                    <p className="text-muted-foreground text-[13px] mt-1.5 leading-normal">
                       {outfit.pieces.map((p) => p.name).join(" · ")}
                     </p>
                   </div>

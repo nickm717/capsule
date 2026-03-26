@@ -349,7 +349,7 @@ function OutfitCard({
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0 px-4 py-3.5">
+      <div className="flex-1 min-w-0 px-4 py-4">
         {/* Top row: name + temp badge + menu */}
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-foreground font-semibold text-[15px] leading-snug flex-1">{outfit.name}</h3>
@@ -364,7 +364,7 @@ function OutfitCard({
           <div className="relative flex-shrink-0" ref={menuRef}>
             <button
               onClick={(e) => { e.stopPropagation(); setMenuOpen((p) => !p); }}
-              className="w-8 h-8 flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92]"
+              className="w-8 py-1.5 flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92]"
             >
               <MoreHorizontal size={15} />
             </button>
@@ -398,7 +398,7 @@ function OutfitCard({
         </div>
 
         {/* Piece names — allow wrapping, no clamp */}
-        <p className="text-muted-foreground text-[13px] mt-1.5 leading-relaxed">
+        <p className="text-muted-foreground text-[13px] mt-1.5 leading-normal">
           {pieces.map((p) => p.name).join(" · ")}
         </p>
       </div>
