@@ -343,8 +343,8 @@ function OutfitCard({
       style={{ animationDelay: `${delay}ms` }}
       onClick={onTap}
     >
-      {/* Vertical color bars — left edge, clipped independently so menu can still escape */}
-      <div className="flex flex-shrink-0 rounded-l-2xl overflow-hidden" style={{ width: 36 }}>
+      {/* Vertical color bars — inset slices with gaps */}
+      <div className="flex flex-shrink-0 rounded-l-2xl overflow-hidden gap-[2px]" style={{ width: 36 }}>
         {pieces.map((piece, pi) => (
           <div key={pi} style={{ backgroundColor: piece.hex, flex: 1 }} />
         ))}
