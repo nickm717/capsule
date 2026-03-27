@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import ProfileButton from "@/components/ProfileButton";
 import { temperatureBadges } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
@@ -94,10 +95,13 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
 
   return (
     <div className="px-4 pb-6 pt-5">
-      {/* Title */}
-      <h2 className="text-[34px] font-bold text-foreground tracking-tight leading-none mb-4 animate-reveal-up">
-        Planner
-      </h2>
+      {/* Title + profile */}
+      <div className="flex items-center justify-between mb-4 animate-reveal-up">
+        <h2 className="text-[34px] font-bold text-foreground tracking-tight leading-none">
+          Planner
+        </h2>
+        <ProfileButton />
+      </div>
 
       {/* Week navigation */}
       <div

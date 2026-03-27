@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import ProfileButton from "@/components/ProfileButton";
 import { Plus, MoreHorizontal, Pencil, Trash2, CalendarPlus, Loader2 } from "lucide-react";
 import { occasionDefs, temperatureBadges } from "@/data/darkautumn";
 import AppBadge from "./AppBadge";
@@ -166,11 +167,12 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
 
   return (
     <div className="px-4 pb-6 space-y-5 pt-5">
-      {/* Header — title only */}
-      <div className="animate-reveal-up">
+      {/* Header — title + profile */}
+      <div className="flex items-center justify-between animate-reveal-up">
         <h2 className="text-[34px] font-bold text-foreground tracking-tight leading-none">
           Outfits
         </h2>
+        <ProfileButton />
       </div>
 
       {/* Solid FAB */}

@@ -53,9 +53,8 @@
   }
 }
 
-/* ── Dark mode (system preference) ───────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  :root {
+/* ── Dark mode (controlled via .dark class by next-themes) ────── */
+.dark {
     --background: 26 22% 4%;
     --foreground: 38 28% 88%;
 
@@ -97,7 +96,6 @@
     --sidebar-accent-foreground: 38 28% 88%;
     --sidebar-border: 26 10% 17%;
     --sidebar-ring: 38 80% 54%;
-  }
 }
 
 @layer base {
