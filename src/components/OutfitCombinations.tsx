@@ -352,16 +352,18 @@ function OutfitCard({
 
       {/* Content */}
       <div className="flex-1 min-w-0 px-4 pt-4 pb-3.5">
-        {/* Top row: fixed h-8 so all three items share the same alignment axis */}
-        <div className="flex items-center justify-between gap-2 h-8">
-          <h3 className="text-foreground font-semibold text-[15px] leading-none flex-1 truncate">{outfit.name}</h3>
-          {tempBadge && (
-            <div className="flex-shrink-0">
-              <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
-                {outfit.temp} · {tempBadge.range}
-              </AppBadge>
-            </div>
-          )}
+        {/* Top row */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-foreground font-semibold text-[15px] leading-none truncate">{outfit.name}</h3>
+            {tempBadge && (
+              <div className="mt-1">
+                <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
+                  {outfit.temp} · {tempBadge.range}
+                </AppBadge>
+              </div>
+            )}
+          </div>
           {/* Menu — z-[60] so it sits above adjacent cards */}
           <div className="relative flex-shrink-0" ref={menuRef}>
             <button
