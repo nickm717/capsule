@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Plus, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
-import { swatches, type WardrobeItem } from "@/data/darkautumn";
+import { type WardrobeItem } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
 import AddItemSheet from "./AddItemSheet";
 import ItemFormPage from "./ItemFormPage";
 import DeleteItemSheet from "./DeleteItemSheet";
 import ItemDetailSheet from "./ItemDetailSheet";
+import AppBadge from "./AppBadge";
 import type { ItemFormData } from "./ItemForm";
 
 type Filter = "all" | "owned" | "gaps";
@@ -29,13 +30,10 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
 
   const { categories: allCategories, loading, error, refetch: fetchItems } = useWardrobeItems();
 
-  // Handle deep-link from piece tap
   useEffect(() => {
     if (!openItemId || loading) return;
     const row = allCategories.flatMap((c) => c.rows).find((r: any) => r.id === openItemId);
-    if (row) {
-      handleEdit(row);
-    }
+    if (row) handleEdit(row);
     onOpenItemConsumed?.();
   }, [openItemId, loading]);
 
@@ -53,36 +51,26 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
     onFormOpen?.(false);
   };
 
-  const handleFormSaved = () => {
-    fetchItems();
-    closeForm();
-  };
+  const handleFormSaved = () => { fetchItems(); closeForm(); };
 
   const handleEdit = (row: any) => {
-    openForm(
-      {
-        name: row.name,
-        brand: row.brand || "",
-        category: row.category,
-        color: row.color,
-        hex: row.hex,
-        notes: row.notes || "",
-        owned: row.owned,
-      },
-      row.id
-    );
+    openForm({
+      name: row.name,
+      brand: row.brand || "",
+      category: row.category,
+      color: row.color,
+      hex: row.hex,
+      notes: row.notes || "",
+      owned: row.owned,
+    }, row.id);
   };
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     const { error } = await supabase.from("custom_items").delete().eq("id", deleteTarget.id);
-    if (!error) {
-      fetchItems();
-    }
+    if (!error) fetchItems();
     setDeleteTarget(null);
   };
-
-  const categories = activeCategory === "all" ? allCategories : allCategories.filter((c) => c.id === activeCategory);
 
   const filterItem = (item: WardrobeItem) => {
     if (filter === "owned") return item.owned;
@@ -100,32 +88,25 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   }
 
   return (
-    <div className="px-4 pb-6 space-y-5">
-      {/* Header */}
-      <div className="pt-2 animate-reveal-up">
-        <h2 className="text-3xl font-semibold text-foreground text-balance">Wardrobe</h2>
-        <p className="text-secondary text-sm mt-1">
-          {ownedCount} owned · {gapCount} rentals · {totalPieces} total
-        </p>
-        <div className="flex gap-1.5 mt-3">
-          {swatches.map((s) => (
-            <div
-              key={s.name}
-              className="w-6 h-6 rounded-full border border-border/40"
-              style={{ backgroundColor: s.hex }}
-              title={s.name}
-            />
-          ))}
-        </div>
+    <div className="px-4 pb-6 space-y-5 pt-5">
+      {/* Header — title only */}
+      <div className="animate-reveal-up">
+        <h2 className="text-[34px] font-bold text-foreground tracking-tight leading-none">
+          Wardrobe
+        </h2>
       </div>
 
-      {/* Floating Action Button */}
+      {/* Solid FAB */}
       <button
         onClick={() => setSheetOpen(true)}
-        className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-[0.93] shadow-lg shadow-black/30"
-        style={{ backgroundColor: "#B08030", bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))" }}
+        className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-[0.92] active:opacity-90"
+        style={{
+          bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))",
+          backgroundColor: "hsl(var(--primary))",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.22)",
+        }}
       >
-        <Plus size={24} style={{ color: "#141008" }} strokeWidth={2.5} />
+        <Plus size={22} color="white" strokeWidth={2.5} />
       </button>
 
       {/* Category chips */}
@@ -136,8 +117,14 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         ))}
       </div>
 
-      {/* Filter bar */}
-      <div className="flex gap-1 bg-muted rounded-lg p-1 animate-reveal-up" style={{ animationDelay: "100ms" }}>
+      {/* Segmented filter */}
+      <div
+        className="flex gap-0.5 rounded-[10px] p-0.5 animate-reveal-up border border-border/60 shadow-sm glass"
+        style={{
+          backgroundColor: "color-mix(in srgb, hsl(var(--muted)) 70%, transparent)",
+          animationDelay: "100ms",
+        }}
+      >
         {[
           { key: "all" as Filter, label: "All", count: totalPieces },
           { key: "owned" as Filter, label: "Owned", count: ownedCount },
@@ -146,55 +133,60 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`flex-1 text-center py-1.5 rounded-md text-sm font-medium transition-all duration-150 active:scale-[0.97] ${
-              filter === f.key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            className={`flex-1 text-center py-[7px] rounded-[8px] text-[14px] font-medium transition-all duration-150 active:scale-[0.97] ${
+              filter === f.key
+                ? "text-foreground"
+                : "text-muted-foreground"
             }`}
+            style={filter === f.key ? {
+              backgroundColor: "hsl(var(--card))",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.18), 0 0.5px 0 rgba(255,255,255,0.06)",
+              border: "0.5px solid hsl(var(--border))",
+            } : undefined}
           >
             {f.label}
-            <span className="ml-1 text-[11px] opacity-60">{f.count}</span>
+            <span className="ml-1 text-[12px]">{f.count}</span>
           </button>
         ))}
       </div>
 
-      {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-16 animate-reveal-up">
-          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">Loading wardrobe…</span>
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-xs text-muted-foreground">Loading wardrobe…</span>
         </div>
       )}
 
-      {/* Error */}
       {error && !loading && (
         <div className="text-center py-16 animate-reveal-up">
           <p className="text-destructive text-sm mb-2">Failed to load items</p>
-          <button onClick={fetchItems} className="text-sm text-gold underline">Retry</button>
+          <button onClick={fetchItems} className="text-xs text-gold underline">Retry</button>
         </div>
       )}
 
-      {/* Item cards */}
-      {!loading && !error && categories.map((cat) => {
+      {/* Grouped item list */}
+      {!loading && !error && filteredCategories.map((cat) => {
         const filtered = cat.items.filter(filterItem);
         if (filtered.length === 0) return null;
         return (
-          <section key={cat.id}>
+          <section key={cat.id} className="animate-reveal-up">
             {activeCategory === "all" && (
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2 animate-reveal-up">
-                <span>{cat.icon}</span> {cat.label}
-                <span className="text-xs font-normal">{filtered.length}</span>
-              </h3>
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase mb-1.5 px-1" style={{ letterSpacing: "0.1em" }}>
+                {cat.icon}  {cat.label}
+              </p>
             )}
-            <div className="space-y-2.5">
+            <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-sm dark:shadow-none">
               {filtered.map((item, i) => {
                 const row = cat.rows.find((r: any) => r.id === item.id);
                 return (
-                  <ItemCard
+                  <ItemRow
                     key={item.id}
                     item={item}
+                    isLast={i === filtered.length - 1}
                     onTap={() => row && setDetailItem({ item, row })}
                     onEdit={() => row && handleEdit(row)}
                     onDelete={() => setDeleteTarget({ id: item.id, name: item.name })}
-                    delay={i * 40}
+                    delay={i * 30}
                   />
                 );
               })}
@@ -203,8 +195,8 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         );
       })}
 
-      {!loading && !error && categories.every((c) => c.items.filter(filterItem).length === 0) && (
-        <div className="text-center py-16 animate-reveal-up">
+      {!loading && !error && filteredCategories.every((c) => c.items.filter(filterItem).length === 0) && (
+        <div className="text-center py-20 animate-reveal-up">
           <p className="text-muted-foreground text-sm">No items match this filter.</p>
         </div>
       )}
@@ -233,24 +225,36 @@ function CategoryChip({ label, icon, active, onClick }: { label: string; icon: s
   return (
     <button
       onClick={onClick}
-      className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-150 active:scale-[0.96] ${
-        active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
+      className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-150 active:scale-[0.96] border ${
+        active
+          ? "bg-primary text-primary-foreground border-primary/70"
+          : "text-muted-foreground border-border/60"
       }`}
+      style={active ? {
+        boxShadow: "0 1px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
+      } : {
+        backdropFilter: "blur(10px) saturate(140%)",
+        WebkitBackdropFilter: "blur(10px) saturate(140%)",
+        backgroundColor: "color-mix(in srgb, hsl(var(--card)) 45%, transparent)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+      }}
     >
-      <span className="text-xs">{icon}</span>
+      <span className="text-sm">{icon}</span>
       {label}
     </button>
   );
 }
 
-function ItemCard({
+function ItemRow({
   item,
+  isLast,
   onTap,
   onEdit,
   onDelete,
   delay,
 }: {
   item: WardrobeItem;
+  isLast: boolean;
   onTap: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -262,9 +266,7 @@ function ItemCard({
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -272,64 +274,50 @@ function ItemCard({
 
   return (
     <div
-      className={`bg-card rounded-xl border border-border animate-reveal-up cursor-pointer active:scale-[0.98] transition-transform relative ${menuOpen ? "z-40" : ""}`}
+      className={`animate-reveal-up relative ${menuOpen ? "z-40" : ""}`}
       style={{ animationDelay: `${delay}ms` }}
-      onClick={onTap}
     >
-      <div className="flex">
-        <div className="w-1.5 flex-shrink-0 rounded-l-xl" style={{ backgroundColor: item.hex }} />
-        <div className="flex-1 p-3.5 min-w-0">
-          <div className="flex items-start gap-2.5">
-            <span className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5 border border-border/40" style={{ backgroundColor: item.hex }} />
-            <div className="flex-1 min-w-0">
-              <p className="text-foreground text-sm font-medium leading-tight truncate">{item.name}</p>
-              {item.brand && <p className="text-muted-foreground text-[11px] mt-0.5">{item.brand}</p>}
-              <p className="text-muted-foreground text-xs mt-0.5">{item.color}</p>
-            </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <span className={`text-[9px] font-bold uppercase tracking-[0.08em] px-1.5 py-0.5 rounded border ${
-                item.owned ? "bg-teal/15 text-teal border-teal/30" : "bg-rust/15 text-rust border-rust/30"
-              }`}>
-                {item.owned ? "OWN" : "RENTAL"}
-              </span>
-              <div className="relative" ref={menuRef}>
+      <div
+        className={`flex items-center px-4 py-3 active:bg-muted/40 transition-colors cursor-pointer ${!isLast ? "border-b border-border/40" : ""}`}
+        onClick={onTap}
+      >
+        <div className="w-9 h-9 rounded-xl flex-shrink-0 border border-black/10 dark:border-white/10" style={{ backgroundColor: item.hex }} />
+        <div className="flex-1 min-w-0 ml-3">
+          <p className="text-foreground text-[15px] font-medium leading-snug truncate">{item.name}</p>
+          <p className="text-muted-foreground text-[13px] mt-0.5 truncate">
+            {item.brand ? `${item.brand} · ` : ""}{item.color}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+          <AppBadge size="sm" variant={item.owned ? "owned" : "rental"}>
+            {item.owned ? "Own" : "Rental"}
+          </AppBadge>
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen((p) => !p); }}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92]"
+            >
+              <MoreHorizontal size={16} />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-9 z-50 min-w-[150px] rounded-2xl border border-border bg-card shadow-xl py-1 animate-in fade-in-0 zoom-in-95 duration-150">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMenuOpen((p) => !p);
-                  }}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-[0.92]"
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }}
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[15px] text-foreground active:bg-muted transition-colors"
                 >
-                  <MoreHorizontal size={16} />
+                  <Pencil size={14} className="text-muted-foreground" />
+                  Edit item
                 </button>
-                {menuOpen && (
-                  <div className="absolute right-0 top-9 z-50 min-w-[140px] rounded-lg border border-border bg-card shadow-lg py-1 animate-in fade-in-0 zoom-in-95 duration-150">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpen(false);
-                        onEdit();
-                      }}
-                      className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"
-                    >
-                      <Pencil size={14} className="text-muted-foreground" />
-                      Edit item
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpen(false);
-                        onDelete();
-                      }}
-                      className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-destructive hover:bg-muted transition-colors active:scale-[0.97]"
-                    >
-                      <Trash2 size={14} />
-                      Delete item
-                    </button>
-                  </div>
-                )}
+                <div className="h-px bg-border/60 mx-3" />
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[15px] text-destructive active:bg-muted transition-colors"
+                >
+                  <Trash2 size={14} />
+                  Delete item
+                </button>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

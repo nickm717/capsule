@@ -2,54 +2,101 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* ── Light mode (default) ─────────────────────────────────────── */
 @layer base {
   :root {
-    --background: 30 30% 5%;
-    --foreground: 35 50% 80%;
+    --background: 38 28% 96%;
+    --foreground: 26 30% 14%;
 
-    --card: 30 25% 9%;
-    --card-foreground: 35 50% 80%;
+    --card: 38 22% 100%;
+    --card-foreground: 26 30% 14%;
 
-    --popover: 30 25% 9%;
-    --popover-foreground: 35 50% 80%;
+    --popover: 38 22% 100%;
+    --popover-foreground: 26 30% 14%;
 
-    --primary: 35 58% 44%;
-    --primary-foreground: 30 30% 5%;
+    --primary: 38 76% 32%;
+    --primary-foreground: 38 28% 97%;
 
-    --secondary: 35 30% 65%;
-    --secondary-foreground: 30 30% 5%;
+    --secondary: 38 15% 88%;
+    --secondary-foreground: 26 30% 14%;
 
-    --muted: 30 20% 14%;
-    --muted-foreground: 35 25% 55%;
+    --muted: 38 14% 92%;
+    --muted-foreground: 38 12% 40%;
 
-    --accent: 15 58% 38%;
-    --accent-foreground: 35 50% 90%;
+    --accent: 14 58% 40%;
+    --accent-foreground: 38 28% 97%;
 
-    --destructive: 0 62% 40%;
-    --destructive-foreground: 35 50% 90%;
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 38 28% 97%;
 
-    --border: 30 15% 18%;
-    --input: 30 15% 18%;
-    --ring: 35 58% 44%;
+    --border: 38 14% 86%;
+    --input: 38 14% 86%;
+    --ring: 38 76% 44%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
-    /* Custom palette */
-    --gold: 35 58% 44%;
-    --rust: 15 58% 38%;
+    --gold: 38 76% 32%;
+    --rust: 14 58% 40%;
     --olive: 78 35% 35%;
     --teal: 176 41% 30%;
 
-    --sidebar-background: 30 25% 7%;
-    --sidebar-foreground: 35 50% 80%;
-    --sidebar-primary: 35 58% 44%;
-    --sidebar-primary-foreground: 30 30% 5%;
-    --sidebar-accent: 30 20% 14%;
-    --sidebar-accent-foreground: 35 50% 80%;
-    --sidebar-border: 30 15% 18%;
-    --sidebar-ring: 35 58% 44%;
+    --sidebar-background: 38 22% 98%;
+    --sidebar-foreground: 26 30% 14%;
+    --sidebar-primary: 38 76% 44%;
+    --sidebar-primary-foreground: 38 28% 97%;
+    --sidebar-accent: 38 14% 92%;
+    --sidebar-accent-foreground: 26 30% 14%;
+    --sidebar-border: 38 14% 86%;
+    --sidebar-ring: 38 76% 44%;
+  }
+}
+
+/* ── Dark mode (system preference) ───────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 26 22% 4%;
+    --foreground: 38 28% 88%;
+
+    --card: 26 18% 11%;
+    --card-foreground: 38 28% 88%;
+
+    --popover: 26 18% 11%;
+    --popover-foreground: 38 28% 88%;
+
+    --primary: 38 80% 54%;
+    --primary-foreground: 26 22% 5%;
+
+    --secondary: 38 20% 68%;
+    --secondary-foreground: 26 22% 5%;
+
+    --muted: 26 14% 16%;
+    --muted-foreground: 38 12% 55%;
+
+    --accent: 14 62% 40%;
+    --accent-foreground: 38 28% 92%;
+
+    --destructive: 0 65% 42%;
+    --destructive-foreground: 38 28% 92%;
+
+    --border: 26 10% 20%;
+    --input: 26 10% 17%;
+    --ring: 38 80% 54%;
+
+    --gold: 38 80% 54%;
+    --rust: 14 60% 62%;
+    --olive: 78 35% 35%;
+    --teal: 176 50% 58%;
+
+    --sidebar-background: 26 20% 6%;
+    --sidebar-foreground: 38 28% 88%;
+    --sidebar-primary: 38 80% 54%;
+    --sidebar-primary-foreground: 26 22% 5%;
+    --sidebar-accent: 26 14% 13%;
+    --sidebar-accent-foreground: 38 28% 88%;
+    --sidebar-border: 26 10% 17%;
+    --sidebar-ring: 38 80% 54%;
   }
 }
 
@@ -58,15 +105,15 @@
     @apply border-border;
   }
 
+  html {
+    background-color: hsl(var(--background));
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 400;
   }
-
-  h1, h2, h3, h4 {
-    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
-  }
-
 
   /* Prevent iOS zoom on focus — inputs must be ≥16px */
   input, select, textarea {
@@ -78,14 +125,28 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  .text-gold {
+    color: hsl(var(--gold));
+  }
+
+  .bg-gold {
+    background-color: hsl(var(--gold));
+  }
+
+  /* iOS-style liquid glass surface */
+  .glass {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
 }
 
-/* Scroll reveal animation */
+/* ── Animations ────────────────────────────────────────────────── */
 @keyframes reveal-up {
   from {
     opacity: 0;
-    transform: translateY(16px);
-    filter: blur(4px);
+    transform: translateY(10px);
+    filter: blur(2px);
   }
   to {
     opacity: 1;
@@ -95,31 +156,22 @@
 }
 
 .animate-reveal-up {
-  animation: reveal-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: reveal-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Bottom sheet animations */
 @keyframes sheet-up {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }
 
 @keyframes sheet-down {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(100%);
-  }
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
 }
 
 @keyframes fade-overlay {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 .animate-sheet-up {
@@ -128,4 +180,9 @@
 
 .animate-sheet-down {
   animation: sheet-down 0.28s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
