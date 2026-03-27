@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import ProfileButton from "@/components/ProfileButton";
 import { Plus, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
 import { type WardrobeItem } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,11 +90,12 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
 
   return (
     <div className="px-4 pb-6 space-y-5 pt-5">
-      {/* Header — title only */}
-      <div className="animate-reveal-up">
+      {/* Header — title + profile */}
+      <div className="flex items-center justify-between animate-reveal-up">
         <h2 className="text-[34px] font-bold text-foreground tracking-tight leading-none">
           Wardrobe
         </h2>
+        <ProfileButton />
       </div>
 
       {/* Solid FAB */}
