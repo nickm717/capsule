@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { swatches } from "@/data/darkautumn";
 import type { ItemFormData } from "./ItemForm";
@@ -30,6 +31,7 @@ interface ItemFormPageProps {
 }
 
 const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps) => {
+  const { user } = useAuth();
   const isEdit = !!editId;
   useSwipeBack(useCallback(() => onCancel(), [onCancel]));
 
@@ -80,7 +82,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
     if (isEdit) {
       ({ error } = await supabase.from("custom_items").update(payload).eq("id", editId));
     } else {
-      ({ error } = await supabase.from("custom_items").insert(payload));
+      ({ error } = await supabase.from("custom_items").insert({ ...payload, user_id: user!.id }));
     }
     setSaving(false);
     if (error) {

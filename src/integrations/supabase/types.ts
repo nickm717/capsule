@@ -25,6 +25,7 @@ export type Database = {
           name: string
           notes: string | null
           owned: boolean
+          user_id: string | null
         }
         Insert: {
           brand?: string | null
@@ -36,6 +37,7 @@ export type Database = {
           name: string
           notes?: string | null
           owned?: boolean
+          user_id?: string | null
         }
         Update: {
           brand?: string | null
@@ -47,6 +49,7 @@ export type Database = {
           name?: string
           notes?: string | null
           owned?: boolean
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -59,6 +62,7 @@ export type Database = {
           occasion_id: string
           pieces: Json
           temp: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -68,6 +72,7 @@ export type Database = {
           occasion_id?: string
           pieces?: Json
           temp?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -77,6 +82,7 @@ export type Database = {
           occasion_id?: string
           pieces?: Json
           temp?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -86,18 +92,21 @@ export type Database = {
           day_key: string
           id: string
           outfit_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           day_key: string
           id?: string
           outfit_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           day_key?: string
           id?: string
           outfit_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

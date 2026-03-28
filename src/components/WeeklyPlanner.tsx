@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import ProfileButton from "@/components/ProfileButton";
 import { temperatureBadges } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
 import { useWeatherForecast } from "@/hooks/use-weather-forecast";
 import OutfitPickerSheet from "./OutfitPickerSheet";
@@ -47,6 +48,7 @@ interface WeeklyPlannerProps {
 }
 
 const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
+  const { user } = useAuth();
   const { outfits } = useOutfits();
   const { forecast } = useWeatherForecast();
   const [plan, setPlan] = useState<Record<string, string>>({});
@@ -57,7 +59,7 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
   const todayKey  = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const loadAssignments = useCallback(async () => {
-    const { data } = await supabase.from("planner_assignments").select("day_key, outfit_id");
+    const { data } = await supabase.from("planner_assignments").select("day_key, outfit_id").eq("user_id", user!.id);
     if (data) {
       const map: Record<string, string> = {};
       data.forEach((row: any) => { map[row.day_key] = row.outfit_id; });
@@ -76,7 +78,7 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
     setSheetDay(null);
     await supabase
       .from("planner_assignments")
-      .upsert({ day_key: dayKey, outfit_id: outfitId }, { onConflict: "day_key" });
+      .upsert({ day_key: dayKey, outfit_id: outfitId, user_id: user!.id }, { onConflict: "day_key,user_id" });
   };
 
   const clearDay = async (dayKey: string) => {

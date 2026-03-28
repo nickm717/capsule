@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { Check, Sparkles, ChevronDown } from "lucide-react";
 import { categoryDefs, temperatureBadges, occasionDefs, type WardrobeItem, type OutfitPiece } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useSwipeBack } from "@/hooks/use-swipe-back";
 import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
@@ -41,6 +42,7 @@ interface Props {
 }
 
 const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
+  const { user } = useAuth();
   const isEdit = !!editOutfit;
   useSwipeBack(useCallback(() => onBack(), [onBack]));
 
@@ -181,6 +183,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
           temp: activeTemp,
           notes: notes.trim(),
           occasion_id: occasionId,
+          user_id: user!.id,
         }));
       }
       if (error) throw error;

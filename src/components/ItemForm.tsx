@@ -12,6 +12,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { swatches } from "@/data/darkautumn";
 
@@ -47,6 +48,7 @@ interface ItemFormProps {
 }
 
 const ItemForm = ({ prefill, onSaved, onBack }: ItemFormProps) => {
+  const { user } = useAuth();
   const [form, setForm] = useState<ItemFormData>({
     name: "",
     brand: "",
@@ -92,6 +94,7 @@ const ItemForm = ({ prefill, onSaved, onBack }: ItemFormProps) => {
       hex: form.hex,
       notes: form.notes.trim(),
       owned: form.owned,
+      user_id: user!.id,
     });
     setSaving(false);
     if (error) {

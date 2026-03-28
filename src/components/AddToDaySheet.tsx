@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useOutfits } from "@/hooks/use-outfits";
 
 const DAY_ABBR = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -29,6 +30,7 @@ interface AddToDaySheetProps {
 }
 
 const AddToDaySheet = ({ open, outfit, onClose, onSaved }: AddToDaySheetProps) => {
+  const { user } = useAuth();
   const [closing, setClosing] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -47,7 +49,7 @@ const AddToDaySheet = ({ open, outfit, onClose, onSaved }: AddToDaySheetProps) =
     setWeekOffset(0);
     setClosing(false);
     (async () => {
-      const { data } = await supabase.from("planner_assignments").select("day_key, outfit_id");
+      const { data } = await supabase.from("planner_assignments").select("day_key, outfit_id").eq("user_id", user!.id);
       if (data) {
         const map: Record<string, string> = {};
         data.forEach((r: any) => { map[r.day_key] = r.outfit_id; });
@@ -97,7 +99,7 @@ const AddToDaySheet = ({ open, outfit, onClose, onSaved }: AddToDaySheetProps) =
     setSaving(true);
     await supabase
       .from("planner_assignments")
-      .upsert({ day_key: selectedDay, outfit_id: outfit.id }, { onConflict: "day_key" });
+      .upsert({ day_key: selectedDay, outfit_id: outfit.id, user_id: user!.id }, { onConflict: "day_key,user_id" });
     setSaving(false);
     onSaved?.();
     dismiss();

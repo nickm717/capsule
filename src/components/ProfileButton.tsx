@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import { Pencil, Check, X, User } from "lucide-react";
+import { Pencil, Check, X, User, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ function getInitials(name: string): string {
 }
 
 export default function ProfileButton() {
+  const { signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const [displayName, setDisplayName] = useState(
     () => localStorage.getItem(DISPLAY_NAME_KEY) ?? ""
@@ -173,6 +175,18 @@ export default function ProfileButton() {
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>
+          </section>
+
+          {/* ── Sign Out ─────────────────────────────────────── */}
+          <section>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+              onClick={() => { setOpen(false); signOut(); }}
+            >
+              <LogOut size={16} />
+              Sign out
+            </Button>
           </section>
 
           {/* ── Capsule Wardrobe Palette ─────────────────────── */}

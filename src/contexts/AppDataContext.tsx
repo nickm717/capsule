@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import type { DbOutfit } from "@/hooks/use-outfits";
 
 interface AppDataContextValue {
@@ -19,6 +20,8 @@ interface AppDataContextValue {
 const AppDataContext = createContext<AppDataContextValue | null>(null);
 
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+
   const [wardrobeItems, setWardrobeItems] = useState<any[]>([]);
   const [wardrobeLoading, setWardrobeLoading] = useState(true);
   const [wardrobeError, setWardrobeError] = useState<string | null>(null);
@@ -28,11 +31,13 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [outfitsError, setOutfitsError] = useState<string | null>(null);
 
   const refreshWardrobe = useCallback(async () => {
+    if (!user) return;
     setWardrobeLoading(true);
     setWardrobeError(null);
     const { data, error } = await supabase
       .from("custom_items")
       .select("*")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: true });
     if (error) {
       setWardrobeError(error.message);
@@ -40,14 +45,16 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       setWardrobeItems(data ?? []);
     }
     setWardrobeLoading(false);
-  }, []);
+  }, [user]);
 
   const refreshOutfits = useCallback(async () => {
+    if (!user) return;
     setOutfitsLoading(true);
     setOutfitsError(null);
     const { data, error } = await supabase
       .from("custom_outfits")
       .select("*")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: true });
     if (error) {
       setOutfitsError(error.message);
@@ -55,14 +62,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       setOutfits((data ?? []) as unknown as DbOutfit[]);
     }
     setOutfitsLoading(false);
-  }, []);
+  }, [user]);
 
   // Fetch once on mount — never refetches on tab switch since this provider
   // lives above the tab renderer and never unmounts.
   useEffect(() => {
     refreshWardrobe();
     refreshOutfits();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshWardrobe, refreshOutfits]);
 
   return (
     <AppDataContext.Provider
