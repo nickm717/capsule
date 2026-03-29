@@ -123,7 +123,7 @@ const PULL_RESISTANCE = 0.45; // how much drag vs finger movement
 
 const IndexInner = () => {
   const { refreshWardrobe, refreshOutfits } = useAppData();
-  const { palette } = usePaletteContext();
+  const { palette, loading } = usePaletteContext();
 
   const [activeTab, setActiveTab] = useState<Tab>("wardrobe");
   const [hideNav, setHideNav] = useState(false);
@@ -260,9 +260,9 @@ const IndexInner = () => {
           background: tabGradients[activeTab],
           WebkitMask: "linear-gradient(180deg, black 0%, transparent 100%)",
           mask: "linear-gradient(180deg, black 0%, transparent 100%)",
-          opacity: gradientOpacity,
+          opacity: loading ? 0 : gradientOpacity,
           zIndex: 0,
-          transition: "background 0.4s ease",
+          transition: loading ? "none" : "background 0.4s ease, opacity 0.3s ease",
         }}
       />
 

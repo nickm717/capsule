@@ -44,7 +44,7 @@ async function upsertProfile(
 
 export function usePalette(): UsePaletteResult {
   const { user } = useAuth();
-  const [palette, setPalette] = useState<ColorSwatch[]>(DEFAULT_PALETTE);
+  const [palette, setPalette] = useState<ColorSwatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [seasonalType, setSeasonalType] = useState<string | null>(null);
 
@@ -70,6 +70,8 @@ export function usePalette(): UsePaletteResult {
       if (!cancelled) {
         if (data?.palette && Array.isArray(data.palette) && data.palette.length > 0) {
           setPalette(data.palette as ColorSwatch[]);
+        } else {
+          setPalette(DEFAULT_PALETTE);
         }
         setSeasonalType(data?.seasonal_type ?? null);
         setLoading(false);
