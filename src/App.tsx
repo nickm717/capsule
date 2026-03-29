@@ -4,8 +4,10 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { PaletteProvider } from "@/contexts/PaletteContext";
 import AuthPage from "./pages/AuthPage.tsx";
 import Index from "./pages/Index.tsx";
+import ProfilePage from "./pages/ProfilePage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,7 @@ function AuthGate() {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
+      <Route path="/profile" element={<ProfilePage />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -38,9 +41,11 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <AuthProvider>
-        <BrowserRouter>
-          <AuthGate />
-        </BrowserRouter>
+        <PaletteProvider>
+          <BrowserRouter>
+            <AuthGate />
+          </BrowserRouter>
+        </PaletteProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

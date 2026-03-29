@@ -4,7 +4,7 @@ import { Loader2, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { swatches } from "@/data/darkautumn";
+import { usePaletteContext } from "@/contexts/PaletteContext";
 import type { ItemFormData } from "./ItemForm";
 import { useSwipeBack } from "@/hooks/use-swipe-back";
 
@@ -17,7 +17,7 @@ const CATEGORIES = [
   { value: "accessories", label: "Accessories" },
 ];
 
-function closestPaletteHex(colorLabel: string): string {
+function closestPaletteHex(colorLabel: string, swatches: { name: string; hex: string }[]): string {
   const lower = colorLabel.toLowerCase();
   const match = swatches.find((s) => lower.includes(s.name.toLowerCase()));
   return match ? match.hex : "#5C3317";
@@ -32,6 +32,7 @@ interface ItemFormPageProps {
 
 const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps) => {
   const { user } = useAuth();
+  const { palette } = usePaletteContext();
   const isEdit = !!editId;
   useSwipeBack(useCallback(() => onCancel(), [onCancel]));
 
@@ -51,7 +52,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
       setForm((prev) => ({
         ...prev,
         ...prefill,
-        hex: prefill.hex || (prefill.color ? closestPaletteHex(prefill.color) : prev.hex),
+        hex: prefill.hex || (prefill.color ? closestPaletteHex(prefill.color, palette) : prev.hex),
       }));
     }
   }, [prefill]);
@@ -60,7 +61,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
     setForm((prev) => {
       const next = { ...prev, [key]: value };
       if (key === "color" && typeof value === "string" && !prefill?.hex) {
-        next.hex = closestPaletteHex(value);
+        next.hex = closestPaletteHex(value, palette);
       }
       return next;
     });
@@ -177,7 +178,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
             {/* Palette swatches grid */}
             <div className="px-4 pt-4 pb-3">
               <div className="flex flex-wrap gap-2.5">
-                {swatches.map((s) => (
+                {palette.map((s) => (
                   <button
                     key={s.hex}
                     onClick={() => update("hex", s.hex)}
