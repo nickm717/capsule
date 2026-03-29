@@ -14,7 +14,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { swatches } from "@/data/darkautumn";
+import { usePaletteContext } from "@/contexts/PaletteContext";
 
 export interface ItemFormData {
   name: string;
@@ -35,7 +35,7 @@ const CATEGORIES = [
   { value: "accessories", label: "Accessories" },
 ];
 
-function closestPaletteHex(colorLabel: string): string {
+function closestPaletteHex(colorLabel: string, swatches: { name: string; hex: string }[]): string {
   const lower = colorLabel.toLowerCase();
   const match = swatches.find((s) => lower.includes(s.name.toLowerCase()));
   return match ? match.hex : "#5C3317";
@@ -49,6 +49,7 @@ interface ItemFormProps {
 
 const ItemForm = ({ prefill, onSaved, onBack }: ItemFormProps) => {
   const { user } = useAuth();
+  const { palette } = usePaletteContext();
   const [form, setForm] = useState<ItemFormData>({
     name: "",
     brand: "",
@@ -65,7 +66,7 @@ const ItemForm = ({ prefill, onSaved, onBack }: ItemFormProps) => {
       setForm((prev) => ({
         ...prev,
         ...prefill,
-        hex: prefill.hex || (prefill.color ? closestPaletteHex(prefill.color) : prev.hex),
+        hex: prefill.hex || (prefill.color ? closestPaletteHex(prefill.color, palette) : prev.hex),
       }));
     }
   }, [prefill]);
@@ -74,7 +75,7 @@ const ItemForm = ({ prefill, onSaved, onBack }: ItemFormProps) => {
     setForm((prev) => {
       const next = { ...prev, [key]: value };
       if (key === "color" && typeof value === "string" && !prefill?.hex) {
-        next.hex = closestPaletteHex(value);
+        next.hex = closestPaletteHex(value, palette);
       }
       return next;
     });
@@ -172,7 +173,7 @@ const ItemForm = ({ prefill, onSaved, onBack }: ItemFormProps) => {
             className="w-10 h-10 rounded-lg border border-border cursor-pointer"
           />
           <div className="flex gap-1.5 flex-wrap flex-1">
-            {swatches.map((s) => (
+            {palette.map((s) => (
               <button
                 key={s.hex}
                 onClick={() => update("hex", s.hex)}

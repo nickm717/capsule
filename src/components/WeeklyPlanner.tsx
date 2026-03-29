@@ -50,13 +50,51 @@ interface WeeklyPlannerProps {
 const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
   const { user } = useAuth();
   const { outfits } = useOutfits();
-  const { forecast } = useWeatherForecast();
   const [plan, setPlan] = useState<Record<string, string>>({});
   const [weekOffset, setWeekOffset] = useState(0);
   const [sheetDay, setSheetDay] = useState<{ key: string; label: string } | null>(null);
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
   const todayKey  = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+  // Read stored zip code into state so the weather hook re-fetches when it's first saved.
+  const zipKey = user ? `capsule-zip-${user.id}` : null;
+  const [zipCode, setZipCode] = useState(() =>
+    zipKey ? (localStorage.getItem(zipKey) ?? "") : ""
+  );
+
+  const { forecast } = useWeatherForecast(zipCode || undefined);
+
+  // Auto-populate zip code from geolocation on first planner visit.
+  // Once stored, the weather hook uses the zip directly — no further geolocation needed.
+  useEffect(() => {
+    if (!user || !zipKey) return;
+    if (localStorage.getItem(zipKey)) return; // already stored
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+            { headers: { "Accept-Language": "en" } }
+          );
+          if (!res.ok) return;
+          const data = await res.json();
+          const zip = data?.address?.postcode;
+          if (zip) {
+            localStorage.setItem(zipKey, zip);
+            setZipCode(zip); // trigger weather re-fetch via the hook
+          }
+        } catch {
+          // silently ignore — zip code is non-critical
+        }
+      },
+      () => {}, // permission denied — no-op
+      { timeout: 8000 }
+    );
+  }, [user, zipKey]);
 
   const loadAssignments = useCallback(async () => {
     const { data } = await supabase.from("planner_assignments").select("day_key, outfit_id").eq("user_id", user!.id);

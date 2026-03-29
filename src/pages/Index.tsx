@@ -1,8 +1,83 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import WardrobeGuide from "@/components/WardrobeGuide";
 import OutfitCombinations from "@/components/OutfitCombinations";
 import WeeklyPlanner from "@/components/WeeklyPlanner";
 import { AppDataProvider, useAppData } from "@/contexts/AppDataContext";
+import { usePaletteContext } from "@/contexts/PaletteContext";
+import type { ColorSwatch } from "@/data/darkautumn";
+
+// ── Gradient pairing algorithm ────────────────────────────────
+function hexToHsl(hex: string): [number, number, number] {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h = 0;
+  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  else if (max === g) h = ((b - r) / d + 2) / 6;
+  else h = ((r - g) / d + 4) / 6;
+  return [h * 360, s, l];
+}
+
+function scorePair(hsl1: [number, number, number], hsl2: [number, number, number]): number {
+  let hueDiff = Math.abs(hsl1[0] - hsl2[0]);
+  if (hueDiff > 180) hueDiff = 360 - hueDiff;
+  // Prefer hue differences in 20–100° range (analogous / split-complementary)
+  const hueScore = hueDiff >= 20 && hueDiff <= 100 ? 1 - Math.abs(hueDiff - 60) / 60 : 0;
+  // Reward some lightness difference for gradient depth
+  const lightnessDiff = Math.abs(hsl1[2] - hsl2[2]);
+  const lightnessScore = Math.min(lightnessDiff / 0.3, 1);
+  return hueScore * 0.7 + lightnessScore * 0.3;
+}
+
+const FALLBACK_GRADIENTS: Record<string, string> = {
+  wardrobe: "linear-gradient(135deg, #9B4A2A, #B85C38)",
+  outfits:  "linear-gradient(135deg, #6B7A3A, #A0682A)",
+  planner:  "linear-gradient(135deg, #2E6E68, #3A4A5C)",
+};
+
+function pickGradientPairs(palette: ColorSwatch[]): Record<string, string> {
+  if (palette.length < 2) return FALLBACK_GRADIENTS;
+
+  const tabs = ["wardrobe", "outfits", "planner"] as const;
+  const hsls = palette.map((c) => hexToHsl(c.hex));
+
+  // Score all pairs
+  type Pair = { i: number; j: number; score: number };
+  const pairs: Pair[] = [];
+  for (let i = 0; i < palette.length; i++) {
+    for (let j = i + 1; j < palette.length; j++) {
+      pairs.push({ i, j, score: scorePair(hsls[i], hsls[j]) });
+    }
+  }
+  pairs.sort((a, b) => b.score - a.score);
+
+  // Greedily pick 3 non-overlapping pairs (no color reused across tabs)
+  const used = new Set<number>();
+  const chosen: Pair[] = [];
+  for (const pair of pairs) {
+    if (chosen.length === 3) break;
+    if (!used.has(pair.i) && !used.has(pair.j)) {
+      chosen.push(pair);
+      used.add(pair.i);
+      used.add(pair.j);
+    }
+  }
+
+  // Fill remaining tabs with fallback if not enough good pairs
+  const result: Record<string, string> = { ...FALLBACK_GRADIENTS };
+  tabs.forEach((tab, idx) => {
+    const pair = chosen[idx];
+    if (pair) {
+      result[tab] = `linear-gradient(135deg, ${palette[pair.i].hex}, ${palette[pair.j].hex})`;
+    }
+  });
+  return result;
+}
 
 type Tab = "wardrobe" | "outfits" | "planner";
 
@@ -48,6 +123,7 @@ const PULL_RESISTANCE = 0.45; // how much drag vs finger movement
 
 const IndexInner = () => {
   const { refreshWardrobe, refreshOutfits } = useAppData();
+  const { palette } = usePaletteContext();
 
   const [activeTab, setActiveTab] = useState<Tab>("wardrobe");
   const [hideNav, setHideNav] = useState(false);
@@ -165,11 +241,7 @@ const IndexInner = () => {
   const baseOpacity = isDark ? 0.55 : 0.22;
   const gradientOpacity = baseOpacity * Math.max(0, 1 - scrollY / (mainRef.current?.clientHeight ?? window.innerHeight));
 
-  const tabGradients: Record<Tab, string> = {
-    wardrobe: "linear-gradient(90deg, #9B4A2A, #B85C38)",
-    outfits:  "linear-gradient(90deg, #6B7A3A, #A0682A)",
-    planner:  "linear-gradient(90deg, #2E6E68, #3A4A5C)",
-  };
+  const tabGradients = useMemo(() => pickGradientPairs(palette), [palette]);
 
   // Pull indicator: how far along the threshold (0–1)
   const pullProgress = Math.min(pullDistance / PULL_THRESHOLD, 1);

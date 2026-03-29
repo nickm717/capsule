@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { wardrobeItems, existingOutfits, criteria } = await req.json();
+    const { wardrobeItems, existingOutfits, userPalette, criteria } = await req.json();
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
 
@@ -36,12 +36,30 @@ serve(async (req) => {
       ? `\nMUST INCLUDE: At least one piece from the "${mustIncludeCategory}" category.`
       : "";
 
-    const systemPrompt = `You are a personal stylist specializing in the Dark Autumn color season.
+    // Build palette section dynamically from user's palette, falling back to Dark Autumn defaults
+    const paletteColors = Array.isArray(userPalette) && userPalette.length > 0
+      ? userPalette
+      : [
+          { name: "Espresso", hex: "#3B1F14" }, { name: "Burnt Sienna", hex: "#8B3A2A" },
+          { name: "Terracotta", hex: "#C2622D" }, { name: "Warm Rust", hex: "#A0522D" },
+          { name: "Olive Brown", hex: "#5C4A1E" }, { name: "Forest Moss", hex: "#4A5240" },
+          { name: "Deep Teal", hex: "#2C4A52" }, { name: "Aubergine", hex: "#4B2E3E" },
+          { name: "Warm Taupe", hex: "#8C7B6B" }, { name: "Cream", hex: "#E8DCC8" },
+        ];
 
-COLOR SEASON PROFILE — Dark Autumn:
-- Best colors: warm, muted, earthy tones — olive, rust, chocolate, camel, cream, teal, gold, terracotta, espresso, deep olive, oatmeal, caramel, salmon, denim
-- AVOID: cool tones (blue-based), bright/neon colors, high-contrast black-and-white combinations
-- Aim for tonal harmony: pieces should share warmth and depth
+    const paletteList = paletteColors
+      .map((c: { name: string; hex: string }) => `${c.name} (${c.hex})`)
+      .join(", ");
+
+    const systemPrompt = `You are a personal stylist creating outfits tailored to the user's specific color palette.
+
+USER'S COLOR PALETTE (prioritize these colors):
+${paletteList}
+
+COLOR RULES:
+- Prefer wardrobe pieces whose colors are closest to the palette above
+- Aim for tonal harmony: pieces should feel cohesive and share depth or warmth
+- AVOID combining pieces whose colors strongly clash with the palette (e.g. bright neons, stark cool tones if the palette is warm)
 
 STYLING RULES:
 - Balance proportions (fitted top + relaxed bottom, or vice versa)

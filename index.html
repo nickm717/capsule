@@ -33,6 +33,17 @@
   <meta name="twitter:title" content="Dark Autumn — Wardrobe">
   <meta property="og:description" content="Your dark autumn seasonal wardrobe companion">
   <meta name="twitter:description" content="Your dark autumn seasonal wardrobe companion">
+  <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem('capsule-theme');
+        var isDark = theme === 'dark' ||
+          ((!theme || theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', isDark);
+      } catch (_) {}
+    })();
+  </script>
 </head>
 
   <body>

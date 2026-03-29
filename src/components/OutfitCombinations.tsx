@@ -11,6 +11,7 @@ import OutfitDetailSheet from "./OutfitDetailSheet";
 import AddOutfitSheet, { type AiCriteria } from "./AddOutfitSheet";
 import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
 import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
+import { usePaletteContext } from "@/contexts/PaletteContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -39,6 +40,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
 
   const { outfits, loading, error, refetch } = useOutfits();
   const { categories: wardrobeCategories } = useWardrobeItems();
+  const { palette } = usePaletteContext();
   const allWardrobeItems = useMemo(
     () => wardrobeCategories.flatMap((c) => c.items),
     [wardrobeCategories]
@@ -96,6 +98,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         body: {
           wardrobeItems: wardrobeData,
           existingOutfits: existingData,
+          userPalette: palette,
           criteria: {
             anchorPieceId: criteria.anchorPieceId,
             occasion: occasionLabel,
