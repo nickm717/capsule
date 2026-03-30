@@ -24,6 +24,7 @@ export interface ItemFormData {
   hex: string;
   notes: string;
   owned: boolean;
+  price: string;
 }
 
 const CATEGORIES = [
@@ -58,6 +59,7 @@ const ItemForm = ({ prefill, onSaved, onBack }: ItemFormProps) => {
     hex: "#5C3317",
     notes: "",
     owned: true,
+    price: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -95,6 +97,7 @@ const ItemForm = ({ prefill, onSaved, onBack }: ItemFormProps) => {
       hex: form.hex,
       notes: form.notes.trim(),
       owned: form.owned,
+      price: form.price ? parseFloat(form.price) : null,
       user_id: user!.id,
     });
     setSaving(false);

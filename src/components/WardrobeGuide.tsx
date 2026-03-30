@@ -64,6 +64,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
       hex: row.hex,
       notes: row.notes || "",
       owned: row.owned,
+      price: row.price != null ? String(row.price) : "",
     }, row.id);
   };
 

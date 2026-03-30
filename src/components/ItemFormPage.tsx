@@ -43,6 +43,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
     hex: "#5C3317",
     notes: "",
     owned: true,
+    price: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -77,6 +78,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
       hex: form.hex,
       notes: form.notes.trim(),
       owned: form.owned,
+      price: form.price ? parseFloat(form.price) : null,
     };
     let error;
     if (isEdit) {
@@ -166,11 +168,20 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
                 </select>
               </div>
             </FormRow>
-            <FormRow label="Color" isFirst={false} isLast>
+            <FormRow label="Color" isFirst={false} isLast={false}>
               <input
                 value={form.color}
                 onChange={(e) => update("color", e.target.value)}
                 placeholder="e.g. Olive, Rust"
+                className="flex-1 bg-transparent text-[17px] text-foreground text-right outline-none placeholder:text-muted-foreground min-w-0"
+              />
+            </FormRow>
+            <FormRow label="Price" isFirst={false} isLast>
+              <input
+                value={form.price}
+                onChange={(e) => update("price", e.target.value)}
+                placeholder="Optional"
+                inputMode="decimal"
                 className="flex-1 bg-transparent text-[17px] text-foreground text-right outline-none placeholder:text-muted-foreground min-w-0"
               />
             </FormRow>
