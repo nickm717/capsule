@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOutfits } from "@/hooks/use-outfits";
@@ -107,7 +108,7 @@ const AddToDaySheet = ({ open, outfit, onClose, onSaved }: AddToDaySheetProps) =
 
   if (!open && !closing) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100]">
       <div
         className={`absolute inset-0 bg-black/60 transition-opacity duration-280 ${closing ? "opacity-0" : "opacity-100"}`}
@@ -209,7 +210,8 @@ const AddToDaySheet = ({ open, outfit, onClose, onSaved }: AddToDaySheetProps) =
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
