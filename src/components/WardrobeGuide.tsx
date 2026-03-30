@@ -28,6 +28,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [detailItem, setDetailItem] = useState<{ item: any; row: any } | null>(null);
+  const [openMenuCatId, setOpenMenuCatId] = useState<string | null>(null);
 
   const { categories: allCategories, loading, error, refetch: fetchItems } = useWardrobeItems();
 
@@ -171,13 +172,13 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         const filtered = cat.items.filter(filterItem);
         if (filtered.length === 0) return null;
         return (
-          <section key={cat.id} className="animate-reveal-up">
+          <section key={cat.id} className={`animate-reveal-up relative ${openMenuCatId === cat.id ? "z-50" : ""}`}>
             {activeCategory === "all" && (
               <p className="text-[11px] font-semibold text-muted-foreground uppercase mb-1.5 px-1" style={{ letterSpacing: "0.1em" }}>
                 {cat.icon}  {cat.label}
               </p>
             )}
-            <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-sm dark:shadow-none">
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm dark:shadow-none">
               {filtered.map((item, i) => {
                 const row = cat.rows.find((r: any) => r.id === item.id);
                 return (
@@ -189,6 +190,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
                     onEdit={() => row && handleEdit(row)}
                     onDelete={() => setDeleteTarget({ id: item.id, name: item.name })}
                     delay={i * 30}
+                    onMenuOpenChange={(open) => setOpenMenuCatId(open ? cat.id : null)}
                   />
                 );
               })}
@@ -254,6 +256,7 @@ function ItemRow({
   onEdit,
   onDelete,
   delay,
+  onMenuOpenChange,
 }: {
   item: WardrobeItem;
   isLast: boolean;
@@ -261,14 +264,20 @@ function ItemRow({
   onEdit: () => void;
   onDelete: () => void;
   delay: number;
+  onMenuOpenChange: (open: boolean) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const handleSetMenuOpen = (open: boolean) => {
+    setMenuOpen(open);
+    onMenuOpenChange(open);
+  };
+
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) handleSetMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -296,7 +305,7 @@ function ItemRow({
           </AppBadge>
           <div className="relative" ref={menuRef}>
             <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen((p) => !p); }}
+              onClick={(e) => { e.stopPropagation(); handleSetMenuOpen(!menuOpen); }}
               className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92]"
             >
               <MoreHorizontal size={16} />
@@ -304,7 +313,7 @@ function ItemRow({
             {menuOpen && (
               <div className="absolute right-0 top-9 z-50 min-w-[150px] rounded-2xl border border-border bg-card shadow-xl py-1 animate-in fade-in-0 zoom-in-95 duration-150">
                 <button
-                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }}
+                  onClick={(e) => { e.stopPropagation(); handleSetMenuOpen(false); onEdit(); }}
                   className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[15px] text-foreground active:bg-muted transition-colors"
                 >
                   <Pencil size={14} className="text-muted-foreground" />
@@ -312,7 +321,7 @@ function ItemRow({
                 </button>
                 <div className="h-px bg-border/60 mx-3" />
                 <button
-                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
+                  onClick={(e) => { e.stopPropagation(); handleSetMenuOpen(false); onDelete(); }}
                   className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[15px] text-destructive active:bg-muted transition-colors"
                 >
                   <Trash2 size={14} />
