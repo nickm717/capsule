@@ -130,7 +130,7 @@ export default function ProfilePage() {
   const currentInitials = getInitials(displayName);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
       <div className="max-w-lg mx-auto px-4 pb-10">
         {/* Header */}
         <div className="flex items-center justify-between py-5">
