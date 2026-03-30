@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { Switch } from "@/components/ui/switch";
 import { Loader2, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -160,7 +159,11 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
                   onChange={(e) => update("category", e.target.value)}
                   className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                   style={{ fontSize: "16px" }}
-                />
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
               </div>
             </FormRow>
             <FormRow label="Color" isFirst={false} isLast>
@@ -211,22 +214,29 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
             </div>
           </FormSection>
 
-          {/* Section 3 — Status */}
-          <FormSection label="Status">
-            <FormRow label="Ownership" isFirst isLast>
-              <div className="flex items-center gap-2.5 ml-auto">
-                <span className={`text-[15px] ${!form.owned ? "text-rust font-medium" : "text-muted-foreground"}`}>
-                  Rental
-                </span>
-                <Switch
-                  checked={form.owned}
-                  onCheckedChange={(v) => update("owned", v)}
-                />
-                <span className={`text-[15px] ${form.owned ? "text-teal font-medium" : "text-muted-foreground"}`}>
-                  Own
-                </span>
-              </div>
-            </FormRow>
+          {/* Section 3 — Ownership */}
+          <FormSection label="Ownership">
+            <div className="grid grid-cols-2 divide-x divide-border/40">
+              {([{ value: true, label: "Own" }, { value: false, label: "Rental" }] as const).map(({ value, label }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => update("owned", value)}
+                  className="flex items-center justify-between px-4 py-3.5 active:bg-muted/40 transition-colors"
+                >
+                  <span className={`text-[17px] ${form.owned === value ? "text-foreground" : "text-muted-foreground"}`}>
+                    {label}
+                  </span>
+                  <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center transition-colors ${
+                    form.owned === value ? "border-gold" : "border-muted-foreground/30"
+                  }`}>
+                    {form.owned === value && (
+                      <div className="w-[11px] h-[11px] rounded-full bg-gold" />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
           </FormSection>
 
           {/* Section 4 — Notes */}
