@@ -177,13 +177,23 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
               />
             </FormRow>
             <FormRow label="Price" isFirst={false} isLast>
-              <input
-                value={form.price}
-                onChange={(e) => update("price", e.target.value)}
-                placeholder="Optional"
-                inputMode="decimal"
-                className="flex-1 bg-transparent text-[17px] text-foreground text-right outline-none placeholder:text-muted-foreground min-w-0"
-              />
+              <div className="flex items-center gap-0.5 ml-auto">
+                <span className={`text-[17px] ${form.price ? "text-foreground" : "text-muted-foreground"}`}>$</span>
+                <input
+                  value={form.price}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^\d.]/g, "");
+                    const [whole, ...rest] = raw.split(".");
+                    const sanitized = rest.length > 0
+                      ? whole + "." + rest.join("").slice(0, 2)
+                      : whole;
+                    update("price", sanitized);
+                  }}
+                  placeholder="0"
+                  inputMode="decimal"
+                  className="w-24 bg-transparent text-[17px] text-foreground text-right outline-none placeholder:text-muted-foreground min-w-0"
+                />
+              </div>
             </FormRow>
           </FormSection>
 
