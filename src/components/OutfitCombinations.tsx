@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import ProfileButton from "@/components/ProfileButton";
-import { Plus, MoreHorizontal, Pencil, Trash2, CalendarPlus, Loader2 } from "lucide-react";
+import { Plus, MoreHorizontal, Pencil, Trash2, CalendarPlus, Loader2, X } from "lucide-react";
 import { occasionDefs, temperatureBadges } from "@/data/darkautumn";
 import AppBadge from "./AppBadge";
 import type { OutfitPiece } from "@/data/darkautumn";
@@ -29,6 +29,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
   const [detailOutfit, setDetailOutfit] = useState<DbOutfit | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [addSheetOpen, setAddSheetOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [aiGenerating, setAiGenerating] = useState(false);
   const [builderPreset, setBuilderPreset] = useState<{
     selectedIds: string[];
@@ -45,6 +46,22 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
     () => wardrobeCategories.flatMap((c) => c.items),
     [wardrobeCategories]
   );
+
+  const filteredOutfits = useMemo(() => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return outfits.filter((o) => {
+        const pieces = Array.isArray(o.pieces) ? (o.pieces as OutfitPiece[]) : [];
+        return (
+          o.name?.toLowerCase().includes(q) ||
+          pieces.some(
+            (p) => p.name?.toLowerCase().includes(q) || p.color?.toLowerCase().includes(q)
+          )
+        );
+      });
+    }
+    return outfits.filter((o) => o.occasion_id === activeOccasion);
+  }, [outfits, searchQuery, activeOccasion]);
 
   const openBuilder = (outfit?: DbOutfit) => {
     setEditOutfit(outfit ?? null);
@@ -166,8 +183,6 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
     );
   }
 
-  const outfitsForOccasion = outfits.filter((o) => o.occasion_id === activeOccasion);
-
   return (
     <div className="px-4 pb-6 space-y-5 pt-5">
       {/* Header — title + profile */}
@@ -192,8 +207,39 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         <Plus size={22} color="white" strokeWidth={2.5} />
       </button>
 
+      {/* Search */}
+      <div className="relative animate-reveal-up" style={{ animationDelay: "40ms" }}>
+        <svg
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+          width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search outfits…"
+          className="w-full bg-muted border border-border rounded-xl py-2.5 pl-9 pr-9 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50"
+          style={{ fontSize: 16 }}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground active:text-foreground"
+          >
+            <X size={15} />
+          </button>
+        )}
+      </div>
+
       {/* Occasion tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 animate-reveal-up -mx-4 px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ animationDelay: "60ms" }}>
+      <div
+        className="flex gap-2 overflow-x-auto pb-1 animate-reveal-up -mx-4 px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ animationDelay: "60ms", opacity: searchQuery ? 0.4 : 1, transition: "opacity 0.2s ease", pointerEvents: searchQuery ? "none" : undefined }}
+      >
         {occasionDefs.map((occ) => (
           <button
             key={occ.id}
@@ -238,9 +284,9 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
 
       {/* Outfit cards */}
       <div className="space-y-3">
-        {!loading && !error && outfitsForOccasion.map((outfit, i) => {
+        {!loading && !error && filteredOutfits.map((outfit, i) => {
           const tempBadge = temperatureBadges[outfit.temp];
-          const pieces = outfit.pieces as OutfitPiece[];
+          const pieces = Array.isArray(outfit.pieces) ? (outfit.pieces as OutfitPiece[]) : [];
           return (
             <OutfitCard
               key={outfit.id}
@@ -257,9 +303,11 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         })}
       </div>
 
-      {!loading && !error && outfitsForOccasion.length === 0 && (
+      {!loading && !error && filteredOutfits.length === 0 && (
         <div className="text-center py-20 animate-reveal-up">
-          <p className="text-muted-foreground text-sm">No outfits for this occasion yet.</p>
+          <p className="text-muted-foreground text-sm">
+            {searchQuery ? "No outfits match your search." : "No outfits for this occasion yet."}
+          </p>
         </div>
       )}
 
