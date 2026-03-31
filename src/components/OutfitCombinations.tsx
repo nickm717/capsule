@@ -60,6 +60,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         );
       });
     }
+    if (activeOccasion === "all") return outfits;
     return outfits.filter((o) => o.occasion_id === activeOccasion);
   }, [outfits, searchQuery, activeOccasion]);
 
@@ -306,7 +307,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
       {!loading && !error && filteredOutfits.length === 0 && (
         <div className="text-center py-20 animate-reveal-up">
           <p className="text-muted-foreground text-sm">
-            {searchQuery ? "No outfits match your search." : "No outfits for this occasion yet."}
+            {searchQuery ? "No outfits match your search." : activeOccasion === "all" ? "No outfits yet." : "No outfits for this occasion yet."}
           </p>
         </div>
       )}
