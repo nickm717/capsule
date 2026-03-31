@@ -18,6 +18,7 @@ export function useWardrobeItems() {
           owned: row.owned,
           gap: !row.owned,
           notes: row.notes || "",
+          price: row.price ?? null,
         }));
         return { ...cat, items: mapped, rows: catItems };
       }),

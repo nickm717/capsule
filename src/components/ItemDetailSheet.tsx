@@ -87,6 +87,9 @@ const ItemDetailSheet = ({ open, item, brand, category, onClose, onEdit, onDelet
               {item.owned ? "OWN" : "RENTAL"}
             </span>
           </div>
+          {item.price != null && (
+            <DetailRow label="Price" value={`$${item.price.toLocaleString()}`} />
+          )}
           {item.notes && (
             <div>
               <span className="text-sm text-muted-foreground block mb-1">Notes</span>

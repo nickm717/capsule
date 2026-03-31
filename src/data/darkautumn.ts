@@ -18,6 +18,7 @@ export interface WardrobeItem {
   priority?: boolean;
   seasonal?: boolean;
   notes: string;
+  price?: number | null;
 }
 
 export interface WardrobeCategory {
