@@ -115,8 +115,9 @@ export const categoryDefs: { id: string; label: string; icon: string }[] = [
 
 /** Occasion definitions (id, label, icon) — used for tabs & filtering */
 export const occasionDefs: { id: string; label: string; icon: string }[] = [
-  { id: "casual", label: "Casual Everyday", icon: "☀" },
-  { id: "work", label: "Work / Office", icon: "◈" },
-  { id: "weekend", label: "Weekend Errands", icon: "◎" },
-  { id: "dinner", label: "Going Out / Dinner", icon: "✦" },
+  { id: "all", label: "All", icon: "◉" },
+  { id: "casual", label: "Casual", icon: "☀" },
+  { id: "work", label: "Office", icon: "◈" },
+  { id: "weekend", label: "Weekend", icon: "◎" },
+  { id: "dinner", label: "Going Out", icon: "✦" },
 ];
