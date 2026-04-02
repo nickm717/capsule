@@ -1,33 +1,11 @@
 import * as React from "react";
-import { useEffect } from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
 
-const Drawer = ({
-  shouldScaleBackground = true,
-  open,
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) => {
-  useEffect(() => {
-    if (!open) return;
-    const count = parseInt(document.body.dataset.sheetOpenCount ?? "0", 10);
-    document.body.dataset.sheetOpenCount = String(count + 1);
-    return () => {
-      const next = Math.max(0, parseInt(document.body.dataset.sheetOpenCount ?? "0", 10) - 1);
-      if (next === 0) delete document.body.dataset.sheetOpenCount;
-      else document.body.dataset.sheetOpenCount = String(next);
-    };
-  }, [open]);
-
-  return (
-    <DrawerPrimitive.Root
-      shouldScaleBackground={shouldScaleBackground}
-      open={open}
-      {...props}
-    />
-  );
-};
+const Drawer = ({ shouldScaleBackground = true, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
+  <DrawerPrimitive.Root shouldScaleBackground={shouldScaleBackground} {...props} />
+);
 Drawer.displayName = "Drawer";
 
 const DrawerTrigger = DrawerPrimitive.Trigger;
