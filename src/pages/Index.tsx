@@ -179,6 +179,8 @@ const IndexInner = () => {
     if (!el) return;
 
     const onTouchStart = (e: TouchEvent) => {
+      // Skip pull-to-refresh when any drawer/dialog is open
+      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
       if (el.scrollTop === 0) {
         touchStartYRef.current = e.touches[0].clientY;
         isPullingRef.current = true;
