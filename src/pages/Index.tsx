@@ -179,8 +179,8 @@ const IndexInner = () => {
     if (!el) return;
 
     const onTouchStart = (e: TouchEvent) => {
-      // Skip pull-to-refresh when any drawer/dialog is open
-      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+      // Skip pull-to-refresh when any drawer/sheet is open
+      if (document.body.dataset.sheetOpenCount) return;
       if (el.scrollTop === 0) {
         touchStartYRef.current = e.touches[0].clientY;
         isPullingRef.current = true;
@@ -189,6 +189,12 @@ const IndexInner = () => {
 
     const onTouchMove = (e: TouchEvent) => {
       if (!isPullingRef.current) return;
+      // Abort if a sheet opened after touchstart (belt-and-suspenders)
+      if (document.body.dataset.sheetOpenCount) {
+        isPullingRef.current = false;
+        setPullDistance(0);
+        return;
+      }
       const dy = e.touches[0].clientY - touchStartYRef.current;
       if (dy <= 0) {
         isPullingRef.current = false;
