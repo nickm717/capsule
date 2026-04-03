@@ -38,7 +38,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       .from("custom_items")
       .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: true });
+      .order("name", { ascending: true });
     if (error) {
       setWardrobeError(error.message);
     } else {
@@ -55,7 +55,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       .from("custom_outfits")
       .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: true });
+      .order("name", { ascending: true });
     if (error) {
       setOutfitsError(error.message);
     } else {
