@@ -134,7 +134,7 @@ const AddOutfitSheet = ({
               </div>
             </DrawerHeader>
 
-            <div className="space-y-5 mt-1 max-h-[60vh] overflow-y-auto">
+            <div className="space-y-5 mt-1 max-h-[60vh] overflow-y-auto overscroll-contain">
               {/* Anchor piece */}
               <div>
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
@@ -163,7 +163,7 @@ const AddOutfitSheet = ({
                         className="w-full bg-card border border-border rounded-lg pl-8 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                       />
                     </div>
-                    <div className="max-h-32 overflow-y-auto space-y-1 rounded-lg">
+                    <div className="max-h-32 overflow-y-auto space-y-1 rounded-lg overscroll-contain">
                       {filteredItems.map((item) => (
                         <button
                           key={item.id}

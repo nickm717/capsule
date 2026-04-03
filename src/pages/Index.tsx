@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { Plus } from "lucide-react";
 import WardrobeGuide from "@/components/WardrobeGuide";
 import OutfitCombinations from "@/components/OutfitCombinations";
 import WeeklyPlanner from "@/components/WeeklyPlanner";
@@ -128,6 +129,7 @@ const IndexInner = () => {
   const [activeTab, setActiveTab] = useState<Tab>("wardrobe");
   const [hideNav, setHideNav] = useState(false);
   const [editItemId, setEditItemId] = useState<string | null>(null);
+  const [addOutfitSheetOpen, setAddOutfitSheetOpen] = useState(false);
 
   const handleWardrobeFormOpen = (open: boolean) => setHideNav(open);
 
@@ -170,15 +172,18 @@ const IndexInner = () => {
   const touchStartYRef = useRef(0);
   const isPullingRef = useRef(false);
   const activeTabRef = useRef(activeTab);
+  const hideNavRef = useRef(hideNav);
   const plannerRefreshRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+  useEffect(() => { hideNavRef.current = hideNav; }, [hideNav]);
 
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
 
     const onTouchStart = (e: TouchEvent) => {
+      if (hideNavRef.current) return;
       if (el.scrollTop === 0) {
         touchStartYRef.current = e.touches[0].clientY;
         isPullingRef.current = true;
@@ -325,11 +330,33 @@ const IndexInner = () => {
             />
           )}
           {activeTab === "outfits" && (
-            <OutfitCombinations onBuilderOpen={setHideNav} onPieceTap={handlePieceTap} />
+            <OutfitCombinations
+              onBuilderOpen={setHideNav}
+              onPieceTap={handlePieceTap}
+              addSheetOpen={addOutfitSheetOpen}
+              onAddSheetOpenChange={setAddOutfitSheetOpen}
+            />
           )}
           {activeTab === "planner" && <WeeklyPlanner refreshRef={plannerRefreshRef} />}
         </div>
       </main>
+
+      {/* Add-outfit FAB — intentionally outside <main> so its touch events
+          don't bubble to the pull-to-refresh scroll listener */}
+      {activeTab === "outfits" && !hideNav && (
+        <button
+          onClick={() => setAddOutfitSheetOpen(true)}
+          className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-[0.92] active:opacity-90"
+          style={{
+            bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))",
+            backgroundColor: "hsl(var(--primary))",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.22)",
+          }}
+          aria-label="Add outfit"
+        >
+          <Plus size={22} color="white" strokeWidth={2.5} />
+        </button>
+      )}
 
       {/* Bottom Tab Bar */}
       {!hideNav && (

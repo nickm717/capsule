@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import ProfileButton from "@/components/ProfileButton";
-import { Plus, MoreHorizontal, Pencil, Trash2, CalendarPlus, Loader2, X } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, CalendarPlus, Loader2, X } from "lucide-react";
 import { occasionDefs, temperatureBadges } from "@/data/darkautumn";
 import AppBadge from "./AppBadge";
 import type { OutfitPiece } from "@/data/darkautumn";
@@ -18,9 +18,11 @@ import { toast } from "sonner";
 interface OutfitCombinationsProps {
   onBuilderOpen?: (open: boolean) => void;
   onPieceTap?: (itemId: string) => void;
+  addSheetOpen: boolean;
+  onAddSheetOpenChange: (open: boolean) => void;
 }
 
-const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsProps) => {
+const OutfitCombinations = ({ onBuilderOpen, onPieceTap, addSheetOpen, onAddSheetOpenChange }: OutfitCombinationsProps) => {
   const [activeOccasion, setActiveOccasion] = useState(occasionDefs[0].id);
   const [showBuilder, setShowBuilder] = useState(false);
   const [editOutfit, setEditOutfit] = useState<DbOutfit | null>(null);
@@ -28,7 +30,6 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
   const [deleteOutfit, setDeleteOutfit] = useState<{ id: string; name: string } | null>(null);
   const [detailOutfit, setDetailOutfit] = useState<DbOutfit | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [aiGenerating, setAiGenerating] = useState(false);
   const [builderPreset, setBuilderPreset] = useState<{
@@ -137,7 +138,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         return;
       }
 
-      setAddSheetOpen(false);
+      onAddSheetOpenChange(false);
       setBuilderPreset({
         selectedIds: validIds,
         name: data.name || "",
@@ -193,20 +194,6 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
         </h2>
         <ProfileButton />
       </div>
-
-      {/* Solid FAB */}
-      <button
-        onClick={() => setAddSheetOpen(true)}
-        className="fixed right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-[0.92] active:opacity-90"
-        style={{
-          bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))",
-          backgroundColor: "hsl(var(--primary))",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.22)",
-        }}
-        aria-label="Add outfit"
-      >
-        <Plus size={22} color="white" strokeWidth={2.5} />
-      </button>
 
       {/* Search */}
       <div className="relative animate-reveal-up" style={{ animationDelay: "40ms" }}>
@@ -342,9 +329,9 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap }: OutfitCombinationsPro
 
       <AddOutfitSheet
         open={addSheetOpen}
-        onClose={() => setAddSheetOpen(false)}
+        onClose={() => onAddSheetOpenChange(false)}
         onBuildManually={() => {
-          setAddSheetOpen(false);
+          onAddSheetOpenChange(false);
           openBuilder();
         }}
         onAiGenerate={handleAiGenerate}
