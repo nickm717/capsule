@@ -394,7 +394,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
                       <div className="flex-1 min-w-0 ml-3">
                         <p className="text-foreground text-[15px] font-medium leading-snug truncate">{item.name}</p>
                         <p className="text-muted-foreground text-[13px] mt-0.5">
-                          {[item.color, item.brand, cat?.label].filter(Boolean).join(" • ")}
+                          {[item.brand, item.color, cat?.label].filter(Boolean).join(" • ")}
                         </p>
                       </div>
                       {selected && <Check size={16} className="text-primary flex-shrink-0 ml-2" />}
