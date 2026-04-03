@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import ProfileButton from "@/components/ProfileButton";
-import { Plus, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, MoreHorizontal, Pencil, Trash2, Loader2, X } from "lucide-react";
 import { type WardrobeItem } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
@@ -29,6 +29,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [detailItem, setDetailItem] = useState<{ item: any; row: any } | null>(null);
   const [openMenuCatId, setOpenMenuCatId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { categories: allCategories, loading, error, refetch: fetchItems } = useWardrobeItems();
 
@@ -81,10 +82,24 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
     return true;
   };
 
-  const filteredCategories = activeCategory === "all" ? allCategories : allCategories.filter((c) => c.id === activeCategory);
+  const baseCategoriesForFilter = activeCategory === "all" ? allCategories : allCategories.filter((c) => c.id === activeCategory);
+  const filteredCategories = baseCategoriesForFilter;
   const totalPieces = filteredCategories.reduce((s, c) => s + c.items.length, 0);
   const ownedCount = filteredCategories.reduce((s, c) => s + c.items.filter((i) => i.owned).length, 0);
   const gapCount = filteredCategories.reduce((s, c) => s + c.items.filter((i) => i.gap).length, 0);
+
+  const displayCategories = useMemo(() => {
+    if (!searchQuery.trim()) return filteredCategories.map((cat) => ({ ...cat, displayItems: cat.items.filter(filterItem) }));
+    const q = searchQuery.toLowerCase();
+    return allCategories.map((cat) => ({
+      ...cat,
+      displayItems: cat.items.filter((item) =>
+        item.name?.toLowerCase().includes(q) ||
+        item.brand?.toLowerCase().includes(q) ||
+        item.color?.toLowerCase().includes(q)
+      ),
+    }));
+  }, [allCategories, filteredCategories, searchQuery, filter]);
 
   if (formOpen) {
     return <ItemFormPage prefill={formPrefill} editId={editId} onSaved={handleFormSaved} onCancel={closeForm} />;
@@ -98,6 +113,34 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
           Wardrobe
         </h2>
         <ProfileButton />
+      </div>
+
+      {/* Search */}
+      <div className="relative animate-reveal-up" style={{ animationDelay: "30ms" }}>
+        <svg
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+          width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search wardrobe…"
+          className="w-full bg-muted border border-border rounded-xl py-2.5 pl-9 pr-9 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50"
+          style={{ fontSize: 16 }}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground active:text-foreground"
+          >
+            <X size={15} />
+          </button>
+        )}
       </div>
 
       {/* Solid FAB */}
@@ -114,7 +157,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
       </button>
 
       {/* Category chips */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 animate-reveal-up [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ animationDelay: "50ms" }}>
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 animate-reveal-up [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ animationDelay: "50ms", opacity: searchQuery ? 0.4 : 1, transition: "opacity 0.2s ease", pointerEvents: searchQuery ? "none" : undefined }}>
         <CategoryChip label="All" icon="✦" active={activeCategory === "all"} onClick={() => setActiveCategory("all")} />
         {allCategories.map((cat) => (
           <CategoryChip key={cat.id} label={cat.label} icon={cat.icon} active={activeCategory === cat.id} onClick={() => setActiveCategory(cat.id)} />
@@ -127,6 +170,9 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         style={{
           backgroundColor: "color-mix(in srgb, hsl(var(--muted)) 70%, transparent)",
           animationDelay: "100ms",
+          opacity: searchQuery ? 0.4 : 1,
+          transition: "opacity 0.2s ease",
+          pointerEvents: searchQuery ? "none" : undefined,
         }}
       >
         {[
@@ -169,24 +215,23 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
       )}
 
       {/* Grouped item list */}
-      {!loading && !error && filteredCategories.map((cat) => {
-        const filtered = cat.items.filter(filterItem);
-        if (filtered.length === 0) return null;
+      {!loading && !error && displayCategories.map((cat) => {
+        if (cat.displayItems.length === 0) return null;
         return (
           <section key={cat.id} className={`animate-reveal-up relative ${openMenuCatId === cat.id ? "z-50" : ""}`}>
-            {activeCategory === "all" && (
+            {(activeCategory === "all" || searchQuery) && (
               <p className="text-[11px] font-semibold text-muted-foreground uppercase mb-1.5 px-1" style={{ letterSpacing: "0.1em" }}>
                 {cat.icon}  {cat.label}
               </p>
             )}
             <div className="bg-card rounded-2xl border border-border/50 shadow-sm dark:shadow-none">
-              {filtered.map((item, i) => {
+              {cat.displayItems.map((item, i) => {
                 const row = cat.rows.find((r: any) => r.id === item.id);
                 return (
                   <ItemRow
                     key={item.id}
                     item={item}
-                    isLast={i === filtered.length - 1}
+                    isLast={i === cat.displayItems.length - 1}
                     onTap={() => row && setDetailItem({ item, row })}
                     onEdit={() => row && handleEdit(row)}
                     onDelete={() => setDeleteTarget({ id: item.id, name: item.name })}
@@ -200,9 +245,11 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         );
       })}
 
-      {!loading && !error && filteredCategories.every((c) => c.items.filter(filterItem).length === 0) && (
+      {!loading && !error && displayCategories.every((c) => c.displayItems.length === 0) && (
         <div className="text-center py-20 animate-reveal-up">
-          <p className="text-muted-foreground text-sm">No items match this filter.</p>
+          <p className="text-muted-foreground text-sm">
+            {searchQuery ? "No items match your search." : "No items match this filter."}
+          </p>
         </div>
       )}
 
