@@ -172,15 +172,18 @@ const IndexInner = () => {
   const touchStartYRef = useRef(0);
   const isPullingRef = useRef(false);
   const activeTabRef = useRef(activeTab);
+  const hideNavRef = useRef(hideNav);
   const plannerRefreshRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+  useEffect(() => { hideNavRef.current = hideNav; }, [hideNav]);
 
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
 
     const onTouchStart = (e: TouchEvent) => {
+      if (hideNavRef.current) return;
       if (el.scrollTop === 0) {
         touchStartYRef.current = e.touches[0].clientY;
         isPullingRef.current = true;
