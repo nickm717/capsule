@@ -31,7 +31,7 @@ const DeleteItemSheet = ({ open, itemName, onConfirm, onCancel }: DeleteItemShee
           </button>
           <button
             onClick={onCancel}
-            className="w-full py-3 rounded-xl bg-muted text-foreground font-medium text-sm transition-all active:scale-[0.97]"
+            className="w-full py-3 rounded-xl liquid-glass-surface border border-border/50 text-foreground font-medium text-sm transition-all active:scale-[0.97]"
           >
             Cancel
           </button>

@@ -361,10 +361,9 @@ const IndexInner = () => {
       {/* Bottom Tab Bar */}
       {!hideNav && (
         <nav
-          className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50"
+          className="fixed bottom-0 left-0 right-0 z-50 liquid-glass-nav"
           style={{
             paddingBottom: "env(safe-area-inset-bottom)",
-            backgroundColor: "color-mix(in srgb, hsl(var(--card)) 92%, transparent)",
           }}
         >
           <div className="max-w-lg mx-auto flex">

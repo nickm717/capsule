@@ -329,7 +329,7 @@ const OutfitBuilder = ({ onBack, onSaved, editOutfit, preset }: Props) => {
             <div className="sticky top-0 z-10 bg-background px-4 pt-3 pb-2 border-b border-border/40">
               <div className="relative">
                 <svg
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50 pointer-events-none"
                   width="16" height="16" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                 >

@@ -275,7 +275,7 @@ export default function ProfilePage() {
             <p className="text-sm font-medium">Seasonal Type</p>
             <button
               onClick={() => setSeasonalDrawerOpen(true)}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors text-left"
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-border/60 liquid-glass-surface active:opacity-80 transition-opacity text-left"
             >
               <div className="min-w-0">
                 {currentSeasonal ? (

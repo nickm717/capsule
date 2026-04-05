@@ -116,9 +116,9 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
       </div>
 
       {/* Search */}
-      <div className="relative animate-reveal-up" style={{ animationDelay: "30ms" }}>
+      <div className="relative animate-reveal-up liquid-glass-input rounded-xl focus-within:ring-1 focus-within:ring-gold/50" style={{ animationDelay: "30ms" }}>
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50 pointer-events-none"
           width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
         >
@@ -130,7 +130,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search wardrobe…"
-          className="w-full bg-muted border border-border rounded-xl py-2.5 pl-9 pr-9 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50"
+          className="w-full bg-transparent border-0 rounded-xl py-2.5 pl-9 pr-9 text-foreground placeholder:text-muted-foreground focus:outline-none"
           style={{ fontSize: 16 }}
         />
         {searchQuery && (
@@ -158,17 +158,16 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
 
       {/* Category chips */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 animate-reveal-up [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ animationDelay: "50ms", opacity: searchQuery ? 0.4 : 1, transition: "opacity 0.2s ease", pointerEvents: searchQuery ? "none" : undefined }}>
-        <CategoryChip label="All" icon="✦" active={activeCategory === "all"} onClick={() => setActiveCategory("all")} />
+        <CategoryChip label="All" icon="" active={activeCategory === "all"} onClick={() => setActiveCategory("all")} />
         {allCategories.map((cat) => (
           <CategoryChip key={cat.id} label={cat.label} icon={cat.icon} active={activeCategory === cat.id} onClick={() => setActiveCategory(cat.id)} />
         ))}
       </div>
 
-      {/* Segmented filter */}
-      <div
-        className="flex gap-0.5 rounded-[10px] p-0.5 animate-reveal-up border border-border/60 shadow-sm glass"
+      {/* Segmented filter — only shown when rentals exist */}
+      {gapCount > 0 && <div
+        className="flex gap-0.5 rounded-[10px] p-0.5 animate-reveal-up border border-border/40 liquid-glass-surface"
         style={{
-          backgroundColor: "color-mix(in srgb, hsl(var(--muted)) 70%, transparent)",
           animationDelay: "100ms",
           opacity: searchQuery ? 0.4 : 1,
           transition: "opacity 0.2s ease",
@@ -178,7 +177,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         {[
           { key: "all" as Filter, label: "All", count: totalPieces },
           { key: "owned" as Filter, label: "Owned", count: ownedCount },
-          { key: "gaps" as Filter, label: "Rentals", count: gapCount },
+          ...(gapCount > 0 ? [{ key: "gaps" as Filter, label: "Rentals", count: gapCount }] : []),
         ].map((f) => (
           <button
             key={f.key}
@@ -198,7 +197,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
             <span className="ml-1 text-[12px]">{f.count}</span>
           </button>
         ))}
-      </div>
+      </div>}
 
       {loading && (
         <div className="flex items-center justify-center py-16 animate-reveal-up">
@@ -224,7 +223,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
                 {cat.icon}  {cat.label}
               </p>
             )}
-            <div className="bg-card rounded-2xl border border-border/50 shadow-sm dark:shadow-none">
+            <div className="liquid-glass-card rounded-2xl">
               {cat.displayItems.map((item, i) => {
                 const row = cat.rows.find((r: any) => r.id === item.id);
                 return (
@@ -291,7 +290,7 @@ function CategoryChip({ label, icon, active, onClick }: { label: string; icon: s
         boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
       }}
     >
-      <span className="text-sm">{icon}</span>
+      {icon && <span className="text-sm">{icon}</span>}
       {label}
     </button>
   );

@@ -89,7 +89,7 @@ const AddItemSheet = ({ open, onOpenChange, onOpenForm }: AddItemSheetProps) => 
                       setMode(t.key);
                     }
                   }}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-muted/80 transition-colors active:scale-[0.97] text-left"
+                  className="flex items-center gap-4 p-4 rounded-xl liquid-glass-surface border border-border/50 transition-all active:scale-[0.97] text-left"
                 >
                   <div className="w-12 h-12 rounded-lg bg-gold/15 flex items-center justify-center flex-shrink-0">
                     <t.icon size={22} className="text-gold" />

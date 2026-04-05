@@ -90,7 +90,7 @@ const AddOutfitSheet = ({
             <div className="space-y-2.5 mt-2">
               <button
                 onClick={handleManual}
-                className="w-full flex items-center gap-3.5 p-4 rounded-xl bg-card border border-border text-left transition-all active:scale-[0.98] hover:border-primary/30"
+                className="w-full flex items-center gap-3.5 p-4 rounded-xl liquid-glass-surface border border-border/50 text-left transition-all active:scale-[0.98]"
               >
                 <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
                   <Layers size={18} className="text-foreground" />
@@ -102,7 +102,7 @@ const AddOutfitSheet = ({
               </button>
               <button
                 onClick={() => setStep("ai")}
-                className="w-full flex items-center gap-3.5 p-4 rounded-xl bg-card border border-border text-left transition-all active:scale-[0.98] hover:border-primary/30"
+                className="w-full flex items-center gap-3.5 p-4 rounded-xl liquid-glass-surface border border-border/50 text-left transition-all active:scale-[0.98]"
               >
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -154,7 +154,7 @@ const AddOutfitSheet = ({
                 ) : (
                   <>
                     <div className="relative mb-2">
-                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50" />
                       <input
                         type="text"
                         placeholder="Search wardrobe…"

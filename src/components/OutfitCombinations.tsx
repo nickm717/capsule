@@ -196,9 +196,9 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap, addSheetOpen, onAddShee
       </div>
 
       {/* Search */}
-      <div className="relative animate-reveal-up" style={{ animationDelay: "40ms" }}>
+      <div className="relative animate-reveal-up liquid-glass-input rounded-xl focus-within:ring-1 focus-within:ring-gold/50" style={{ animationDelay: "40ms" }}>
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50 pointer-events-none"
           width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
         >
@@ -210,7 +210,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap, addSheetOpen, onAddShee
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search outfits…"
-          className="w-full bg-muted border border-border rounded-xl py-2.5 pl-9 pr-9 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50"
+          className="w-full bg-transparent border-0 rounded-xl py-2.5 pl-9 pr-9 text-foreground placeholder:text-muted-foreground focus:outline-none"
           style={{ fontSize: 16 }}
         />
         {searchQuery && (
@@ -248,7 +248,7 @@ const OutfitCombinations = ({ onBuilderOpen, onPieceTap, addSheetOpen, onAddShee
               boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
             }}
           >
-            <span className="mr-1.5 text-sm">{occ.icon}</span>
+            {occ.icon && <span className="mr-1.5 text-sm">{occ.icon}</span>}
             {occ.label}
           </button>
         ))}
@@ -378,7 +378,7 @@ function OutfitCard({
   return (
     // No overflow-hidden on the card so the dropdown menu can escape its bounds
     <div
-      className={`w-full text-left bg-card rounded-2xl border border-border/60 animate-reveal-up cursor-pointer active:scale-[0.99] transition-transform relative flex ${menuOpen ? "z-40" : ""}`}
+      className={`w-full text-left liquid-glass-card rounded-2xl animate-reveal-up cursor-pointer active:scale-[0.99] transition-transform relative flex ${menuOpen ? "z-40" : ""}`}
       style={{ animationDelay: `${delay}ms` }}
       onClick={onTap}
     >

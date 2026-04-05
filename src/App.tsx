@@ -8,6 +8,7 @@ import { PaletteProvider } from "@/contexts/PaletteContext";
 import AuthPage from "./pages/AuthPage.tsx";
 import Index from "./pages/Index.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
+import DesignSystemPage from "./pages/DesignSystemPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ function AuthGate() {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/design-system" element={<DesignSystemPage />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>

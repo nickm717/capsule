@@ -7,32 +7,32 @@
 /* ── Light mode (default) ─────────────────────────────────────── */
 @layer base {
   :root {
-    --background: 38 28% 96%;
-    --foreground: 26 30% 14%;
+    --background: 38 10% 97%;
+    --foreground: 30 12% 14%;
 
-    --card: 38 22% 100%;
-    --card-foreground: 26 30% 14%;
+    --card: 38 6% 100%;
+    --card-foreground: 30 12% 14%;
 
-    --popover: 38 22% 100%;
-    --popover-foreground: 26 30% 14%;
+    --popover: 38 6% 100%;
+    --popover-foreground: 30 12% 14%;
 
     --primary: 38 76% 32%;
-    --primary-foreground: 38 28% 97%;
+    --primary-foreground: 38 10% 98%;
 
-    --secondary: 38 15% 88%;
-    --secondary-foreground: 26 30% 14%;
+    --secondary: 38 7% 91%;
+    --secondary-foreground: 30 12% 14%;
 
-    --muted: 38 14% 92%;
-    --muted-foreground: 38 12% 40%;
+    --muted: 38 6% 94%;
+    --muted-foreground: 38 6% 48%;
 
     --accent: 14 58% 40%;
-    --accent-foreground: 38 28% 97%;
+    --accent-foreground: 38 10% 98%;
 
     --destructive: 0 65% 45%;
-    --destructive-foreground: 38 28% 97%;
+    --destructive-foreground: 38 10% 98%;
 
-    --border: 38 14% 86%;
-    --input: 38 14% 86%;
+    --border: 38 4% 87%;
+    --input: 38 4% 87%;
     --ring: 38 76% 44%;
 
     --radius: 0.75rem;
@@ -42,45 +42,51 @@
     --olive: 78 35% 35%;
     --teal: 176 41% 30%;
 
-    --sidebar-background: 38 22% 98%;
-    --sidebar-foreground: 26 30% 14%;
+    --sidebar-background: 38 6% 98%;
+    --sidebar-foreground: 30 12% 14%;
     --sidebar-primary: 38 76% 44%;
-    --sidebar-primary-foreground: 38 28% 97%;
-    --sidebar-accent: 38 14% 92%;
-    --sidebar-accent-foreground: 26 30% 14%;
-    --sidebar-border: 38 14% 86%;
+    --sidebar-primary-foreground: 38 10% 98%;
+    --sidebar-accent: 38 6% 94%;
+    --sidebar-accent-foreground: 30 12% 14%;
+    --sidebar-border: 38 4% 87%;
     --sidebar-ring: 38 76% 44%;
+
+    /* Temperature badge text — WCAG AA accessible for light mode */
+    --badge-cold-text: #1F6B65;
+    --badge-cool-text: #556828;
+    --badge-mild-text: #8A6020;
+    --badge-warm-text: #9A4828;
   }
 }
 
 /* ── Dark mode (controlled via .dark class by next-themes) ────── */
 .dark {
-    --background: 26 22% 4%;
-    --foreground: 38 28% 88%;
+    --background: 26 6% 9%;
+    --foreground: 38 8% 90%;
 
-    --card: 26 18% 11%;
-    --card-foreground: 38 28% 88%;
+    --card: 26 5% 13%;
+    --card-foreground: 38 8% 90%;
 
-    --popover: 26 18% 11%;
-    --popover-foreground: 38 28% 88%;
+    --popover: 26 5% 13%;
+    --popover-foreground: 38 8% 90%;
 
     --primary: 38 80% 54%;
-    --primary-foreground: 26 22% 5%;
+    --primary-foreground: 26 6% 9%;
 
-    --secondary: 38 20% 68%;
-    --secondary-foreground: 26 22% 5%;
+    --secondary: 38 8% 60%;
+    --secondary-foreground: 26 6% 9%;
 
-    --muted: 26 14% 16%;
-    --muted-foreground: 38 12% 55%;
+    --muted: 26 5% 17%;
+    --muted-foreground: 38 5% 50%;
 
     --accent: 14 62% 40%;
-    --accent-foreground: 38 28% 92%;
+    --accent-foreground: 38 8% 90%;
 
     --destructive: 0 65% 42%;
-    --destructive-foreground: 38 28% 92%;
+    --destructive-foreground: 38 8% 90%;
 
-    --border: 26 10% 20%;
-    --input: 26 10% 17%;
+    --border: 26 4% 24%;
+    --input: 26 4% 20%;
     --ring: 38 80% 54%;
 
     --gold: 38 80% 54%;
@@ -88,14 +94,20 @@
     --olive: 78 35% 35%;
     --teal: 176 50% 58%;
 
-    --sidebar-background: 26 20% 6%;
-    --sidebar-foreground: 38 28% 88%;
+    --sidebar-background: 26 5% 11%;
+    --sidebar-foreground: 38 8% 90%;
     --sidebar-primary: 38 80% 54%;
-    --sidebar-primary-foreground: 26 22% 5%;
-    --sidebar-accent: 26 14% 13%;
-    --sidebar-accent-foreground: 38 28% 88%;
-    --sidebar-border: 26 10% 17%;
+    --sidebar-primary-foreground: 26 6% 9%;
+    --sidebar-accent: 26 5% 15%;
+    --sidebar-accent-foreground: 38 8% 90%;
+    --sidebar-border: 26 4% 20%;
     --sidebar-ring: 38 80% 54%;
+
+    /* Temperature badge text — bright for dark mode */
+    --badge-cold-text: #5AADA6;
+    --badge-cool-text: #8FA054;
+    --badge-mild-text: #C49040;
+    --badge-warm-text: #D4845A;
 }
 
 @layer base {
@@ -137,6 +149,113 @@
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
+
+  /* Liquid glass — with white glass border */
+  .liquid-glass-card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  /* Liquid glass — background/blur/shadow only, no border (use Tailwind border classes alongside) */
+  .liquid-glass-surface {
+    background: rgba(255, 255, 255, 0.48);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  /* Liquid glass sheet/drawer */
+  .liquid-glass-sheet {
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 -2px 16px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Liquid glass nav bar — higher opacity for contrast over content */
+  .liquid-glass-nav {
+    background: rgba(255, 255, 255, 0.60);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-top: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 -1px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Liquid glass input / search field */
+  .liquid-glass-input {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 1px 4px rgba(0, 0, 0, 0.03);
+  }
+}
+
+/* Liquid glass — dark mode */
+.dark .liquid-glass-card {
+  background: rgba(22, 20, 18, 0.25);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark .liquid-glass-surface {
+  background: rgba(22, 20, 18, 0.25);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.dark .liquid-glass-sheet {
+  background: rgba(22, 20, 18, 0.60);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 -2px 16px rgba(0, 0, 0, 0.35);
+}
+
+.dark .liquid-glass-nav {
+  background: rgba(16, 14, 13, 0.60);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -1px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark .liquid-glass-input {
+  background: rgba(22, 20, 18, 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Liquid glass floating menu (edit/delete dropdown) */
+.liquid-glass-menu {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Liquid glass menu — dark mode */
+.dark .liquid-glass-menu {
+  background: rgba(22, 20, 18, 0.72);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.40), 0 1px 4px rgba(0, 0, 0, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Vaul's ::after pseudo-element extends the drawer background below the visible area
+   for rubber-band/overscroll coverage. Pin it to a solid color so it doesn't
+   create a stacked semi-transparent layer. */
+[data-vaul-drawer]::after {
+  background: hsl(var(--background)) !important;
 }
 
 /* ── Animations ────────────────────────────────────────────────── */

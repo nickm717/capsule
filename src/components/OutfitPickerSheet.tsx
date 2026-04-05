@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { occasionDefs, temperatureBadges } from "@/data/darkautumn";
 import type { OutfitPiece } from "@/data/darkautumn";
 import AppBadge from "./AppBadge";
@@ -106,7 +107,7 @@ const OutfitPickerSheet = ({
 
   if (!open && !closing) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100]">
       {/* Backdrop */}
       <div
@@ -118,7 +119,7 @@ const OutfitPickerSheet = ({
       {/* Sheet */}
       <div
         ref={sheetRef}
-        className={`absolute bottom-0 left-0 right-0 bg-card rounded-t-2xl border-t border-border flex flex-col ${
+        className={`absolute bottom-0 left-0 right-0 liquid-glass-sheet rounded-t-2xl border-t border-border/40 flex flex-col ${
           closing ? "animate-sheet-down" : "animate-sheet-up"
         }`}
         style={{ height: "85vh", willChange: "transform" }}
@@ -140,7 +141,7 @@ const OutfitPickerSheet = ({
           {/* Search */}
           <div className="relative">
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50"
               width="16" height="16" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
             >
@@ -167,11 +168,17 @@ const OutfitPickerSheet = ({
                 <button
                   key={temp}
                   onClick={() => setTempFilter(active ? null : temp)}
-                  className={`transition-all active:scale-[0.95] rounded-md ${active ? "ring-1 ring-offset-1 ring-offset-card ring-current" : "opacity-70"}`}
+                  className="flex-shrink-0 flex items-center px-3.5 py-1.5 rounded-full text-sm font-medium transition-all active:scale-[0.96] border"
+                  style={{
+                    backgroundColor: badge?.bg,
+                    borderColor: badge?.border,
+                    color: badge?.text,
+                    boxShadow: active ? "0 1px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.15)" : undefined,
+                    outline: active ? `2px solid ${badge?.border}` : undefined,
+                    outlineOffset: active ? "2px" : undefined,
+                  }}
                 >
-                  <AppBadge size="sm" bg={badge?.bg} borderColor={badge?.border} color={badge?.text}>
-                    {temp}
-                  </AppBadge>
+                  {temp}
                 </button>
               );
             })}
@@ -179,22 +186,29 @@ const OutfitPickerSheet = ({
 
           {/* Occasion filter */}
           <div className="flex gap-1.5 mt-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {occasionDefs.map((oc) => {
+            {occasionDefs.filter((oc) => oc.id !== "all").map((oc) => {
               const labels: Record<string, string> = { casual: "Casual", work: "Work", weekend: "Weekend", dinner: "Going Out" };
               const active = occasionFilter === oc.id;
               return (
                 <button
                   key={oc.id}
                   onClick={() => setOccasionFilter(active ? null : oc.id)}
-                  className={`flex-shrink-0 transition-all active:scale-[0.95] rounded-full ${active ? "ring-1 ring-gold/30 ring-offset-1 ring-offset-card" : ""}`}
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all active:scale-[0.96] border ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary/70"
+                      : "text-muted-foreground border-border/60"
+                  }`}
+                  style={active ? {
+                    boxShadow: "0 1px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
+                  } : {
+                    backdropFilter: "blur(10px) saturate(140%)",
+                    WebkitBackdropFilter: "blur(10px) saturate(140%)",
+                    backgroundColor: "color-mix(in srgb, hsl(var(--card)) 45%, transparent)",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+                  }}
                 >
-                  <AppBadge
-                    size="sm"
-                    variant={active ? "gold" : "muted"}
-                    className={!active ? "opacity-70" : ""}
-                  >
-                    {oc.icon} {labels[oc.id] || oc.label}
-                  </AppBadge>
+                  {oc.icon && <span>{oc.icon}</span>}
+                  {labels[oc.id] || oc.label}
                 </button>
               );
             })}
@@ -204,7 +218,7 @@ const OutfitPickerSheet = ({
         {/* Scrollable outfit list — drag-to-dismiss also works here when at scroll top */}
         <div
           ref={contentRef}
-          className="flex-1 overflow-y-auto overscroll-contain px-4 pb-8 space-y-1.5"
+          className="flex-1 overflow-y-auto overscroll-contain px-4 pb-8"
           onTouchStart={onContentTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
@@ -214,55 +228,54 @@ const OutfitPickerSheet = ({
               No outfits match "{search}"
             </p>
           ) : (
-            filtered.map((o) => {
-              const tempBadge = temperatureBadges[o.temp];
-              const occasion  = occasionDefs.find((oc) => oc.id === o.occasion_id);
-              const isSelected = currentOutfitId === o.id;
+            <div className="space-y-1.5">
+              {filtered.map((o) => {
+                const tempBadge = temperatureBadges[o.temp];
+                const occasion  = occasionDefs.find((oc) => oc.id === o.occasion_id);
+                const isSelected = currentOutfitId === o.id;
 
-              return (
-                <button
-                  key={o.id}
-                  onClick={() => onSelect(o.id)}
-                  className={`w-full text-left flex items-center gap-3 px-3 py-3 rounded-xl transition-colors active:scale-[0.98] ${
-                    isSelected
-                      ? "bg-gold/10 border border-gold/20"
-                      : "active:bg-muted border border-transparent"
-                  }`}
-                >
-                  {/* Color dots */}
-                  <div className="flex gap-1 flex-shrink-0 w-[72px]">
-                    {o.pieces.slice(0, 4).map((p, pi) => (
-                      <span
-                        key={pi}
-                        className="w-3.5 h-3.5 rounded-full border border-border/50"
-                        style={{ backgroundColor: p.hex }}
-                      />
-                    ))}
-                  </div>
+                return (
+                  <button
+                    key={o.id}
+                    onClick={() => onSelect(o.id)}
+                    className={`w-full text-left rounded-xl overflow-hidden border flex items-stretch transition-colors active:scale-[0.98] liquid-glass-surface ${
+                      isSelected ? "border-gold/30 bg-gold/10" : "border-border/40"
+                    }`}
+                  >
+                    {/* Vertical color bars */}
+                    <div className="flex flex-shrink-0 gap-[2px]" style={{ width: 28 }}>
+                      {o.pieces.map((p, pi) => (
+                        <div key={pi} style={{ backgroundColor: p.hex, flex: 1 }} />
+                      ))}
+                    </div>
 
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[15px] text-foreground font-medium truncate block">{o.name}</span>
-                    <span className="text-[12px] text-muted-foreground block mt-0.5">
-                      {o.pieces.map((p) => p.name).join(" · ")}
-                    </span>
-                  </div>
+                    <div className="flex-1 min-w-0 flex items-center gap-2 px-3 py-3">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[15px] text-foreground font-medium truncate block">{o.name}</span>
+                        <span className="text-[12px] text-muted-foreground block mt-0.5">
+                          {o.pieces.map((p) => p.name).join(" · ")}
+                        </span>
+                      </div>
 
-                  {tempBadge && (
-                    <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
-                      {o.temp}
-                    </AppBadge>
-                  )}
+                      {tempBadge && (
+                        <AppBadge size="sm" bg={tempBadge.bg} borderColor={tempBadge.border} color={tempBadge.text}>
+                          {o.temp}
+                        </AppBadge>
+                      )}
 
-                  {occasion && (
-                    <span className="text-[13px] flex-shrink-0">{occasion.icon}</span>
-                  )}
-                </button>
-              );
-            })
+                      {occasion && (
+                        <span className="text-[13px] flex-shrink-0">{occasion.icon}</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

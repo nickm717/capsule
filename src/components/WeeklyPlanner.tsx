@@ -145,7 +145,7 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
 
       {/* Week navigation */}
       <div
-        className="flex items-center justify-between bg-card rounded-2xl border border-border/50 px-2 py-2 mb-4 animate-reveal-up shadow-sm dark:shadow-none"
+        className="flex items-center justify-between liquid-glass-card rounded-2xl px-2 py-2 mb-4 animate-reveal-up"
         style={{ animationDelay: "30ms" }}
       >
         <button
@@ -221,10 +221,10 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
             {/* Outfit card */}
             <button
               onClick={() => setSheetDay({ key: dayKey, label: `${DAY_LABELS[i].slice(0, 3)} ${dayNum}` })}
-              className={`w-full text-left rounded-2xl border overflow-hidden transition-all active:scale-[0.99] bg-card shadow-sm dark:shadow-none ${
+              className={`w-full text-left rounded-2xl border overflow-hidden transition-all active:scale-[0.99] ${
                 outfit
-                  ? isToday ? "border-gold/30" : "border-border/50"
-                  : "border-dashed border-border/50"
+                  ? `liquid-glass-surface ${isToday ? "border-gold/30" : "border-border/40"}`
+                  : "bg-card/20 border-dashed border-border"
               }`}
             >
               {outfit ? (

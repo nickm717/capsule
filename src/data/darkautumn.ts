@@ -97,10 +97,10 @@ export const swatches: ColorSwatch[] = [
 ];
 
 export const temperatureBadges: Record<string, TemperatureBadge> = {
-  Cold: { bg: "rgba(46,110,104,0.15)", border: "rgba(46,110,104,0.35)", text: "#5AADA6", range: "below 40°F" },
-  Cool: { bg: "rgba(74,82,40,0.2)", border: "rgba(107,122,58,0.4)", text: "#8FA054", range: "40–60°F" },
-  Mild: { bg: "rgba(160,104,42,0.15)", border: "rgba(160,104,42,0.35)", text: "#C49040", range: "60–70°F" },
-  Warm: { bg: "rgba(184,92,56,0.15)", border: "rgba(184,92,56,0.35)", text: "#D4845A", range: "70°F+" },
+  Cold: { bg: "rgba(46,110,104,0.15)", border: "rgba(46,110,104,0.35)", text: "var(--badge-cold-text)", range: "below 40°F" },
+  Cool: { bg: "rgba(74,82,40,0.2)", border: "rgba(107,122,58,0.4)", text: "var(--badge-cool-text)", range: "40–60°F" },
+  Mild: { bg: "rgba(160,104,42,0.15)", border: "rgba(160,104,42,0.35)", text: "var(--badge-mild-text)", range: "60–70°F" },
+  Warm: { bg: "rgba(184,92,56,0.15)", border: "rgba(184,92,56,0.35)", text: "var(--badge-warm-text)", range: "70°F+" },
 };
 
 /** Category definitions (id, label, icon) — used for tabs & grouping */
@@ -115,9 +115,9 @@ export const categoryDefs: { id: string; label: string; icon: string }[] = [
 
 /** Occasion definitions (id, label, icon) — used for tabs & filtering */
 export const occasionDefs: { id: string; label: string; icon: string }[] = [
-  { id: "all", label: "All", icon: "◉" },
-  { id: "casual", label: "Casual", icon: "☀" },
-  { id: "work", label: "Office", icon: "◈" },
-  { id: "weekend", label: "Weekend", icon: "◎" },
-  { id: "dinner", label: "Going Out", icon: "✦" },
+  { id: "all", label: "All", icon: "" },
+  { id: "casual", label: "Casual", icon: "☀️" },
+  { id: "work", label: "Office", icon: "💼" },
+  { id: "weekend", label: "Weekend", icon: "🌿" },
+  { id: "dinner", label: "Going Out", icon: "🍸" },
 ];

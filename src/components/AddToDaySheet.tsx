@@ -117,7 +117,7 @@ const AddToDaySheet = ({ open, outfit, onClose, onSaved }: AddToDaySheetProps) =
       />
       <div
         ref={sheetRef}
-        className={`absolute bottom-0 left-0 right-0 bg-card rounded-t-2xl border-t border-border flex flex-col ${closing ? "animate-sheet-down" : "animate-sheet-up"}`}
+        className={`absolute bottom-0 left-0 right-0 liquid-glass-sheet rounded-t-2xl border-t border-border/40 flex flex-col ${closing ? "animate-sheet-down" : "animate-sheet-up"}`}
         style={{ willChange: "transform" }}
       >
         {/* Drag handle */}

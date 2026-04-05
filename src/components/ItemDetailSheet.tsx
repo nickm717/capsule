@@ -41,7 +41,7 @@ const ItemDetailSheet = ({ open, item, brand, category, onClose, onEdit, onDelet
                   <MoreHorizontal className="w-5 h-5" />
                 </button>
                 {menuOpen && (
-                  <div className="absolute right-0 top-9 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px] animate-in fade-in-0 zoom-in-95 duration-150">
+                  <div className="absolute right-0 top-9 z-50 liquid-glass-menu rounded-xl py-1 min-w-[140px] animate-in fade-in-0 zoom-in-95 duration-150">
                     <button
                       onClick={() => { setMenuOpen(false); onClose(); onEdit(); }}
                       className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors active:scale-[0.97]"

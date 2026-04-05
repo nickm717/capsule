@@ -102,7 +102,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       {/* iOS-style navigation bar */}
-      <header className="flex-shrink-0 flex items-center h-12 px-4 relative border-b border-border/50">
+      <header className="flex-shrink-0 flex items-center h-12 px-4 relative border-b border-border/30">
         <button
           onClick={onCancel}
           className="text-[17px] font-normal text-gold active:opacity-60 transition-opacity"
@@ -128,7 +128,7 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
       </header>
 
       {/* Scrollable form body */}
-      <div className="flex-1 overflow-y-auto bg-muted/30">
+      <div className="flex-1 overflow-y-auto bg-background">
         <div className="px-4 py-6 space-y-8">
 
           {/* Section 1 — Item details */}
@@ -287,11 +287,11 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
           disabled={saving || !form.name.trim()}
           className="w-full py-3.5 rounded-2xl font-semibold text-[17px] transition-all active:scale-[0.97] active:opacity-90 disabled:opacity-40 flex items-center justify-center gap-2"
           style={{
-            background: "linear-gradient(145deg, rgba(184,128,48,0.85) 0%, rgba(160,100,24,0.80) 100%)",
-            backdropFilter: "blur(12px) saturate(160%)",
-            WebkitBackdropFilter: "blur(12px) saturate(160%)",
-            border: "1px solid rgba(255,200,100,0.4)",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.28)",
+            background: "linear-gradient(145deg, rgba(184,128,48,0.55) 0%, rgba(160,100,24,0.50) 100%)",
+            backdropFilter: "blur(16px) saturate(180%)",
+            WebkitBackdropFilter: "blur(16px) saturate(180%)",
+            border: "1px solid rgba(255,200,100,0.35)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.22)",
             color: "rgba(255,255,255,0.95)",
           }}
         >
@@ -309,7 +309,7 @@ function FormSection({ label, children }: { label: string; children: React.React
       <p className="text-[13px] font-medium text-muted-foreground uppercase px-1 mb-1.5" style={{ letterSpacing: "0.08em" }}>
         {label}
       </p>
-      <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-sm dark:shadow-none">
+      <div className="bg-card rounded-2xl overflow-hidden">
         {children}
       </div>
     </div>
