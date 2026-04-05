@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Loader2, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { usePaletteContext } from "@/contexts/PaletteContext";
 import type { ItemFormData } from "./ItemForm";
 import { useSwipeBack } from "@/hooks/use-swipe-back";
+import { useAppData } from "@/contexts/AppDataContext";
+import BrandCombobox from "./BrandCombobox";
 
 const CATEGORIES = [
   { value: "tops", label: "Tops" },
@@ -32,6 +34,12 @@ interface ItemFormPageProps {
 const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps) => {
   const { user } = useAuth();
   const { palette } = usePaletteContext();
+  const { wardrobeItems } = useAppData();
+  const brandSuggestions = useMemo(() => {
+    const seen = new Set<string>();
+    wardrobeItems.forEach((item) => { if (item.brand) seen.add(item.brand); });
+    return Array.from(seen).sort();
+  }, [wardrobeItems]);
   const isEdit = !!editId;
   useSwipeBack(useCallback(() => onCancel(), [onCancel]));
 
@@ -143,11 +151,10 @@ const ItemFormPage = ({ prefill, editId, onSaved, onCancel }: ItemFormPageProps)
               />
             </FormRow>
             <FormRow label="Brand" isFirst={false} isLast={false}>
-              <input
+              <BrandCombobox
                 value={form.brand}
-                onChange={(e) => update("brand", e.target.value)}
-                placeholder="Optional"
-                className="flex-1 bg-transparent text-[17px] text-foreground text-right outline-none placeholder:text-muted-foreground min-w-0"
+                onChange={(val) => update("brand", val)}
+                suggestions={brandSuggestions}
               />
             </FormRow>
             <FormRow label="Category" isFirst={false} isLast={false}>

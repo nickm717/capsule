@@ -1,8 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Pencil, Check, X, User, LogOut, Plus, Trash2, ChevronRight, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAppData } from "@/contexts/AppDataContext";
+import BrandManagerSheet from "@/components/BrandManagerSheet";
 import { usePaletteContext } from "@/contexts/PaletteContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -41,7 +43,15 @@ function getInitials(name: string): string {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
+  const { wardrobeItems, refreshWardrobe } = useAppData();
   const { theme, setTheme } = useTheme();
+
+  const brandList = useMemo(() => {
+    const seen = new Set<string>();
+    wardrobeItems.forEach((item) => { if (item.brand) seen.add(item.brand); });
+    return Array.from(seen).sort();
+  }, [wardrobeItems]);
+  const [brandManagerOpen, setBrandManagerOpen] = useState(false);
   const { palette, seasonalType, addColor, addColors, removeColor, updateColor, selectSeasonalType } = usePaletteContext();
 
   // ── Display name ────────────────────────────────────────────
@@ -291,6 +301,20 @@ export default function ProfilePage() {
             </button>
           </section>
 
+          {/* ── Brands ───────────────────────────────────────── */}
+          <section className="space-y-2">
+            <p className="text-sm font-medium">Brands</p>
+            <button
+              onClick={() => setBrandManagerOpen(true)}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-border/60 liquid-glass-surface active:opacity-80 transition-opacity text-left"
+            >
+              <span className="text-sm text-muted-foreground">
+                {brandList.length} brand{brandList.length !== 1 ? "s" : ""} in your wardrobe
+              </span>
+              <ChevronRight size={16} className="text-muted-foreground shrink-0 ml-2" />
+            </button>
+          </section>
+
           {/* ── Palette Editor ───────────────────────────────── */}
           <section className="space-y-3">
             <div className="flex items-center justify-between">
@@ -403,6 +427,14 @@ export default function ProfilePage() {
           </section>
         </div>
       </div>
+
+      {/* ── Brand Manager Drawer ─────────────────────────────── */}
+      <BrandManagerSheet
+        open={brandManagerOpen}
+        onOpenChange={setBrandManagerOpen}
+        brands={brandList}
+        onRenameComplete={refreshWardrobe}
+      />
 
       {/* ── Seasonal Type Drawer ──────────────────────────────── */}
       <Drawer open={seasonalDrawerOpen} onOpenChange={setSeasonalDrawerOpen}>

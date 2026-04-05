@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PaletteProvider } from "@/contexts/PaletteContext";
+import { AppDataProvider } from "@/contexts/AppDataContext";
 import AuthPage from "./pages/AuthPage.tsx";
 import Index from "./pages/Index.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
@@ -45,7 +46,9 @@ const App = () => (
       <AuthProvider>
         <PaletteProvider>
           <BrowserRouter>
-            <AuthGate />
+            <AppDataProvider>
+              <AuthGate />
+            </AppDataProvider>
           </BrowserRouter>
         </PaletteProvider>
       </AuthProvider>

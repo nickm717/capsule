@@ -8,8 +8,11 @@ import AddItemSheet from "./AddItemSheet";
 import ItemFormPage from "./ItemFormPage";
 import DeleteItemSheet from "./DeleteItemSheet";
 import ItemDetailSheet from "./ItemDetailSheet";
+import WardrobeFilterSheet from "./WardrobeFilterSheet";
+import BrandManagerSheet from "./BrandManagerSheet";
 import AppBadge from "./AppBadge";
 import type { ItemFormData } from "./ItemForm";
+import { COLOR_FAMILIES, hexToFamily } from "@/lib/colorFamilies";
 
 type Filter = "all" | "owned" | "gaps";
 
@@ -30,6 +33,10 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   const [detailItem, setDetailItem] = useState<{ item: any; row: any } | null>(null);
   const [openMenuCatId, setOpenMenuCatId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [brandManagerOpen, setBrandManagerOpen] = useState(false);
+  const [selectedColorFamilies, setSelectedColorFamilies] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
 
   const { categories: allCategories, loading, error, refetch: fetchItems } = useWardrobeItems();
 
@@ -88,18 +95,65 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   const ownedCount = filteredCategories.reduce((s, c) => s + c.items.filter((i) => i.owned).length, 0);
   const gapCount = filteredCategories.reduce((s, c) => s + c.items.filter((i) => i.gap).length, 0);
 
+  const availableColorFamilies = useMemo(() => {
+    const presentIds = new Set<string>();
+    allCategories.forEach((cat) =>
+      cat.items.forEach((item) => {
+        presentIds.add(hexToFamily(item.hex));
+      })
+    );
+    return COLOR_FAMILIES.filter((f) => presentIds.has(f.id));
+  }, [allCategories]);
+
+  const availableBrands = useMemo(() => {
+    const seen = new Set<string>();
+    allCategories.forEach((cat) =>
+      cat.items.forEach((item) => {
+        if (item.brand) seen.add(item.brand);
+      })
+    );
+    return Array.from(seen).sort();
+  }, [allCategories]);
+
+  const hasActiveFilters = selectedColorFamilies.length > 0 || selectedBrands.length > 0;
+
+  const clearAllFilters = () => {
+    setSelectedColorFamilies([]);
+    setSelectedBrands([]);
+  };
+
   const displayCategories = useMemo(() => {
-    if (!searchQuery.trim()) return filteredCategories.map((cat) => ({ ...cat, displayItems: cat.items.filter(filterItem) }));
-    const q = searchQuery.toLowerCase();
-    return allCategories.map((cat) => ({
-      ...cat,
-      displayItems: cat.items.filter((item) =>
-        item.name?.toLowerCase().includes(q) ||
-        item.brand?.toLowerCase().includes(q) ||
-        item.color?.toLowerCase().includes(q)
-      ),
-    }));
-  }, [allCategories, filteredCategories, searchQuery, filter]);
+    const colorBrandFilter = (item: WardrobeItem) => {
+      const colorMatch = selectedColorFamilies.length === 0 || selectedColorFamilies.includes(hexToFamily(item.hex));
+      const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(item.brand ?? "");
+      return colorMatch && brandMatch;
+    };
+
+    let base;
+    if (!searchQuery.trim()) {
+      base = filteredCategories.map((cat) => ({ ...cat, displayItems: cat.items.filter(filterItem) }));
+    } else {
+      const q = searchQuery.toLowerCase();
+      base = allCategories.map((cat) => ({
+        ...cat,
+        displayItems: cat.items.filter(
+          (item) =>
+            item.name?.toLowerCase().includes(q) ||
+            item.brand?.toLowerCase().includes(q) ||
+            item.color?.toLowerCase().includes(q)
+        ),
+      }));
+    }
+
+    if (hasActiveFilters) {
+      base = base.map((cat) => ({
+        ...cat,
+        displayItems: cat.displayItems.filter(colorBrandFilter),
+      }));
+    }
+
+    return base;
+  }, [allCategories, filteredCategories, searchQuery, filter, selectedColorFamilies, selectedBrands]);
 
   if (formOpen) {
     return <ItemFormPage prefill={formPrefill} editId={editId} onSaved={handleFormSaved} onCancel={closeForm} />;
@@ -115,33 +169,121 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         <ProfileButton />
       </div>
 
-      {/* Search */}
-      <div className="relative animate-reveal-up liquid-glass-input rounded-xl focus-within:ring-1 focus-within:ring-gold/50" style={{ animationDelay: "30ms" }}>
-        <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50 pointer-events-none"
-          width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search wardrobe…"
-          className="w-full bg-transparent border-0 rounded-xl py-2.5 pl-9 pr-9 text-foreground placeholder:text-muted-foreground focus:outline-none"
-          style={{ fontSize: 16 }}
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground active:text-foreground"
+      {/* Search + Filter button */}
+      <div className="flex items-center gap-2 animate-reveal-up" style={{ animationDelay: "30ms" }}>
+        <div className="relative flex-1 liquid-glass-input rounded-xl focus-within:ring-1 focus-within:ring-gold/50">
+          <svg
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50 pointer-events-none"
+            width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
           >
-            <X size={15} />
-          </button>
-        )}
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search wardrobe…"
+            className="w-full bg-transparent border-0 rounded-xl py-2.5 pl-9 pr-9 text-foreground placeholder:text-muted-foreground focus:outline-none"
+            style={{ fontSize: 16 }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground active:text-foreground"
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
+
+        {/* Filter icon button */}
+        <button
+          onClick={() => setFilterSheetOpen(true)}
+          className="relative flex-shrink-0 flex items-center justify-center rounded-xl liquid-glass-input transition-all active:scale-[0.92]"
+          style={{ width: 44, height: 44, minWidth: 44 }}
+          aria-label="Filter wardrobe"
+        >
+          <svg
+            width="17" height="17" viewBox="0 0 24 24" fill="none"
+            stroke={hasActiveFilters ? "hsl(var(--primary))" : "currentColor"}
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            className={hasActiveFilters ? "" : "text-foreground/60"}
+          >
+            <line x1="4" y1="6" x2="20" y2="6" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+            <line x1="11" y1="18" x2="13" y2="18" />
+          </svg>
+          {hasActiveFilters && (
+            <span
+              className="absolute top-1.5 right-1.5 rounded-full"
+              style={{
+                width: 8,
+                height: 8,
+                backgroundColor: "hsl(var(--primary))",
+              }}
+            />
+          )}
+        </button>
       </div>
+
+      {/* Active filter strip */}
+      {hasActiveFilters && (
+        <div className="flex items-center gap-2 flex-wrap animate-reveal-up -mt-2">
+          {selectedColorFamilies.map((familyId) => {
+            const family = COLOR_FAMILIES.find((f) => f.id === familyId);
+            if (!family) return null;
+            return (
+              <button
+                key={`family-${familyId}`}
+                onClick={() => setSelectedColorFamilies(selectedColorFamilies.filter((f) => f !== familyId))}
+                className="flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-full text-[13px] font-medium border border-border/60 active:scale-[0.95] transition-transform"
+                style={{
+                  backdropFilter: "blur(10px) saturate(140%)",
+                  WebkitBackdropFilter: "blur(10px) saturate(140%)",
+                  backgroundColor: "color-mix(in srgb, hsl(var(--card)) 55%, transparent)",
+                }}
+              >
+                <span
+                  style={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    backgroundColor: family.hex,
+                    border: "1px solid hsl(var(--border))",
+                    flexShrink: 0,
+                    display: "inline-block",
+                  }}
+                />
+                <span className="text-foreground">{family.label}</span>
+                <X size={11} className="text-muted-foreground ml-0.5" />
+              </button>
+            );
+          })}
+          {selectedBrands.map((brand) => (
+            <button
+              key={`brand-${brand}`}
+              onClick={() => setSelectedBrands(selectedBrands.filter((b) => b !== brand))}
+              className="flex items-center gap-1.5 pl-2.5 pr-2.5 py-1 rounded-full text-[13px] font-medium border border-border/60 active:scale-[0.95] transition-transform"
+              style={{
+                backdropFilter: "blur(10px) saturate(140%)",
+                WebkitBackdropFilter: "blur(10px) saturate(140%)",
+                backgroundColor: "color-mix(in srgb, hsl(var(--card)) 55%, transparent)",
+              }}
+            >
+              <span className="text-foreground">{brand}</span>
+              <X size={11} className="text-muted-foreground ml-0.5" />
+            </button>
+          ))}
+          <button
+            onClick={clearAllFilters}
+            className="text-[13px] text-primary font-medium ml-1 active:opacity-60 transition-opacity"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
 
       {/* Solid FAB */}
       <button
@@ -247,12 +389,41 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
       {!loading && !error && displayCategories.every((c) => c.displayItems.length === 0) && (
         <div className="text-center py-20 animate-reveal-up">
           <p className="text-muted-foreground text-sm">
-            {searchQuery ? "No items match your search." : "No items match this filter."}
+            {searchQuery
+              ? "No items match your search."
+              : hasActiveFilters
+              ? "No items match these filters."
+              : "No items match this filter."}
           </p>
+          {hasActiveFilters && !searchQuery && (
+            <button
+              onClick={clearAllFilters}
+              className="mt-2 text-sm text-primary underline active:opacity-60"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       )}
 
       <AddItemSheet open={sheetOpen} onOpenChange={setSheetOpen} onOpenForm={openForm} />
+      <WardrobeFilterSheet
+        open={filterSheetOpen}
+        onOpenChange={setFilterSheetOpen}
+        availableColorFamilies={availableColorFamilies}
+        availableBrands={availableBrands}
+        selectedColorFamilies={selectedColorFamilies}
+        selectedBrands={selectedBrands}
+        onColorFamiliesChange={setSelectedColorFamilies}
+        onBrandsChange={setSelectedBrands}
+        onManageBrands={() => { setFilterSheetOpen(false); setBrandManagerOpen(true); }}
+      />
+      <BrandManagerSheet
+        open={brandManagerOpen}
+        onOpenChange={setBrandManagerOpen}
+        brands={availableBrands}
+        onRenameComplete={() => { fetchItems(); setSelectedBrands([]); }}
+      />
       <ItemDetailSheet
         open={!!detailItem}
         item={detailItem?.item ?? null}

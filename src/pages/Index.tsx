@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import WardrobeGuide from "@/components/WardrobeGuide";
 import OutfitCombinations from "@/components/OutfitCombinations";
 import WeeklyPlanner from "@/components/WeeklyPlanner";
-import { AppDataProvider, useAppData } from "@/contexts/AppDataContext";
+import { useAppData } from "@/contexts/AppDataContext";
 import { usePaletteContext } from "@/contexts/PaletteContext";
 import type { ColorSwatch } from "@/data/darkautumn";
 
@@ -395,10 +395,6 @@ const IndexInner = () => {
   );
 };
 
-const Index = () => (
-  <AppDataProvider>
-    <IndexInner />
-  </AppDataProvider>
-);
+const Index = () => <IndexInner />;
 
 export default Index;
