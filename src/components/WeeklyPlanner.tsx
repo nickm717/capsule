@@ -316,17 +316,16 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
   const handleMouseLeave  = () => { if (dragState.current?.active) endDrag(); };
 
   // ── Scroll a day row into view below the sticky strip ────────────────────
-  // scrollIntoView doesn't know where the sticky card ends, so we calculate
-  // the target scroll position from getBoundingClientRect instead.
+  // Uses scroll-container-relative coordinates to avoid safe-area / viewport
+  // offset differences between Safari and PWA (standalone) mode:
+  //   - dayRect.top - containerRect.top  →  position inside scroll container
+  //   - stickyEl.offsetHeight            →  DOM height, not viewport-relative
+  //   - scrollTo (absolute)              →  no delta accumulation errors
   const scrollToDay = useCallback((i: number) => {
     const dayEl    = dayRefs.current[i];
     const stickyEl = stickyRef.current;
     if (!dayEl || !stickyEl) return;
 
-    const stickyBottom = stickyEl.getBoundingClientRect().bottom;
-    const dayTop       = dayEl.getBoundingClientRect().top;
-
-    // Walk up to find the scroll container
     let scrollEl: HTMLElement | null = dayEl.parentElement;
     while (scrollEl) {
       const { overflowY } = getComputedStyle(scrollEl);
@@ -335,9 +334,19 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
     }
     if (!scrollEl) return;
 
-    const gap = 8; // breathing room below sticky card
-    const delta = dayTop - stickyBottom - gap;
-    scrollEl.scrollBy({ top: delta, behavior: "smooth" });
+    const containerRect = scrollEl.getBoundingClientRect();
+    const dayRect       = dayEl.getBoundingClientRect();
+    const stickyHeight  = stickyEl.offsetHeight;
+    const gap = 8;
+
+    // Day card's current distance from the scroll container's visible top edge.
+    // Both rects are viewport-relative, so their difference is safe-area-neutral.
+    const dayFromContainerTop = dayRect.top - containerRect.top;
+
+    scrollEl.scrollTo({
+      top: scrollEl.scrollTop + dayFromContainerTop - stickyHeight - gap,
+      behavior: "smooth",
+    });
   }, []);
 
   // ── Day button renderer (shared across all three panels) ───────────────────
