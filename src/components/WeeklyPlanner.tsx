@@ -343,8 +343,14 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
     // Both rects are viewport-relative, so their difference is safe-area-neutral.
     const dayFromContainerTop = dayRect.top - containerRect.top;
 
+    // In PWA (standalone) mode, iOS WKWebView resolves sticky top:0 relative
+    // to the scroll container's content box (inside pt-4) rather than its
+    // border box, adding ~8px to the effective strip height we need to clear.
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+    const pwaPx = isStandalone ? 8 : 0;
+
     scrollEl.scrollTo({
-      top: scrollEl.scrollTop + dayFromContainerTop - stickyHeight - gap,
+      top: scrollEl.scrollTop + dayFromContainerTop - stickyHeight - gap + pwaPx,
       behavior: "smooth",
     });
   }, []);
