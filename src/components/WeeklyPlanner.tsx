@@ -41,11 +41,14 @@ function getWeekDates(offset: number): Date[] {
 
 interface DragState {
   startX: number;
+  startY: number;
   lastX: number;
   lastTime: number;
   velocity: number; // px/ms, exponential smoothed
   active: boolean;
   containerWidth: number;
+  // null = undecided, set after first 8px of movement
+  directionLocked: "horizontal" | "vertical" | null;
 }
 
 interface WeeklyPlannerProps {
@@ -161,17 +164,18 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
 
   // ── Gesture helpers ────────────────────────────────────────────────────────
 
-  const startDrag = useCallback((clientX: number) => {
+  const startDrag = useCallback((clientX: number, clientY: number) => {
     if (isAnimating.current) return;
     const container = stripContainerRef.current;
     if (!container) return;
     dragState.current = {
-      startX: clientX, lastX: clientX,
+      startX: clientX, startY: clientY, lastX: clientX,
       lastTime: performance.now(), velocity: 0,
       active: true,
       containerWidth: container.getBoundingClientRect().width,
+      directionLocked: null,
     };
-    setStripTransitionCSS("none");
+    // Don't disable transition yet — wait until we know it's horizontal
   }, []);
 
   const moveDrag = useCallback((clientX: number) => {
@@ -248,29 +252,93 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
     setTimeout(() => setStripTransitionCSS("none"), 200);
   }, []);
 
-  // ── Imperative non-passive touchmove (allows preventDefault for scroll lock) ──
+  // ── Imperative touch handlers (non-passive so we can call preventDefault) ──
   useEffect(() => {
     const el = stickyRef.current;
     if (!el) return;
+
     const onMove = (e: TouchEvent) => {
       const ds = dragState.current;
       if (!ds?.active) return;
-      // Lock page scroll once a clear horizontal drag starts
-      if (Math.abs(ds.lastX - ds.startX) > 5) e.preventDefault();
-      moveDrag(e.touches[0].clientX);
+
+      const touch = e.touches[0];
+      const dx = Math.abs(touch.clientX - ds.startX);
+      const dy = Math.abs(touch.clientY - ds.startY);
+
+      if (!ds.directionLocked) {
+        if (dx < 3 && dy < 3) {
+          // Too little movement to decide — hold off the browser's scroll
+          // decision by preventing default on this frame.
+          e.preventDefault();
+          return;
+        }
+        if (dx >= dy) {
+          // Horizontal — take over
+          ds.directionLocked = "horizontal";
+          setStripTransitionCSS("none");
+        } else {
+          // Vertical — abandon drag, let native scroll happen unobstructed
+          ds.active = false;
+          dragState.current = null;
+          return;
+        }
+      }
+
+      e.preventDefault();
+      moveDrag(touch.clientX);
     };
+
+    // After a horizontal drag, touchend triggers a click on whichever day
+    // button the finger is over. Suppress that click so the page doesn't
+    // jump to that day's card. This handler fires before React's synthetic
+    // onTouchEnd because it's registered directly on the element.
+    const onEnd = (e: TouchEvent) => {
+      if (dragState.current?.directionLocked === "horizontal") {
+        e.preventDefault();
+      }
+    };
+
     el.addEventListener("touchmove", onMove, { passive: false });
-    return () => el.removeEventListener("touchmove", onMove);
+    el.addEventListener("touchend", onEnd, { passive: false });
+    return () => {
+      el.removeEventListener("touchmove", onMove);
+      el.removeEventListener("touchend", onEnd);
+    };
   }, [moveDrag]);
 
   // ── React event handlers ───────────────────────────────────────────────────
-  const handleTouchStart  = (e: React.TouchEvent) => startDrag(e.touches[0].clientX);
+  const handleTouchStart  = (e: React.TouchEvent) => startDrag(e.touches[0].clientX, e.touches[0].clientY);
   const handleTouchEnd    = () => endDrag();
   const handleTouchCancel = () => cancelDrag();
   const handleMouseDown   = (e: React.MouseEvent) => startDrag(e.clientX);
   const handleMouseMove   = (e: React.MouseEvent) => moveDrag(e.clientX);
   const handleMouseUp     = () => endDrag();
   const handleMouseLeave  = () => { if (dragState.current?.active) endDrag(); };
+
+  // ── Scroll a day row into view below the sticky strip ────────────────────
+  // scrollIntoView doesn't know where the sticky card ends, so we calculate
+  // the target scroll position from getBoundingClientRect instead.
+  const scrollToDay = useCallback((i: number) => {
+    const dayEl    = dayRefs.current[i];
+    const stickyEl = stickyRef.current;
+    if (!dayEl || !stickyEl) return;
+
+    const stickyBottom = stickyEl.getBoundingClientRect().bottom;
+    const dayTop       = dayEl.getBoundingClientRect().top;
+
+    // Walk up to find the scroll container
+    let scrollEl: HTMLElement | null = dayEl.parentElement;
+    while (scrollEl) {
+      const { overflowY } = getComputedStyle(scrollEl);
+      if (overflowY === "auto" || overflowY === "scroll") break;
+      scrollEl = scrollEl.parentElement;
+    }
+    if (!scrollEl) return;
+
+    const gap = 8; // breathing room below sticky card
+    const delta = dayTop - stickyBottom - gap;
+    scrollEl.scrollBy({ top: delta, behavior: "smooth" });
+  }, []);
 
   // ── Day button renderer (shared across all three panels) ───────────────────
   const renderDayButton = (date: Date, i: number, interactive: boolean) => {
@@ -284,7 +352,7 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
         key={dayKey}
         onClick={interactive ? () => {
           setSelectedDayIdx(i);
-          dayRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "start" });
+          scrollToDay(i);
         } : undefined}
         className="flex-1 flex flex-col items-center gap-[3px] py-1"
         style={{ pointerEvents: interactive ? "auto" : "none" }}
@@ -427,7 +495,7 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
               key={dayKey}
               ref={el => { dayRefs.current[i] = el; }}
               className="animate-reveal-up"
-              style={{ animationDelay: `${(i + 1) * 45 + 30}ms`, marginBottom: "16px", scrollMarginTop: "90px" }}
+              style={{ animationDelay: `${(i + 1) * 45 + 30}ms`, marginBottom: "16px" }}
             >
               {/* Day + weather header */}
               <div className="flex items-center justify-between px-1 mb-1.5">
