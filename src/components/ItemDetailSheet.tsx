@@ -7,6 +7,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import type { WardrobeItem } from "@/data/darkautumn";
+import { useItemWearCount } from "@/hooks/useWearCounts";
 
 interface ItemDetailSheetProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface ItemDetailSheetProps {
 
 const ItemDetailSheet = ({ open, item, brand, category, onClose, onEdit, onDelete }: ItemDetailSheetProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { count: wearCount, loading: wearLoading } = useItemWearCount(item?.id ?? "");
 
   if (!item) return null;
 
@@ -89,6 +91,25 @@ const ItemDetailSheet = ({ open, item, brand, category, onClose, onEdit, onDelet
           </div>
           {item.price != null && (
             <DetailRow label="Price" value={`$${item.price.toLocaleString()}`} />
+          )}
+          {!wearLoading && (
+            wearCount === 0 ? (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Worn</span>
+                <span className="text-sm text-muted-foreground">Never worn</span>
+              </div>
+            ) : (
+              <DetailRow
+                label="Worn"
+                value={`${wearCount} ${wearCount === 1 ? "time" : "times"}`}
+              />
+            )
+          )}
+          {!wearLoading && wearCount > 0 && item.price != null && item.price > 0 && (
+            <DetailRow
+              label="Cost per wear"
+              value={`$${Math.round(item.price / wearCount).toLocaleString()}`}
+            />
           )}
           {item.notes && (
             <div>

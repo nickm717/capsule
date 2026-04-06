@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function displayNameKey(userId: string) {
   return `capsule-display-name-${userId}`;
@@ -44,17 +50,34 @@ export default function ProfileButton() {
   const currentInitials = getInitials(displayName);
 
   return (
-    <button
-      onClick={() => navigate("/profile")}
-      className="w-9 h-9 rounded-full glass border border-border/60 flex items-center justify-center text-sm font-semibold text-foreground shrink-0 active:scale-95 transition-transform duration-150"
-      style={{ backgroundColor: "color-mix(in srgb, hsl(var(--background)) 60%, transparent)" }}
-      aria-label="Open profile"
-    >
-      {currentInitials ? (
-        <span className="text-[13px] font-semibold tracking-tight">{currentInitials}</span>
-      ) : (
-        <User size={17} strokeWidth={1.8} />
-      )}
-    </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="w-9 h-9 rounded-full glass border border-border/60 flex items-center justify-center text-sm font-semibold text-foreground shrink-0 active:scale-95 transition-transform duration-150"
+          style={{ backgroundColor: "color-mix(in srgb, hsl(var(--background)) 60%, transparent)" }}
+          aria-label="Open profile menu"
+        >
+          {currentInitials ? (
+            <span className="text-[13px] font-semibold tracking-tight">{currentInitials}</span>
+          ) : (
+            <User size={17} strokeWidth={1.8} />
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" sideOffset={6} className="liquid-glass-menu rounded-xl border-0 bg-transparent shadow-none p-1 min-w-[140px]">
+        <DropdownMenuItem
+          className="py-3 cursor-pointer"
+          onSelect={() => navigate("/profile")}
+        >
+          Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="py-3 cursor-pointer"
+          onSelect={() => navigate("/insights")}
+        >
+          Insights
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
