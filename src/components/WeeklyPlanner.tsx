@@ -3,7 +3,7 @@ import ProfileButton from "@/components/ProfileButton";
 import { temperatureBadges } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useOutfits, type DbOutfit } from "@/hooks/use-outfits";
+import { useOutfits } from "@/hooks/use-outfits";
 import { useWeatherForecast } from "@/hooks/use-weather-forecast";
 import OutfitPickerSheet from "./OutfitPickerSheet";
 import AppBadge from "./AppBadge";
@@ -23,9 +23,9 @@ function conditionEmoji(condition: string): string {
   }
 }
 
-const DAY_LABELS  = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const DAY_SHORT   = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-const DAY_LETTER  = ["M", "T", "W", "T", "F", "S", "S"];
+const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_SHORT  = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+const DAY_LETTER = ["M", "T", "W", "T", "F", "S", "S"];
 
 function getWeekDates(offset: number): Date[] {
   const now  = new Date();
@@ -39,6 +39,15 @@ function getWeekDates(offset: number): Date[] {
   });
 }
 
+interface DragState {
+  startX: number;
+  lastX: number;
+  lastTime: number;
+  velocity: number; // px/ms, exponential smoothed
+  active: boolean;
+  containerWidth: number;
+}
+
 interface WeeklyPlannerProps {
   refreshRef?: React.MutableRefObject<(() => Promise<void>) | undefined>;
 }
@@ -50,7 +59,7 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
   const [weekOffset, setWeekOffset] = useState(0);
   const [sheetDay, setSheetDay] = useState<{ key: string; label: string } | null>(null);
 
-  // Selected day index (0 = Monday … 6 = Sunday) within current week
+  // Selected day index (0 = Monday … 6 = Sunday)
   const [selectedDayIdx, setSelectedDayIdx] = useState<number>(() => {
     const dates = getWeekDates(0);
     const today = new Date().toISOString().slice(0, 10);
@@ -58,42 +67,47 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
     return idx >= 0 ? idx : 0;
   });
 
-  // Strip slide animation state
-  const [stripTranslate, setStripTranslate] = useState(0);
-  const [stripTransition, setStripTransition] = useState(true);
+  // Live-drag strip position: drives translateX(calc(-33.333% + Xpx))
+  // -33.333% of the 300%-wide track = exactly -1 container width, centering panel 2
+  const [stripOffsetPx, setStripOffsetPx] = useState(0);
+  const [stripTransitionCSS, setStripTransitionCSS] = useState("none");
+
+  // All gesture state in a single ref — no re-renders during drag
+  const dragState = useRef<DragState | null>(null);
   const isAnimating = useRef(false);
 
-  // Swipe / drag tracking
-  const touchStartX = useRef<number | null>(null);
-  const mouseStartX = useRef<number | null>(null);
-  const isDragging  = useRef(false);
+  // DOM refs
+  const stickyRef        = useRef<HTMLDivElement>(null); // for imperative touchmove
+  const stripContainerRef = useRef<HTMLDivElement>(null); // for containerWidth reads
+  const dayRefs          = useRef<(HTMLDivElement | null)[]>(Array(7).fill(null));
 
-  // Refs for scroll-to-day behaviour
-  const dayRefs = useRef<(HTMLDivElement | null)[]>(Array(7).fill(null));
+  // Sync weekOffset into a ref so gesture handlers read it without stale closures
+  const weekOffsetRef = useRef(weekOffset);
+  useEffect(() => { weekOffsetRef.current = weekOffset; }, [weekOffset]);
 
+  // Three panels: prev / current / next
+  const prevWeekDates = useMemo(() => getWeekDates(weekOffset - 1), [weekOffset]);
+  const weekDates     = useMemo(() => getWeekDates(weekOffset),     [weekOffset]);
+  const nextWeekDates = useMemo(() => getWeekDates(weekOffset + 1), [weekOffset]);
 
-  const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
-  const todayKey  = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const todayKey = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const monthLabel = useMemo(() => ({
     month: weekDates[0].toLocaleDateString("en-US", { month: "short" }).toUpperCase(),
     year:  weekDates[0].getFullYear(),
   }), [weekDates]);
 
-  // Read stored zip code into state so the weather hook re-fetches when it's first saved.
+  // ── Weather / zip ──────────────────────────────────────────────────────────
   const zipKey = user ? `capsule-zip-${user.id}` : null;
   const [zipCode, setZipCode] = useState(() =>
     zipKey ? (localStorage.getItem(zipKey) ?? "") : ""
   );
-
   const { forecast } = useWeatherForecast(zipCode || undefined);
 
-  // Auto-populate zip code from geolocation on first planner visit.
   useEffect(() => {
     if (!user || !zipKey) return;
     if (localStorage.getItem(zipKey)) return;
     if (!navigator.geolocation) return;
-
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
@@ -105,21 +119,18 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
           if (!res.ok) return;
           const data = await res.json();
           const zip = data?.address?.postcode;
-          if (zip) {
-            localStorage.setItem(zipKey, zip);
-            setZipCode(zip);
-          }
-        } catch {
-          // silently ignore — zip code is non-critical
-        }
+          if (zip) { localStorage.setItem(zipKey, zip); setZipCode(zip); }
+        } catch { /* non-critical */ }
       },
       () => {},
       { timeout: 8000 }
     );
   }, [user, zipKey]);
 
+  // ── Supabase ───────────────────────────────────────────────────────────────
   const loadAssignments = useCallback(async () => {
-    const { data } = await supabase.from("planner_assignments").select("day_key, outfit_id").eq("user_id", user!.id);
+    const { data } = await supabase
+      .from("planner_assignments").select("day_key, outfit_id").eq("user_id", user!.id);
     if (data) {
       const map: Record<string, string> = {};
       data.forEach((row: any) => { map[row.day_key] = row.outfit_id; });
@@ -128,44 +139,70 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
   }, []);
 
   useEffect(() => { loadAssignments(); }, [loadAssignments]);
-
-  useEffect(() => {
-    if (refreshRef) refreshRef.current = loadAssignments;
-  }, [refreshRef, loadAssignments]);
+  useEffect(() => { if (refreshRef) refreshRef.current = loadAssignments; }, [refreshRef, loadAssignments]);
 
   const assignOutfit = async (dayKey: string, outfitId: string) => {
-    setPlan((prev) => ({ ...prev, [dayKey]: outfitId }));
+    setPlan(prev => ({ ...prev, [dayKey]: outfitId }));
     setSheetDay(null);
-    await supabase
-      .from("planner_assignments")
+    await supabase.from("planner_assignments")
       .upsert({ day_key: dayKey, outfit_id: outfitId, user_id: user!.id }, { onConflict: "day_key,user_id" });
   };
 
   const clearDay = async (dayKey: string) => {
-    setPlan((prev) => { const next = { ...prev }; delete next[dayKey]; return next; });
+    setPlan(prev => { const next = { ...prev }; delete next[dayKey]; return next; });
     await supabase.from("planner_assignments").delete().eq("day_key", dayKey);
   };
 
-  const getOutfit = (id: string) => outfits.find((o) => o.id === id);
+  const getOutfit = (id: string) => outfits.find(o => o.id === id);
 
   const allOutfitsForPicker = useMemo(() =>
-    outfits.map((o) => ({
-      id: o.id, name: o.name, temp: o.temp,
-      pieces: o.pieces, notes: o.notes, occasion_id: o.occasion_id,
-    })),
+    outfits.map(o => ({ id: o.id, name: o.name, temp: o.temp, pieces: o.pieces, notes: o.notes, occasion_id: o.occasion_id })),
   [outfits]);
 
-  // ── Week navigation with slide animation ──────────────────────────────────
-  const changeWeek = useCallback((dir: 1 | -1) => {
-    if (isAnimating.current) return;
-    isAnimating.current = true;
+  // ── Gesture helpers ────────────────────────────────────────────────────────
 
-    // 1. Slide current strip out
-    setStripTransition(true);
-    setStripTranslate(dir === 1 ? -110 : 110);
+  const startDrag = useCallback((clientX: number) => {
+    if (isAnimating.current) return;
+    const container = stripContainerRef.current;
+    if (!container) return;
+    dragState.current = {
+      startX: clientX, lastX: clientX,
+      lastTime: performance.now(), velocity: 0,
+      active: true,
+      containerWidth: container.getBoundingClientRect().width,
+    };
+    setStripTransitionCSS("none");
+  }, []);
+
+  const moveDrag = useCallback((clientX: number) => {
+    const ds = dragState.current;
+    if (!ds?.active) return;
+    const now = performance.now();
+    const dt = now - ds.lastTime;
+    if (dt > 0) {
+      const instant = (clientX - ds.lastX) / dt;
+      ds.velocity = ds.velocity * 0.7 + instant * 0.3;
+    }
+    ds.lastX = clientX;
+    ds.lastTime = now;
+    setStripOffsetPx(clientX - ds.startX);
+  }, []);
+
+  // Shared commit logic for both drag-release and arrow buttons
+  const commitWeekChange = useCallback((dir: 1 | -1, fromContainerWidth?: number) => {
+    if (isAnimating.current) return;
+    const containerWidth = fromContainerWidth
+      ?? stripContainerRef.current?.getBoundingClientRect().width
+      ?? 0;
+    if (!containerWidth) return;
+
+    isAnimating.current = true;
+    const targetPx = dir === 1 ? -containerWidth : containerWidth;
+    setStripTransitionCSS("transform 200ms ease-out");
+    setStripOffsetPx(targetPx);
 
     setTimeout(() => {
-      // 2. Swap week + snap strip to the incoming side (no transition)
+      setStripTransitionCSS("none");
       setWeekOffset(prev => {
         const newDates = getWeekDates(prev + dir);
         const today = new Date().toISOString().slice(0, 10);
@@ -173,46 +210,112 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
         setSelectedDayIdx(idx >= 0 ? idx : 0);
         return prev + dir;
       });
-      setStripTransition(false);
-      setStripTranslate(dir === 1 ? 110 : -110);
-
-      // 3. Slide new strip in
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setStripTransition(true);
-          setStripTranslate(0);
-          setTimeout(() => { isAnimating.current = false; }, 155);
-        });
-      });
-    }, 150);
+      setStripOffsetPx(0);
+      requestAnimationFrame(() => requestAnimationFrame(() => { isAnimating.current = false; }));
+    }, 200);
   }, []);
 
-  // ── Swipe / drag handlers ─────────────────────────────────────────────────
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    touchStartX.current = null;
-    if (Math.abs(dx) > 40) changeWeek(dx < 0 ? 1 : -1);
-  };
-  const handleMouseDown = (e: React.MouseEvent) => {
-    mouseStartX.current = e.clientX;
-    isDragging.current = true;
-  };
-  const handleMouseUp = (e: React.MouseEvent) => {
-    if (!isDragging.current || mouseStartX.current === null) return;
-    const dx = e.clientX - mouseStartX.current;
-    mouseStartX.current = null;
-    isDragging.current = false;
-    if (Math.abs(dx) > 40) changeWeek(dx < 0 ? 1 : -1);
-  };
-  const handleMouseLeave = () => {
-    isDragging.current = false;
-    mouseStartX.current = null;
+  const endDrag = useCallback(() => {
+    const ds = dragState.current;
+    if (!ds?.active) return;
+    if (isAnimating.current) { dragState.current = null; return; }
+    ds.active = false;
+
+    const delta = ds.lastX - ds.startX;
+    const shouldCommit =
+      Math.abs(delta) >= ds.containerWidth * 0.4 ||
+      Math.abs(ds.velocity) >= 0.3;
+    const dir: 1 | -1 = delta < 0 ? 1 : -1;
+
+    if (shouldCommit) {
+      commitWeekChange(dir, ds.containerWidth);
+    } else {
+      // Bounce back
+      setStripTransitionCSS("transform 200ms ease-out");
+      setStripOffsetPx(0);
+      setTimeout(() => setStripTransitionCSS("none"), 200);
+    }
+    dragState.current = null;
+  }, [commitWeekChange]);
+
+  const cancelDrag = useCallback(() => {
+    const ds = dragState.current;
+    if (!ds) return;
+    ds.active = false;
+    dragState.current = null;
+    setStripTransitionCSS("transform 200ms ease-out");
+    setStripOffsetPx(0);
+    setTimeout(() => setStripTransitionCSS("none"), 200);
+  }, []);
+
+  // ── Imperative non-passive touchmove (allows preventDefault for scroll lock) ──
+  useEffect(() => {
+    const el = stickyRef.current;
+    if (!el) return;
+    const onMove = (e: TouchEvent) => {
+      const ds = dragState.current;
+      if (!ds?.active) return;
+      // Lock page scroll once a clear horizontal drag starts
+      if (Math.abs(ds.lastX - ds.startX) > 5) e.preventDefault();
+      moveDrag(e.touches[0].clientX);
+    };
+    el.addEventListener("touchmove", onMove, { passive: false });
+    return () => el.removeEventListener("touchmove", onMove);
+  }, [moveDrag]);
+
+  // ── React event handlers ───────────────────────────────────────────────────
+  const handleTouchStart  = (e: React.TouchEvent) => startDrag(e.touches[0].clientX);
+  const handleTouchEnd    = () => endDrag();
+  const handleTouchCancel = () => cancelDrag();
+  const handleMouseDown   = (e: React.MouseEvent) => startDrag(e.clientX);
+  const handleMouseMove   = (e: React.MouseEvent) => moveDrag(e.clientX);
+  const handleMouseUp     = () => endDrag();
+  const handleMouseLeave  = () => { if (dragState.current?.active) endDrag(); };
+
+  // ── Day button renderer (shared across all three panels) ───────────────────
+  const renderDayButton = (date: Date, i: number, interactive: boolean) => {
+    const dayKey     = date.toISOString().slice(0, 10);
+    const isSelected = interactive && i === selectedDayIdx;
+    const isToday    = dayKey === todayKey;
+    const hasOutfit  = !!plan[dayKey];
+
+    return (
+      <button
+        key={dayKey}
+        onClick={interactive ? () => {
+          setSelectedDayIdx(i);
+          dayRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "start" });
+        } : undefined}
+        className="flex-1 flex flex-col items-center gap-[3px] py-1"
+        style={{ pointerEvents: interactive ? "auto" : "none" }}
+        tabIndex={interactive ? 0 : -1}
+      >
+        <span className="text-[10px] font-medium text-muted-foreground" style={{ letterSpacing: "0.06em" }}>
+          {DAY_LETTER[i]}
+        </span>
+        <div
+          className="w-[28px] h-[28px] flex items-center justify-center rounded-full"
+          style={{ backgroundColor: isSelected ? "#C8A45A" : "transparent" }}
+        >
+          <span
+            className="text-[14px] leading-none"
+            style={{
+              fontWeight: isSelected || isToday ? 700 : 500,
+              color: isSelected ? "#1A1209" : isToday ? "#FFFFFF" : "hsl(var(--muted-foreground))",
+            }}
+          >
+            {date.getDate()}
+          </span>
+        </div>
+        <div
+          className="w-[4px] h-[4px] rounded-full"
+          style={{ backgroundColor: hasOutfit ? "#C8A45A" : "transparent" }}
+        />
+      </button>
+    );
   };
 
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="pb-6">
       {/* Title + profile */}
@@ -224,24 +327,26 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
       </div>
 
       {/* ── Sticky week strip ───────────────────────────────────────────── */}
-      {/* overflow-hidden on the same element as backdrop-filter is fine —
-          it clips children (slide animation, rounded corners) without breaking blur */}
       <div
+        ref={stickyRef}
         className="sticky top-0 z-10 mx-4 animate-reveal-up liquid-glass-card rounded-2xl overflow-hidden"
         style={{ animationDelay: "30ms", userSelect: "none" }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
         onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
       >
         <div className="px-4 pt-3 pb-2">
-          {/* Month label row + week nav arrows */}
+          {/* Month label + nav arrows */}
           <div className="flex items-center justify-between mb-2">
             <button
               className="text-[12px] font-bold uppercase active:opacity-60 transition-opacity"
               style={{ letterSpacing: "0.12em" }}
               onClick={() => {
+                if (isAnimating.current) return;
                 const dates = getWeekDates(0);
                 const today = new Date().toISOString().slice(0, 10);
                 const idx = dates.findIndex(d => d.toISOString().slice(0, 10) === today);
@@ -254,7 +359,7 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
             </button>
             <div className="flex items-center gap-0.5">
               <button
-                onClick={() => changeWeek(-1)}
+                onClick={() => commitWeekChange(-1)}
                 className="w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground active:text-foreground active:bg-muted/40 transition-colors"
                 aria-label="Previous week"
               >
@@ -263,7 +368,7 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
                 </svg>
               </button>
               <button
-                onClick={() => changeWeek(1)}
+                onClick={() => commitWeekChange(1)}
                 className="w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground active:text-foreground active:bg-muted/40 transition-colors"
                 aria-label="Next week"
               >
@@ -274,69 +379,32 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
             </div>
           </div>
 
-          {/* overflow-hidden here is the immediate parent of the transform —
-              closest-ancestor clipping is most reliable when the browser
-              promotes the animated child to its own compositor layer */}
-          <div className="overflow-hidden">
-          <div
-            className="flex"
-            style={{
-              transform: `translateX(${stripTranslate}%)`,
-              transition: stripTransition ? "transform 150ms ease" : "none",
-            }}
-          >
-            {weekDates.map((date, i) => {
-              const dayKey    = date.toISOString().slice(0, 10);
-              const isSelected = i === selectedDayIdx;
-              const isToday   = dayKey === todayKey;
-              const hasOutfit = !!plan[dayKey];
-
-              return (
-                <button
-                  key={dayKey}
-                  onClick={() => {
-                    setSelectedDayIdx(i);
-                    dayRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
-                  className="flex-1 flex flex-col items-center gap-[3px] py-1"
-                >
-                  {/* Single-letter day */}
-                  <span
-                    className="text-[10px] font-medium text-muted-foreground"
-                    style={{ letterSpacing: "0.06em" }}
-                  >
-                    {DAY_LETTER[i]}
-                  </span>
-
-                  {/* Date number — gold circle when selected */}
-                  <div
-                    className="w-[28px] h-[28px] flex items-center justify-center rounded-full"
-                    style={{ backgroundColor: isSelected ? "#C8A45A" : "transparent" }}
-                  >
-                    <span
-                      className="text-[14px] leading-none"
-                      style={{
-                        fontWeight: isSelected || isToday ? 700 : 500,
-                        color: isSelected
-                          ? "#1A1209"
-                          : isToday
-                          ? "#FFFFFF"
-                          : "hsl(var(--muted-foreground))",
-                      }}
-                    >
-                      {date.getDate()}
-                    </span>
-                  </div>
-
-                  {/* Assignment dot */}
-                  <div
-                    className="w-[4px] h-[4px] rounded-full"
-                    style={{ backgroundColor: hasOutfit ? "#C8A45A" : "transparent" }}
-                  />
-                </button>
-              );
-            })}
-          </div>
+          {/* Three-panel track — 300% wide, centered on panel 2 at rest.
+              During drag, stripOffsetPx shifts the track in real-time.
+              overflow-hidden on the outer sticky card clips the panels. */}
+          <div ref={stripContainerRef} className="overflow-hidden">
+            <div
+              style={{
+                display: "flex",
+                width: "300%",
+                transform: `translateX(calc(-33.333% + ${stripOffsetPx}px))`,
+                transition: stripTransitionCSS,
+                willChange: "transform",
+              }}
+            >
+              {/* Panel 1 — prev week */}
+              <div style={{ width: "33.333%" }} className="flex">
+                {prevWeekDates.map((date, i) => renderDayButton(date, i, false))}
+              </div>
+              {/* Panel 2 — current week (interactive) */}
+              <div style={{ width: "33.333%" }} className="flex">
+                {weekDates.map((date, i) => renderDayButton(date, i, true))}
+              </div>
+              {/* Panel 3 — next week */}
+              <div style={{ width: "33.333%" }} className="flex">
+                {nextWeekDates.map((date, i) => renderDayButton(date, i, false))}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -357,23 +425,16 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
           return (
             <div
               key={dayKey}
-              ref={(el) => { dayRefs.current[i] = el; }}
+              ref={el => { dayRefs.current[i] = el; }}
               className="animate-reveal-up"
-              style={{
-                animationDelay: `${(i + 1) * 45 + 30}ms`,
-                marginBottom: "16px",
-                scrollMarginTop: "90px",
-              }}
+              style={{ animationDelay: `${(i + 1) * 45 + 30}ms`, marginBottom: "16px", scrollMarginTop: "90px" }}
             >
               {/* Day + weather header */}
               <div className="flex items-center justify-between px-1 mb-1.5">
                 <div className="flex items-center gap-1.5">
                   <span
                     className="text-[12px] font-bold uppercase"
-                    style={{
-                      letterSpacing: "0.12em",
-                      color: isToday ? "hsl(var(--gold))" : "hsl(var(--muted-foreground))",
-                    }}
+                    style={{ letterSpacing: "0.12em", color: isToday ? "hsl(var(--gold))" : "hsl(var(--muted-foreground))" }}
                   >
                     {DAY_SHORT[i]}
                   </span>
@@ -402,7 +463,6 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
               >
                 {outfit ? (
                   <div className="flex">
-                    {/* Vertical color bars */}
                     <div className="flex flex-shrink-0 gap-[2px]" style={{ width: 36 }}>
                       {outfit.pieces.map((p, pi) => (
                         <div key={pi} style={{ backgroundColor: p.hex, flex: 1 }} />
@@ -421,14 +481,14 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
                           )}
                         </div>
                         <button
-                          onClick={(e) => { e.stopPropagation(); clearDay(dayKey); }}
+                          onClick={e => { e.stopPropagation(); clearDay(dayKey); }}
                           className="w-8 h-8 flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors active:scale-[0.92] flex-shrink-0"
                         >
                           ✕
                         </button>
                       </div>
                       <p className="text-muted-foreground text-[13px] mt-1.5 leading-normal">
-                        {outfit.pieces.map((p) => p.name).join(" · ")}
+                        {outfit.pieces.map(p => p.name).join(" · ")}
                       </p>
                     </div>
                   </div>
@@ -449,7 +509,7 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
         dayLabel={sheetDay?.label ?? ""}
         currentOutfitId={sheetDay ? plan[sheetDay.key] : undefined}
         allOutfits={allOutfitsForPicker}
-        onSelect={(id) => sheetDay && assignOutfit(sheetDay.key, id)}
+        onSelect={id => sheetDay && assignOutfit(sheetDay.key, id)}
         onClose={() => setSheetDay(null)}
       />
     </div>
