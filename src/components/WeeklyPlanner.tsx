@@ -75,10 +75,10 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
   const todayKey  = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
-  const monthLabel = useMemo(
-    () => weekDates[0].toLocaleDateString("en-US", { month: "short", year: "numeric" }).toUpperCase(),
-    [weekDates]
-  );
+  const monthLabel = useMemo(() => ({
+    month: weekDates[0].toLocaleDateString("en-US", { month: "short" }).toUpperCase(),
+    year:  weekDates[0].getFullYear(),
+  }), [weekDates]);
 
   // Read stored zip code into state so the weather hook re-fetches when it's first saved.
   const zipKey = user ? `capsule-zip-${user.id}` : null;
@@ -224,17 +224,11 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
       </div>
 
       {/* ── Sticky week strip ───────────────────────────────────────────── */}
-      {/* Glass goes on the outermost sticky div — any overflow on a parent
-          kills backdrop-filter, so we only clip the animated columns row inside */}
+      {/* overflow-hidden on the same element as backdrop-filter is fine —
+          it clips children (slide animation, rounded corners) without breaking blur */}
       <div
-        className="sticky top-0 z-10 animate-reveal-up"
-        style={{
-          animationDelay: "30ms",
-          userSelect: "none",
-          background: "rgba(16, 14, 13, 0.65)",
-          backdropFilter: "blur(24px) saturate(160%)",
-          WebkitBackdropFilter: "blur(24px) saturate(160%)",
-        }}
+        className="sticky top-0 z-10 mx-4 animate-reveal-up liquid-glass-card rounded-2xl overflow-hidden"
+        style={{ animationDelay: "30ms", userSelect: "none" }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
@@ -242,17 +236,48 @@ const WeeklyPlanner = ({ refreshRef }: WeeklyPlannerProps) => {
         onMouseLeave={handleMouseLeave}
       >
         <div className="px-4 pt-3 pb-2">
-          {/* Month label */}
-          <p
-            className="text-[10px] font-medium text-muted-foreground mb-2"
-            style={{ letterSpacing: "0.15em" }}
-          >
-            {monthLabel}
-          </p>
+          {/* Month label row + week nav arrows */}
+          <div className="flex items-center justify-between mb-2">
+            <button
+              className="text-[12px] font-bold uppercase active:opacity-60 transition-opacity"
+              style={{ letterSpacing: "0.12em" }}
+              onClick={() => {
+                const dates = getWeekDates(0);
+                const today = new Date().toISOString().slice(0, 10);
+                const idx = dates.findIndex(d => d.toISOString().slice(0, 10) === today);
+                setWeekOffset(0);
+                setSelectedDayIdx(idx >= 0 ? idx : 0);
+              }}
+            >
+              <span className="text-foreground">{monthLabel.month}</span>
+              <span className="text-muted-foreground"> {monthLabel.year}</span>
+            </button>
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={() => changeWeek(-1)}
+                className="w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground active:text-foreground active:bg-muted/40 transition-colors"
+                aria-label="Previous week"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <button
+                onClick={() => changeWeek(1)}
+                className="w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground active:text-foreground active:bg-muted/40 transition-colors"
+                aria-label="Next week"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+          </div>
 
-          {/* Day columns — overflow clipped here so slide animation stays contained
-              without affecting the backdrop-filter on the outer sticky div */}
-          <div className="overflow-x-hidden">
+          {/* overflow-hidden here is the immediate parent of the transform —
+              closest-ancestor clipping is most reliable when the browser
+              promotes the animated child to its own compositor layer */}
+          <div className="overflow-hidden">
           <div
             className="flex"
             style={{
