@@ -75,21 +75,34 @@ export function useInsightsData(): { data: InsightsData | null; loading: boolean
       const yearMonth = new Date().toISOString().slice(0, 7);
       const outfitsThisMonth = assignments.filter(a => a.day_key.startsWith(yearMonth)).length;
 
-      // ── topItems: outfit-appearance count per item ────────────
-      // Computed from already-fetched outfits — no extra queries needed.
-      const itemOutfitCountMap = new Map<string, number>();
-      outfits.forEach(o => {
-        (o.pieces as OutfitPiece[]).forEach(p => {
-          if (p.item_id) {
-            itemOutfitCountMap.set(p.item_id, (itemOutfitCountMap.get(p.item_id) ?? 0) + 1);
-          }
-        });
+      // ── Shared: planner-assignment count per outfit ───────────
+      // Built once and reused for topItems, cpwItems, and mostRepeatedOutfits.
+      const outfitAssignCounts = new Map<string, number>();
+      assignments.forEach(a => {
+        outfitAssignCounts.set(a.outfit_id, (outfitAssignCounts.get(a.outfit_id) ?? 0) + 1);
       });
+
+      // ── Planner-based wear count per item ─────────────────────
+      // Sums assignment counts across every outfit each item appears in.
+      // This is the single "wears" definition used by topItems AND cpwItems.
+      const itemWearCountMap = new Map<string, number>();
+      outfits.forEach(o => {
+        const assignCount = outfitAssignCounts.get(o.id) ?? 0;
+        if (assignCount > 0) {
+          (o.pieces as OutfitPiece[]).forEach(p => {
+            if (p.item_id) {
+              itemWearCountMap.set(p.item_id, (itemWearCountMap.get(p.item_id) ?? 0) + assignCount);
+            }
+          });
+        }
+      });
+
+      // ── topItems ──────────────────────────────────────────────
       const topItems = items
         .map(i => ({
           name: i.name,
           color: i.hex,
-          count: itemOutfitCountMap.get(i.id) ?? 0,
+          count: itemWearCountMap.get(i.id) ?? 0,
           category: i.category || "Uncategorized",
         }))
         .sort((a, b) => b.count - a.count);
@@ -157,11 +170,7 @@ export function useInsightsData(): { data: InsightsData | null; loading: boolean
       }));
 
       // ── mostRepeatedOutfits ───────────────────────────────────
-      const outfitCountMap = new Map<string, number>();
-      assignments.forEach(a => {
-        outfitCountMap.set(a.outfit_id, (outfitCountMap.get(a.outfit_id) ?? 0) + 1);
-      });
-      const mostRepeatedOutfits = Array.from(outfitCountMap.entries())
+      const mostRepeatedOutfits = Array.from(outfitAssignCounts.entries())
         .sort(([, a], [, b]) => b - a)
         .slice(0, 3)
         .map(([id, count]) => ({
@@ -170,16 +179,11 @@ export function useInsightsData(): { data: InsightsData | null; loading: boolean
         }));
 
       // ── cpwItems ──────────────────────────────────────────────
-      const outfitAssignCounts = new Map<string, number>();
-      assignments.forEach(a => {
-        outfitAssignCounts.set(a.outfit_id, (outfitAssignCounts.get(a.outfit_id) ?? 0) + 1);
-      });
+      // Uses the same itemWearCountMap as topItems — numbers are identical.
       const cpwItems = items
         .filter(i => i.price != null && i.price > 0)
         .map(i => {
-          const wearCount = outfits
-            .filter(o => (o.pieces as OutfitPiece[]).some(p => p.item_id === i.id))
-            .reduce((sum, o) => sum + (outfitAssignCounts.get(o.id) ?? 0), 0);
+          const wearCount = itemWearCountMap.get(i.id) ?? 0;
           return { name: i.name, price: i.price!, wearCount, cpw: Math.round(i.price! / wearCount) };
         })
         .filter(i => i.wearCount > 0)
