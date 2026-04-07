@@ -86,6 +86,8 @@ function DrawerCloseButton() {
 export default function InsightsPage() {
   const navigate = useNavigate();
   const { data, loading } = useInsightsData();
+  const [freqDrawerOpen, setFreqDrawerOpen] = useState(false);
+  const [topItemsDrawerOpen, setTopItemsDrawerOpen] = useState(false);
 
   if (loading) {
     return (
@@ -101,8 +103,6 @@ export default function InsightsPage() {
     plannerCoverage: [], mostRepeatedOutfits: [], cpwItems: [],
   };
 
-  const [freqDrawerOpen, setFreqDrawerOpen] = useState(false);
-  const [topItemsDrawerOpen, setTopItemsDrawerOpen] = useState(false);
   const totalFrequencyCount = d.outfitFrequency.reduce((s, w) => s + w.count, 0);
   const freqAllZero = d.outfitFrequency.every(w => w.count === 0);
 
