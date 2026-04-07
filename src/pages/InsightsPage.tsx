@@ -23,6 +23,10 @@ import { useInsightsData } from "@/hooks/useInsightsData";
 
 const PIE_COLORS = ["#9B4A2A", "#6B7A3A", "#2E6E68", "#5C4A7A", "#A07030", "#4A6A8A", "#8A3A4A", "#3A6A70"];
 
+function toTitleCase(s: string): string {
+  return s.replace(/\S+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
+
 // ── Shared primitives ─────────────────────────────────────────
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -186,7 +190,7 @@ export default function InsightsPage() {
                             : "bg-muted/60 text-muted-foreground"
                         }`}
                       >
-                        {cat}
+                        {toTitleCase(cat)}
                       </button>
                     ))}
                   </div>
@@ -289,7 +293,7 @@ export default function InsightsPage() {
                             className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
                             style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
                           />
-                          <span className="text-[11px] text-muted-foreground">{entry.category}</span>
+                          <span className="text-[11px] text-muted-foreground">{toTitleCase(entry.category)}</span>
                         </div>
                       ))}
                     </div>

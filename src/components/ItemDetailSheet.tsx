@@ -9,6 +9,10 @@ import {
 import type { WardrobeItem } from "@/data/darkautumn";
 import { useItemWearCount } from "@/hooks/useWearCounts";
 
+function toTitleCase(s: string): string {
+  return s.replace(/\S+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
+
 interface ItemDetailSheetProps {
   open: boolean;
   item: WardrobeItem | null;
@@ -76,7 +80,7 @@ const ItemDetailSheet = ({ open, item, brand, category, onClose, onEdit, onDelet
             <DetailRow label="Brand" value={brand} />
           )}
           {category && (
-            <DetailRow label="Category" value={category} />
+            <DetailRow label="Category" value={toTitleCase(category)} />
           )}
           <DetailRow label="Color" value={item.color} />
           <div className="flex items-center justify-between">
