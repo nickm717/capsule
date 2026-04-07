@@ -49,30 +49,25 @@ export function useItemWearCount(itemId: string): { count: number; loading: bool
     let cancelled = false;
 
     async function load() {
-      // Step 1: find outfits whose pieces JSONB contains an object with this item_id
-      const { data: outfits } = await supabase
-        .from("custom_outfits")
-        .select("id")
-        .contains("pieces", [{ item_id: itemId }])
-        .eq("user_id", user!.id);
+      // Fetch all outfits with pieces and filter in JS — avoids broken JSONB
+      // containment queries (.contains with nested objects returns empty).
+      const [outfitsRes, assignmentsRes] = await Promise.all([
+        supabase.from("custom_outfits").select("id, pieces").eq("user_id", user!.id),
+        supabase.from("planner_assignments").select("outfit_id").eq("user_id", user!.id),
+      ]);
 
-      if (!outfits || outfits.length === 0) {
-        if (!cancelled) { setCount(0); setLoading(false); }
-        return;
-      }
+      if (cancelled) return;
 
-      // Step 2: count planner_assignments referencing those outfits.
-      // planner_assignments.outfit_id is text; outfit ids are uuid strings — string comparison works.
-      const outfitIds = outfits.map((o) => String(o.id));
+      const matchingIds = new Set(
+        (outfitsRes.data ?? [])
+          .filter(o => (o.pieces as { item_id?: string }[]).some(p => p.item_id === itemId))
+          .map(o => String(o.id))
+      );
 
-      const { count: c } = await supabase
-        .from("planner_assignments")
-        .select("*", { count: "exact", head: true })
-        .in("outfit_id", outfitIds)
-        .eq("user_id", user!.id);
+      const c = (assignmentsRes.data ?? []).filter(a => matchingIds.has(a.outfit_id)).length;
 
       if (!cancelled) {
-        setCount(c ?? 0);
+        setCount(c);
         setLoading(false);
       }
     }
