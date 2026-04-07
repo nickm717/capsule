@@ -8,7 +8,7 @@ export interface InsightsData {
   totalOutfits: number;
   outfitsThisMonth: number;
   wornRate: number;
-  topItems: { name: string; color: string; count: number }[];
+  topItems: { name: string; color: string; count: number; category: string }[];
   ghostItems: { name: string; color: string }[];
   categoryBreakdown: { category: string; count: number }[];
   outfitFrequency: { week: string; count: number }[];
@@ -86,9 +86,13 @@ export function useInsightsData(): { data: InsightsData | null; loading: boolean
         });
       });
       const topItems = items
-        .map(i => ({ name: i.name, color: i.hex, count: itemOutfitCountMap.get(i.id) ?? 0 }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
+        .map(i => ({
+          name: i.name,
+          color: i.hex,
+          count: itemOutfitCountMap.get(i.id) ?? 0,
+          category: i.category || "Uncategorized",
+        }))
+        .sort((a, b) => b.count - a.count);
 
       // ── ghostItems — items absent from every outfit ───────────
       const usedItemIds = new Set<string>();

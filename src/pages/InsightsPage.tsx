@@ -89,6 +89,7 @@ export default function InsightsPage() {
   const { data, loading } = useInsightsData();
   const [freqDrawerOpen, setFreqDrawerOpen] = useState(false);
   const [topItemsDrawerOpen, setTopItemsDrawerOpen] = useState(false);
+  const [topItemsCategory, setTopItemsCategory] = useState("All");
 
   if (loading) {
     return (
@@ -106,6 +107,17 @@ export default function InsightsPage() {
 
   const totalFrequencyCount = d.outfitFrequency.reduce((s, w) => s + w.count, 0);
   const freqAllZero = d.outfitFrequency.every(w => w.count === 0);
+
+  // Categories that have at least one item with count > 0
+  const wornItemCategories = [...new Set(
+    d.topItems.filter(i => i.count > 0).map(i => i.category)
+  )].sort();
+  const topItemsCategories = wornItemCategories.length > 1 ? ["All", ...wornItemCategories] : [];
+
+  const filteredTopItems = (topItemsCategory === "All"
+    ? d.topItems
+    : d.topItems.filter(i => i.category === topItemsCategory)
+  ).filter(i => i.count > 0).slice(0, 5);
 
   return (
     <div className="min-h-screen bg-background" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
@@ -160,28 +172,45 @@ export default function InsightsPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
               {/* Most Worn — tappable */}
-              <Card onClick={d.topItems.length > 0 ? () => setTopItemsDrawerOpen(true) : undefined}>
-                <CardHeader icon={<BarChart2 size={13} />} label="Most Worn" tappable={d.topItems.length > 0} />
-                {d.topItems.length === 0 ? (
+              <Card onClick={filteredTopItems.length > 0 ? () => setTopItemsDrawerOpen(true) : undefined}>
+                <CardHeader icon={<BarChart2 size={13} />} label="Most Worn" tappable={filteredTopItems.length > 0} />
+                {topItemsCategories.length > 0 && (
+                  <div className="flex gap-1.5 flex-wrap mb-3" onClick={e => e.stopPropagation()}>
+                    {topItemsCategories.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={e => { e.stopPropagation(); setTopItemsCategory(cat); }}
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors ${
+                          topItemsCategory === cat
+                            ? "bg-primary/15 text-primary"
+                            : "bg-muted/60 text-muted-foreground"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {filteredTopItems.length === 0 ? (
                   <EmptyState message="Log outfits in the planner to see your most-worn items." />
                 ) : (
                   <>
                     <p className="text-[11px] text-muted-foreground">#1 item</p>
-                    <p className="text-xl font-bold leading-tight mt-0.5 truncate">{d.topItems[0].name}</p>
+                    <p className="text-xl font-bold leading-tight mt-0.5 truncate">{filteredTopItems[0].name}</p>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      {d.topItems[0].count} {d.topItems[0].count === 1 ? "wear" : "wears"}
+                      {filteredTopItems[0].count} {filteredTopItems[0].count === 1 ? "wear" : "wears"}
                     </p>
                     <div className="mt-3">
                       <ResponsiveContainer width="100%" height={44}>
                         <BarChart
-                          data={d.topItems}
+                          data={filteredTopItems}
                           layout="vertical"
                           margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
                         >
                           <YAxis type="category" dataKey="name" hide />
                           <XAxis type="number" hide />
                           <Bar dataKey="count" radius={[0, 3, 3, 0]} barSize={7}>
-                            {d.topItems.map((entry, i) => (
+                            {filteredTopItems.map((entry, i) => (
                               <Cell key={i} fill={entry.color} />
                             ))}
                           </Bar>
@@ -433,12 +462,29 @@ export default function InsightsPage() {
             <p className="text-sm text-muted-foreground mt-1">Items most frequently included in outfits</p>
           </DrawerHeader>
           <div className="px-4 pb-8 overflow-y-auto">
-            {d.topItems.length > 0 && (
+            {topItemsCategories.length > 0 && (
+              <div className="flex gap-2 flex-wrap mt-4">
+                {topItemsCategories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setTopItemsCategory(cat)}
+                    className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
+                      topItemsCategory === cat
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted/60 text-muted-foreground"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
+            {filteredTopItems.length > 0 && (
               <>
                 <div className="mt-4">
-                  <ResponsiveContainer width="100%" height={d.topItems.length * 36 + 8}>
+                  <ResponsiveContainer width="100%" height={filteredTopItems.length * 36 + 8}>
                     <BarChart
-                      data={d.topItems}
+                      data={filteredTopItems}
                       layout="vertical"
                       margin={{ top: 0, right: 12, left: 0, bottom: 0 }}
                     >
@@ -452,7 +498,7 @@ export default function InsightsPage() {
                         width={90}
                       />
                       <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                        {d.topItems.map((entry, i) => (
+                        {filteredTopItems.map((entry, i) => (
                           <Cell key={i} fill={entry.color} />
                         ))}
                       </Bar>
@@ -460,7 +506,7 @@ export default function InsightsPage() {
                   </ResponsiveContainer>
                 </div>
                 <div className="mt-6 divide-y divide-border/40">
-                  {d.topItems.map((item, i) => (
+                  {filteredTopItems.map((item, i) => (
                     <div key={i} className="flex items-center gap-3 py-2.5">
                       <span className="text-xs text-muted-foreground w-4 text-right shrink-0">#{i + 1}</span>
                       <div
