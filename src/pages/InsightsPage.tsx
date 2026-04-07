@@ -466,23 +466,6 @@ export default function InsightsPage() {
             <p className="text-sm text-muted-foreground mt-1">Items most frequently included in outfits</p>
           </DrawerHeader>
           <div className="px-4 pb-8 overflow-y-auto">
-            {topItemsCategories.length > 0 && (
-              <div className="flex gap-2 flex-wrap mt-4">
-                {topItemsCategories.map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => setTopItemsCategory(cat)}
-                    className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
-                      topItemsCategory === cat
-                        ? "bg-primary/15 text-primary"
-                        : "bg-muted/60 text-muted-foreground"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            )}
             {filteredTopItems.length > 0 && (
               <>
                 <div className="mt-4">
@@ -509,7 +492,24 @@ export default function InsightsPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-6 divide-y divide-border/40">
+                {topItemsCategories.length > 0 && (
+                  <div className="flex gap-2 flex-wrap mt-4">
+                    {topItemsCategories.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setTopItemsCategory(cat)}
+                        className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
+                          topItemsCategory === cat
+                            ? "bg-primary/15 text-primary"
+                            : "bg-muted/60 text-muted-foreground"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-4 divide-y divide-border/40">
                   {filteredTopItems.map((item, i) => (
                     <div key={i} className="flex items-center gap-3 py-2.5">
                       <span className="text-xs text-muted-foreground w-4 text-right shrink-0">#{i + 1}</span>
