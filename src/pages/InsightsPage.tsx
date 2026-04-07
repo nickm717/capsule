@@ -10,6 +10,7 @@ import {
   Cell,
   PieChart,
   Pie,
+  Tooltip,
 } from "recharts";
 import {
   Drawer,
@@ -239,6 +240,17 @@ export default function InsightsPage() {
                             <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                           ))}
                         </Pie>
+                        <Tooltip
+                          formatter={(value: number, name: string) => [value, name]}
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--popover))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "0.5rem",
+                            fontSize: 12,
+                          }}
+                          itemStyle={{ color: "hsl(var(--foreground))" }}
+                          cursor={false}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2">
