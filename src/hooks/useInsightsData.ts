@@ -69,28 +69,24 @@ export function useInsightsData(): { data: InsightsData | null; loading: boolean
       const outfits = outfitsRes.data ?? [];
       const assignments = assignmentsRes.data ?? [];
 
-      // ── topItems: one JSONB-containment COUNT per item (parallel) ──
-      const topItemCounts = await Promise.all(
-        items.map(async (item) => {
-          const { count } = await supabase
-            .from("custom_outfits")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", uid)
-            .contains("pieces", [{ item_id: item.id }]);
-          return { name: item.name, color: item.hex, count: count ?? 0 };
-        })
-      );
-
-      if (cancelled) return;
-
       // ── Scalar counts ─────────────────────────────────────────
       const totalItems = items.length;
       const totalOutfits = outfits.length;
       const yearMonth = new Date().toISOString().slice(0, 7);
       const outfitsThisMonth = assignments.filter(a => a.day_key.startsWith(yearMonth)).length;
 
-      // ── topItems ──────────────────────────────────────────────
-      const topItems = [...topItemCounts]
+      // ── topItems: outfit-appearance count per item ────────────
+      // Computed from already-fetched outfits — no extra queries needed.
+      const itemOutfitCountMap = new Map<string, number>();
+      outfits.forEach(o => {
+        (o.pieces as OutfitPiece[]).forEach(p => {
+          if (p.item_id) {
+            itemOutfitCountMap.set(p.item_id, (itemOutfitCountMap.get(p.item_id) ?? 0) + 1);
+          }
+        });
+      });
+      const topItems = items
+        .map(i => ({ name: i.name, color: i.hex, count: itemOutfitCountMap.get(i.id) ?? 0 }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
 
