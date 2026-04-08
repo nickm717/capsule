@@ -9,12 +9,13 @@ export interface DbOutfit {
   notes: string;
   occasion_id: string;
   created_at: string;
+  archived?: boolean;
 }
 
 export function useOutfits() {
   const { outfits, outfitsLoading, outfitsError, refreshOutfits } = useAppData();
   return {
-    outfits,
+    outfits: outfits.filter((o) => !o.archived),
     loading: outfitsLoading,
     error: outfitsError,
     refetch: refreshOutfits,

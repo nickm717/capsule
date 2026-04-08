@@ -84,6 +84,7 @@ export type Database = {
       }
       custom_outfits: {
         Row: {
+          archived: boolean
           created_at: string
           id: string
           name: string
@@ -94,6 +95,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived?: boolean
           created_at?: string
           id?: string
           name: string
@@ -104,6 +106,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived?: boolean
           created_at?: string
           id?: string
           name?: string

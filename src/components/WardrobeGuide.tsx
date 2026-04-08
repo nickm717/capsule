@@ -7,7 +7,7 @@ import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
 import { useOutfits } from "@/hooks/use-outfits";
 import AddItemSheet from "./AddItemSheet";
 import ItemFormPage from "./ItemFormPage";
-import DeleteItemSheet from "./DeleteItemSheet";
+import DeleteWardrobeItemSheet from "./DeleteWardrobeItemSheet";
 import ItemDetailSheet from "./ItemDetailSheet";
 import WardrobeFilterSheet from "./WardrobeFilterSheet";
 import BrandManagerSheet from "./BrandManagerSheet";
@@ -40,7 +40,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
 
   const { categories: allCategories, loading, error, refetch: fetchItems } = useWardrobeItems();
-  const { outfits, refetch: refreshOutfits } = useOutfits();
+  const { outfits: activeOutfits, refetch: refreshOutfits } = useOutfits();
 
   useEffect(() => {
     if (!openItemId || loading) return;
@@ -79,25 +79,62 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   };
 
   const affectedOutfits = deleteTarget
-    ? outfits.filter((o) => o.pieces.some((p) => p.item_id === deleteTarget.id))
+    ? activeOutfits.filter((o) => o.pieces.some((p) => p.item_id === deleteTarget.id))
     : [];
 
-  const handleDeleteConfirm = async () => {
+  const handleSimpleDelete = async () => {
+    if (!deleteTarget) return;
+    const { error } = await supabase.from("custom_items").delete().eq("id", deleteTarget.id);
+    if (!error) fetchItems();
+    setDeleteTarget(null);
+  };
+
+  const handleDeleteAction = async (action: "swap" | "archive" | "delete-outfits", swapItemId?: string) => {
     if (!deleteTarget) return;
     const itemId = deleteTarget.id;
+
     const { error } = await supabase.from("custom_items").delete().eq("id", itemId);
-    if (!error) {
-      fetchItems();
+    if (error) return;
+    fetchItems();
+
+    if (action === "swap" && swapItemId) {
+      const swapItem = allCategories.flatMap((c) => c.items).find((i) => i.id === swapItemId);
+      const swapCategory = allCategories.find((c) => c.items.some((i) => i.id === swapItemId));
       await Promise.all(
         affectedOutfits.map((outfit) =>
           supabase
             .from("custom_outfits")
-            .update({ pieces: outfit.pieces.filter((p) => p.item_id !== itemId) as any })
+            .update({
+              pieces: outfit.pieces.map((p) =>
+                p.item_id === itemId
+                  ? {
+                      ...p,
+                      item_id: swapItemId,
+                      name: swapItem?.name ?? p.name,
+                      color: swapItem?.color ?? p.color,
+                      hex: swapItem?.hex ?? p.hex,
+                      brand: swapItem?.brand ?? p.brand,
+                      category: swapCategory?.id ?? p.category,
+                    }
+                  : p
+              ) as any,
+            })
             .eq("id", outfit.id)
         )
       );
-      if (affectedOutfits.length > 0) refreshOutfits();
+    } else if (action === "archive") {
+      await Promise.all(
+        affectedOutfits.map((outfit) =>
+          supabase.from("custom_outfits").update({ archived: true } as any).eq("id", outfit.id)
+        )
+      );
+    } else if (action === "delete-outfits") {
+      const outfitIds = affectedOutfits.map((o) => o.id);
+      await supabase.from("planner_assignments").delete().in("outfit_id", outfitIds);
+      await supabase.from("custom_outfits").delete().in("id", outfitIds);
     }
+
+    refreshOutfits();
     setDeleteTarget(null);
   };
 
@@ -451,11 +488,13 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
         onEdit={() => detailItem?.row && handleEdit(detailItem.row)}
         onDelete={() => detailItem && setDeleteTarget({ id: detailItem.item.id, name: detailItem.item.name })}
       />
-      <DeleteItemSheet
+      <DeleteWardrobeItemSheet
         open={!!deleteTarget}
-        itemName={deleteTarget?.name || ""}
-        affectedOutfitCount={affectedOutfits.length}
-        onConfirm={handleDeleteConfirm}
+        item={deleteTarget}
+        affectedOutfits={affectedOutfits}
+        allCategories={allCategories}
+        onAction={handleDeleteAction}
+        onSimpleDelete={handleSimpleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
     </div>
