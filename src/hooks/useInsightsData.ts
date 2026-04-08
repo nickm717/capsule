@@ -11,6 +11,8 @@ export interface InsightsData {
   topItems: { name: string; color: string; count: number; category: string }[];
   ghostItems: { name: string; color: string }[];
   categoryBreakdown: { category: string; count: number }[];
+  brandBreakdown: { brand: string; count: number }[];
+  itemColors: { hex: string; category: string }[];
   outfitFrequency: { week: string; count: number }[];
   plannerCoverage: { weekLabel: string; days: boolean[] }[];
   mostRepeatedOutfits: { name: string; count: number }[];
@@ -51,7 +53,7 @@ export function useInsightsData(): { data: InsightsData | null; loading: boolean
       const [itemsRes, outfitsRes, assignmentsRes] = await Promise.all([
         supabase
           .from("custom_items")
-          .select("id, name, color, hex, category, price, created_at")
+          .select("id, name, color, hex, category, price, brand, created_at")
           .eq("user_id", uid),
         supabase
           .from("custom_outfits")
@@ -138,6 +140,22 @@ export function useInsightsData(): { data: InsightsData | null; loading: boolean
         .map(([category, count]) => ({ category, count }))
         .sort((a, b) => b.count - a.count);
 
+      // ── itemColors ────────────────────────────────────────────
+      const itemColors = items.map(i => ({
+        hex: (i.hex as string) || "",
+        category: (i.category as string) || "Uncategorized",
+      }));
+
+      // ── brandBreakdown ────────────────────────────────────────
+      const brandMap = new Map<string, number>();
+      items.forEach(i => {
+        const b = (i.brand as string | null | undefined)?.trim() || "Unbranded";
+        brandMap.set(b, (brandMap.get(b) ?? 0) + 1);
+      });
+      const brandBreakdown = Array.from(brandMap.entries())
+        .map(([brand, count]) => ({ brand, count }))
+        .sort((a, b) => b.count - a.count);
+
       // ── Week helpers: past 8 weeks ending with current week ───
       const currentWeekStart = getMonday(new Date());
       const weeks = Array.from({ length: 8 }, (_, i) => {
@@ -193,7 +211,7 @@ export function useInsightsData(): { data: InsightsData | null; loading: boolean
       if (!cancelled) {
         setData({
           totalItems, totalOutfits, outfitsThisMonth, wornRate,
-          topItems, ghostItems, categoryBreakdown, outfitFrequency,
+          topItems, ghostItems, categoryBreakdown, brandBreakdown, itemColors, outfitFrequency,
           plannerCoverage, mostRepeatedOutfits, cpwItems,
         });
         setLoading(false);

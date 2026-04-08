@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, ChevronRight, Shirt, TrendingUp, Calendar, BarChart2, Layers, Clock, Star } from "lucide-react";
+import { useTheme } from "next-themes";
+import { getVisibleColor, getSwatch } from "@/lib/colorUtils";
+import { X, ChevronRight, Shirt, TrendingUp, Calendar, BarChart2, Layers, Clock, Star, Tag, Palette } from "lucide-react";
+import { hexToFamily, COLOR_FAMILIES } from "@/lib/colorFamilies";
 import {
   ResponsiveContainer,
   BarChart,
@@ -8,6 +11,7 @@ import {
   XAxis,
   YAxis,
   Cell,
+  LabelList,
   PieChart,
   Pie,
   Tooltip,
@@ -90,10 +94,13 @@ function DrawerCloseButton() {
 
 export default function InsightsPage() {
   const navigate = useNavigate();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
   const { data, loading } = useInsightsData();
   const [freqDrawerOpen, setFreqDrawerOpen] = useState(false);
   const [topItemsDrawerOpen, setTopItemsDrawerOpen] = useState(false);
   const [topItemsCategory, setTopItemsCategory] = useState("All");
+  const [colorFamilyCategory, setColorFamilyCategory] = useState("All");
 
   if (loading) {
     return (
@@ -105,7 +112,7 @@ export default function InsightsPage() {
 
   const d = data ?? {
     totalItems: 0, totalOutfits: 0, outfitsThisMonth: 0, wornRate: 0,
-    topItems: [], ghostItems: [], categoryBreakdown: [], outfitFrequency: [],
+    topItems: [], ghostItems: [], categoryBreakdown: [], brandBreakdown: [], itemColors: [], outfitFrequency: [],
     plannerCoverage: [], mostRepeatedOutfits: [], cpwItems: [],
   };
 
@@ -122,6 +129,26 @@ export default function InsightsPage() {
     ? d.topItems
     : d.topItems.filter(i => i.category === topItemsCategory)
   ).filter(i => i.count > 0).slice(0, 5);
+
+  // Color family breakdown
+  const colorFamilyCategories = (() => {
+    const cats = [...new Set(d.itemColors.map(i => i.category))].sort();
+    return cats.length > 1 ? ["All", ...cats] : [];
+  })();
+  const filteredForFamilies = colorFamilyCategory === "All"
+    ? d.itemColors
+    : d.itemColors.filter(i => i.category === colorFamilyCategory);
+  const colorFamilyBreakdown = (() => {
+    const countMap = new Map<string, number>();
+    filteredForFamilies.forEach(i => {
+      const fid = hexToFamily(i.hex);
+      countMap.set(fid, (countMap.get(fid) ?? 0) + 1);
+    });
+    return COLOR_FAMILIES
+      .map(f => ({ ...f, count: countMap.get(f.id) ?? 0 }))
+      .filter(f => f.count > 0)
+      .sort((a, b) => b.count - a.count);
+  })();
 
   return (
     <div className="min-h-screen bg-background" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
@@ -205,17 +232,18 @@ export default function InsightsPage() {
                       {filteredTopItems[0].count} {filteredTopItems[0].count === 1 ? "wear" : "wears"}
                     </p>
                     <div className="mt-3">
-                      <ResponsiveContainer width="100%" height={44}>
+                      <ResponsiveContainer width="100%" height={filteredTopItems.length * 14}>
                         <BarChart
                           data={filteredTopItems}
                           layout="vertical"
+                          barCategoryGap={5}
                           margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
                         >
                           <YAxis type="category" dataKey="name" hide />
                           <XAxis type="number" hide />
                           <Bar dataKey="count" radius={[0, 3, 3, 0]} barSize={7}>
                             {filteredTopItems.map((entry, i) => (
-                              <Cell key={i} fill={entry.color} />
+                              <Cell key={i} fill={getVisibleColor(entry.color, isDark)} />
                             ))}
                           </Bar>
                         </BarChart>
@@ -235,8 +263,8 @@ export default function InsightsPage() {
                     {d.ghostItems.map((item, i) => (
                       <div key={i} className="flex items-center gap-2.5">
                         <div
-                          className="w-5 h-5 rounded-full flex-shrink-0 border border-border/40"
-                          style={{ backgroundColor: item.color }}
+                          className="w-5 h-5 rounded-full flex-shrink-0"
+                          style={getSwatch(item.color, isDark)}
                         />
                         <span className="text-sm flex-1 truncate">{item.name}</span>
                         <span className="text-xs text-muted-foreground">0 wears</span>
@@ -253,49 +281,68 @@ export default function InsightsPage() {
             <SectionLabel>Wardrobe Makeup</SectionLabel>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Card>
-                <CardHeader icon={<Layers size={13} />} label="By Category" />
+                <CardHeader
+                  icon={
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <rect x="0" y="0" width="6" height="6" rx="1" fill="currentColor" />
+                      <rect x="8" y="0" width="6" height="6" rx="1" fill="currentColor" />
+                      <rect x="0" y="8" width="6" height="6" rx="1" fill="currentColor" />
+                      <rect x="8" y="8" width="6" height="6" rx="1" fill="currentColor" />
+                    </svg>
+                  }
+                  label="By Category"
+                />
                 {d.categoryBreakdown.length === 0 ? (
                   <EmptyState message="Add items to your wardrobe to see the breakdown." />
                 ) : (
                   <>
-                    <ResponsiveContainer width="100%" height={140}>
-                      <PieChart>
-                        <Pie
-                          data={d.categoryBreakdown}
-                          dataKey="count"
-                          nameKey="category"
-                          innerRadius="45%"
-                          outerRadius="75%"
-                          paddingAngle={2}
-                          strokeWidth={0}
-                        >
-                          {d.categoryBreakdown.map((_, i) => (
-                            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          formatter={(value: number, name: string) => [value, name]}
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--popover))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "0.5rem",
-                            fontSize: 12,
-                          }}
-                          itemStyle={{ color: "hsl(var(--foreground))" }}
-                          cursor={false}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2">
-                      {d.categoryBreakdown.map((entry, i) => (
-                        <div key={i} className="flex items-center gap-1.5">
+                    <div className="relative">
+                      <ResponsiveContainer width="100%" height={160}>
+                        <PieChart>
+                          <Pie
+                            data={d.categoryBreakdown}
+                            dataKey="count"
+                            nameKey="category"
+                            innerRadius="51%"
+                            outerRadius="75%"
+                            paddingAngle={2}
+                            stroke="hsl(var(--card))"
+                            strokeWidth={3}
+                          >
+                            {d.categoryBreakdown.map((_, i) => (
+                              <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span className="text-2xl font-bold text-foreground leading-none">{d.totalItems}</span>
+                        <span className="text-[11px] text-muted-foreground mt-1">items</span>
+                      </div>
+                    </div>
+                    <div className="mt-1 border-t border-border/40">
+                      {d.categoryBreakdown.map((entry, i) => {
+                        const pct = d.totalItems > 0 ? Math.round((entry.count / d.totalItems) * 100) : 0;
+                        const color = PIE_COLORS[i % PIE_COLORS.length];
+                        return (
                           <div
-                            className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
-                            style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
-                          />
-                          <span className="text-[11px] text-muted-foreground">{toTitleCase(entry.category)}</span>
-                        </div>
-                      ))}
+                            key={i}
+                            className={`flex items-center justify-between py-2 ${i < d.categoryBreakdown.length - 1 ? "border-b border-border/30" : ""}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="rounded-full flex-shrink-0"
+                                style={{ width: 7, height: 7, backgroundColor: color }}
+                              />
+                              <span className="text-[12px] text-muted-foreground">{toTitleCase(entry.category)}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[13px] font-medium text-foreground">{entry.count}</span>
+                              <span className="text-[11px]" style={{ color }}>{pct}%</span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </>
                 )}
@@ -325,6 +372,108 @@ export default function InsightsPage() {
                     ))}
                   </div>
                 )}
+              </Card>
+
+              <Card>
+                <CardHeader icon={<Tag size={13} />} label="By Brand" />
+                {d.brandBreakdown.length === 0 ? (
+                  <EmptyState message="Add brands to your items to see your brand breakdown." />
+                ) : (
+                  <ResponsiveContainer width="100%" height={Math.min(d.brandBreakdown.length, 8) * 28 + 8}>
+                    <BarChart
+                      data={d.brandBreakdown.slice(0, 8)}
+                      layout="vertical"
+                      margin={{ top: 0, right: 32, left: 0, bottom: 0 }}
+                    >
+                      <YAxis
+                        type="category"
+                        dataKey="brand"
+                        tick={{ fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                        width={80}
+                      />
+                      <XAxis type="number" hide />
+                      <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 3, 3, 0]}>
+                        <LabelList
+                          dataKey="count"
+                          position="right"
+                          style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </Card>
+
+              <Card>
+                <CardHeader icon={<Palette size={13} />} label="Color Families" />
+                {colorFamilyCategories.length > 0 && (
+                  <div className="flex gap-1.5 flex-wrap mb-3">
+                    {colorFamilyCategories.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setColorFamilyCategory(cat)}
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors ${
+                          colorFamilyCategory === cat
+                            ? "bg-primary/15 text-primary"
+                            : "bg-muted/60 text-muted-foreground"
+                        }`}
+                      >
+                        {toTitleCase(cat)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {colorFamilyBreakdown.length === 0 ? (
+                  <EmptyState message="Add items to your wardrobe to see your color palette." />
+                ) : (() => {
+                  const maxCount = colorFamilyBreakdown[0].count;
+                  const total = filteredForFamilies.length;
+                  return (
+                    <div className="mt-1">
+                      {colorFamilyBreakdown.map((family, i) => {
+                        const pct = total > 0 ? Math.round((family.count / total) * 100) : 0;
+                        const barWidth = maxCount > 0 ? (family.count / maxCount) * 100 : 0;
+                        const visibleColor = getVisibleColor(family.hex, isDark);
+                        return (
+                          <div
+                            key={family.id}
+                            className={`flex items-center gap-2.5 py-2 ${i < colorFamilyBreakdown.length - 1 ? "border-b border-border/[0.25]" : ""}`}
+                          >
+                            {/* Swatch */}
+                            <div
+                              className="rounded-full flex-shrink-0"
+                              style={{ width: 9, height: 9, ...getSwatch(family.hex, isDark) }}
+                            />
+                            {/* Name */}
+                            <span className="text-[12px] text-muted-foreground w-[58px] flex-shrink-0">
+                              {family.label}
+                            </span>
+                            {/* Bar */}
+                            <div className="flex-1 h-[5px] rounded-[3px] overflow-hidden" style={{ backgroundColor: "hsl(var(--muted) / 0.4)" }}>
+                              <div
+                                className="h-full rounded-[3px]"
+                                style={{ width: `${barWidth}%`, backgroundColor: visibleColor }}
+                              />
+                            </div>
+                            {/* Count */}
+                            <span className="text-[12px] font-medium text-foreground w-5 text-right flex-shrink-0">
+                              {family.count}
+                            </span>
+                            {/* Percentage */}
+                            <span
+                              className="text-[11px] w-7 text-right flex-shrink-0"
+                              style={{ color: visibleColor }}
+                            >
+                              {pct}%
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </Card>
             </div>
           </section>
@@ -486,7 +635,7 @@ export default function InsightsPage() {
                       />
                       <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                         {filteredTopItems.map((entry, i) => (
-                          <Cell key={i} fill={entry.color} />
+                          <Cell key={i} fill={getVisibleColor(entry.color, isDark)} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -514,8 +663,8 @@ export default function InsightsPage() {
                     <div key={i} className="flex items-center gap-3 py-2.5">
                       <span className="text-xs text-muted-foreground w-4 text-right shrink-0">#{i + 1}</span>
                       <div
-                        className="w-4 h-4 rounded-full shrink-0 border border-border/30"
-                        style={{ backgroundColor: item.color }}
+                        className="w-4 h-4 rounded-full shrink-0"
+                        style={getSwatch(item.color, isDark)}
                       />
                       <span className="text-sm flex-1 truncate">{item.name}</span>
                       <span className="text-sm font-semibold">{item.count}</span>
