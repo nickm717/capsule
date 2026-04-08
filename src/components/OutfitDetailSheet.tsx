@@ -9,6 +9,7 @@ import {
 import { temperatureBadges } from "@/data/darkautumn";
 import type { OutfitPiece } from "@/data/darkautumn";
 import AppBadge from "./AppBadge";
+import { useOutfitWearCount } from "@/hooks/useWearCounts";
 
 interface OutfitDetailSheetProps {
   open: boolean;
@@ -27,6 +28,7 @@ interface OutfitDetailSheetProps {
 
 const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay }: OutfitDetailSheetProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { count: wearCount, loading: wearLoading } = useOutfitWearCount(outfit?.id ?? "");
 
   if (!outfit) return null;
 
@@ -83,6 +85,22 @@ const OutfitDetailSheet = ({ open, outfit, onClose, onEdit, onDelete, onAddToDay
             </div>
           </div>
         </DrawerHeader>
+
+        {/* Wear count */}
+        {!wearLoading && (
+          <div className="flex items-center justify-between mb-4 -mt-1">
+            {wearCount === 0 ? (
+              <span className="text-sm text-muted-foreground">Never worn</span>
+            ) : (
+              <>
+                <span className="text-sm text-muted-foreground">Worn</span>
+                <span className="text-sm font-medium text-foreground">
+                  {wearCount} {wearCount === 1 ? "time" : "times"}
+                </span>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Piece list */}
         <div className="space-y-3">
