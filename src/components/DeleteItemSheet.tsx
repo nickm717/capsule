@@ -8,20 +8,27 @@ import {
 interface DeleteItemSheetProps {
   open: boolean;
   itemName: string;
+  affectedOutfitCount?: number;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-const DeleteItemSheet = ({ open, itemName, onConfirm, onCancel }: DeleteItemSheetProps) => {
+const DeleteItemSheet = ({ open, itemName, affectedOutfitCount = 0, onConfirm, onCancel }: DeleteItemSheetProps) => {
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) onCancel(); }}>
       <SheetContent side="bottom" className="rounded-t-2xl px-4 pb-6 pt-5">
         <SheetHeader className="text-left mb-4">
           <SheetTitle className="text-base font-semibold text-foreground">Delete item</SheetTitle>
         </SheetHeader>
-        <p className="text-sm text-muted-foreground mb-6">
+        <p className="text-sm text-muted-foreground mb-3">
           Are you sure you want to delete <span className="font-medium text-foreground">{itemName}</span>? This can't be undone.
         </p>
+        {affectedOutfitCount > 0 && (
+          <p className="text-sm text-muted-foreground mb-6">
+            It's used in <span className="font-medium text-foreground">{affectedOutfitCount} {affectedOutfitCount === 1 ? "outfit" : "outfits"}</span> — it will be removed from {affectedOutfitCount === 1 ? "that outfit" : "those outfits"} as well.
+          </p>
+        )}
+        {affectedOutfitCount === 0 && <div className="mb-6" />}
         <div className="flex flex-col gap-2">
           <button
             onClick={onConfirm}

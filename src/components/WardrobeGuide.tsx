@@ -4,6 +4,7 @@ import { Plus, MoreHorizontal, Pencil, Trash2, Loader2, X } from "lucide-react";
 import { type WardrobeItem } from "@/data/darkautumn";
 import { supabase } from "@/integrations/supabase/client";
 import { useWardrobeItems } from "@/hooks/use-wardrobe-items";
+import { useOutfits } from "@/hooks/use-outfits";
 import AddItemSheet from "./AddItemSheet";
 import ItemFormPage from "./ItemFormPage";
 import DeleteItemSheet from "./DeleteItemSheet";
@@ -39,6 +40,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
 
   const { categories: allCategories, loading, error, refetch: fetchItems } = useWardrobeItems();
+  const { outfits, refetch: refreshOutfits } = useOutfits();
 
   useEffect(() => {
     if (!openItemId || loading) return;
@@ -76,10 +78,26 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
     }, row.id);
   };
 
+  const affectedOutfits = deleteTarget
+    ? outfits.filter((o) => o.pieces.some((p) => p.item_id === deleteTarget.id))
+    : [];
+
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
-    const { error } = await supabase.from("custom_items").delete().eq("id", deleteTarget.id);
-    if (!error) fetchItems();
+    const itemId = deleteTarget.id;
+    const { error } = await supabase.from("custom_items").delete().eq("id", itemId);
+    if (!error) {
+      fetchItems();
+      await Promise.all(
+        affectedOutfits.map((outfit) =>
+          supabase
+            .from("custom_outfits")
+            .update({ pieces: outfit.pieces.filter((p) => p.item_id !== itemId) as any })
+            .eq("id", outfit.id)
+        )
+      );
+      if (affectedOutfits.length > 0) refreshOutfits();
+    }
     setDeleteTarget(null);
   };
 
@@ -436,6 +454,7 @@ const WardrobeGuide = ({ onFormOpen, openItemId, onOpenItemConsumed }: WardrobeG
       <DeleteItemSheet
         open={!!deleteTarget}
         itemName={deleteTarget?.name || ""}
+        affectedOutfitCount={affectedOutfits.length}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
       />
